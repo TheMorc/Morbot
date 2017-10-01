@@ -1,25 +1,31 @@
-﻿using Google.Apis.Services;
-using Google.Apis.YouTube.v3;
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using System.IO;
 using DSharpPlus;
+using DSharpPlus.CommandsNext;
+
 namespace Morbot
 {
     class Program
     {
         //simpul introduction to this bot
         static DiscordClient discord;
-
+        static CommandsNextModule commands;
+        public static void CWrite(string v, ConsoleColor color = ConsoleColor.White)
+        {
+            Console.ForegroundColor = color;
+            Console.WriteLine(v);
+            Console.ForegroundColor = ConsoleColor.White;
+        }
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello to my bot!");
+            CWrite("Morbot - started!", ConsoleColor.White);
 
 
             if (!File.Exists("token"))
             {
                 File.Create("token");
-                Console.WriteLine("Created token file.");
+                CWrite("Creation of token file succeeded", ConsoleColor.Green);
             }
             else
             {
@@ -32,16 +38,18 @@ namespace Morbot
                 catch (Exception ex)
                 {
                     empty = true;
-                    Console.WriteLine("Contents of Token file are empty! This discord bot cannot work until you fill everything!");
+                    CWrite("Contents of Token file are empty! This discord bot cannot work until you fill everything!", ConsoleColor.Red);
                 }
                 if (!empty)
-                    Console.WriteLine("Token file already exists. Contents: " + txt);
+                    CWrite("Token file already exists. Contents: " + txt, ConsoleColor.Green);
 
             }
+
+
             if (!File.Exists("ytapikey"))
             {
                 File.Create("ytapikey");
-                Console.WriteLine("Created Youtube Data API Key file.");
+                CWrite("Creation of Youtube Data API Key file succeeded", ConsoleColor.Green);
             }
             else
             {
@@ -54,17 +62,41 @@ namespace Morbot
                 catch (Exception ex)
                 {
                     empty = true;
-                    Console.WriteLine("Contents of Youtube Data API Key file are empty! This discord bot cannot work until you fill everything!");
+                    CWrite("Contents of Youtube Data API Key file are empty! This discord bot cannot work until you fill everything!", ConsoleColor.Red);
                 }
                 if (!empty)
-                    Console.WriteLine("Youtube Data API Key file already exists. Contents: " + txt);
+                    
+                CWrite("Youtube Data API Key file already exists. Contents: " + txt, ConsoleColor.Green);
 
             }
 
-            MainAsync(args).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
+            try
+            {
+                CWrite("Everything seems to be working fine!", ConsoleColor.Green);
+                MainAsync(args).ConfigureAwait(false).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+
+                if(ex.Message == "Index was outside the bounds of the array.")
+                {
+                    CWrite("Discord token and YTAPIKey files set incorrectly", ConsoleColor.Red);
+                    
+                }
+                
+                CWrite("Bot got issue! (Error code: " + ex.Message + " )..", ConsoleColor.Red);
+                while (true)
+                {
+                    Console.ReadKey();
+                }
+            }
+            }
+
+        
+
         static async Task MainAsync(string[] args)
         {
+            
             //initializing discord client that is needed to have a working discord bot(really? i dont need this line but as always do it! xDDD)
             discord = new DiscordClient(new DiscordConfiguration
             {
@@ -72,59 +104,11 @@ namespace Morbot
                 TokenType = TokenType.Bot
             });
 
-            discord.MessageCreated += async e =>
+            commands = discord.UseCommandsNext(new CommandsNextConfiguration
             {
-                if (e.Message.Content.ToLower().StartsWith("/!whoami"))
-                {
-                    await e.Message.RespondAsync("I am MorcBot, you friendly bot that can show you many things(not the nude ones..).");
-                    Console.WriteLine("Command /!whoami was executed by " + e.Author.Username + "#" + e.Author.Discriminator + " on server:" + e.Guild.Name);
-                }
-
-            };
-            discord.MessageCreated += async e =>
-            {
-                if (e.Message.Content.ToLower().StartsWith("/!latestvideo"))
-                {
-                    await e.Message.RespondAsync("Getting latest video from Morc");
-                    Console.WriteLine("Command /!latestvideo was executed by " + e.Author.Username + "#" + e.Author.Discriminator + " on server:" + e.Guild.Name);
-
-                    try
-                    {
-                        var yt = new YouTubeService(new BaseClientService.Initializer()
-                        {
-                            ApiKey = File.ReadAllLines("ytapikey")[0]
-                        });
-                        var channelsListRequest = yt.Channels.List("contentDetails");
-                        channelsListRequest.ForUsername = "riskoautobus";
-                        var channelsListResponse = channelsListRequest.Execute();
-                        foreach (var channel in channelsListResponse.Items)
-                        {
-                            // of videos uploaded to the authenticated user's channel.
-                            var uploadsListId = channel.ContentDetails.RelatedPlaylists.Uploads;
-                            var nextPageToken = "";
-                            while (nextPageToken != null)
-                            {
-                                var playlistItemsListRequest = yt.PlaylistItems.List("snippet");
-                                playlistItemsListRequest.PlaylistId = uploadsListId;
-                                playlistItemsListRequest.MaxResults = 50;
-                                playlistItemsListRequest.PageToken = nextPageToken;
-                                // Retrieve the list of videos uploaded to the authenticated user's channel.
-                                var playlistItemsListResponse = playlistItemsListRequest.Execute();
-
-
-                                await e.Message.RespondAsync(playlistItemsListResponse.Items[0].Snippet.Title + " https://youtu.be/" + playlistItemsListResponse.Items[0].Snippet.ResourceId.VideoId);
-
-                                nextPageToken = playlistItemsListResponse.NextPageToken;
-                            }
-                        }
-                    }
-                    catch (Exception exy)
-                    {
-                        Console.WriteLine(exy);
-                    }
-
-                }
-            };
+                StringPrefix = "--"
+            });
+            commands.RegisterCommands<Commands>();
             await discord.ConnectAsync();
             await Task.Delay(-1);
         }
