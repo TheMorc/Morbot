@@ -1,10 +1,9 @@
-﻿using DSharpPlus;
-using Google.Apis.Services;
+﻿using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
 using System;
 using System.Threading.Tasks;
 using System.IO;
-
+using DSharpPlus;
 namespace Morbot
 {
     class Program
