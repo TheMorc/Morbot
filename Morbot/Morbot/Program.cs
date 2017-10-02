@@ -23,8 +23,6 @@ namespace Morbot
         static void Main(string[] args)
         {
             CWrite("Morbot - started!", ConsoleColor.White);
-
-
             if (!File.Exists("token"))
             {
                 File.Create("token");
@@ -47,8 +45,6 @@ namespace Morbot
                     CWrite("Token file already exists. Contents: " + txt, ConsoleColor.Green);
 
             }
-
-
             if (!File.Exists("ytapikey"))
             {
                 File.Create("ytapikey");
@@ -72,7 +68,6 @@ namespace Morbot
                 CWrite("Youtube Data API Key file already exists. Contents: " + txt, ConsoleColor.Green);
 
             }
-
             try
             {
                 CWrite("Everything seems to be working fine!", ConsoleColor.Green);
@@ -94,9 +89,6 @@ namespace Morbot
                 }
             }
             }
-
-        
-
         static async Task MainAsync(string[] args)
         {
             
@@ -106,20 +98,16 @@ namespace Morbot
                 Token = File.ReadAllLines("token")[0],
                 TokenType = TokenType.Bot
             });
-
             commands = discord.UseCommandsNext(new CommandsNextConfiguration
             {
                 StringPrefix = prefix
             });
-
             discord.Ready += async e =>
             {
                 game.Name = prefix+"help|Bot ready.";
                 game.StreamType = GameStreamType.NoStream;
                 await discord.UpdateStatusAsync(game);
             };
-
-            
             commands.RegisterCommands<Commands>();
             await discord.ConnectAsync();
             

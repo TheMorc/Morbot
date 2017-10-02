@@ -98,7 +98,7 @@ namespace Morbot
                         // Retrieve the list of videos uploaded to the authenticated user's channel.
                         var playlistItemsListResponse = playlistItemsListRequest.Execute();
                         string ytlink = "https://youtu.be/" + playlistItemsListResponse.Items[0].Snippet.ResourceId.VideoId;
-                        await e.Message.RespondAsync(playlistItemsListResponse.Items[0].Snippet.Title + " " + ytlink;
+                        await e.Message.RespondAsync(playlistItemsListResponse.Items[0].Snippet.Title + " " + ytlink);
                         WriteCommandSucceeded(e, "Sent yt link: " + ytlink);
                         nextPageToken = playlistItemsListResponse.NextPageToken;
                     }
@@ -191,7 +191,7 @@ namespace Morbot
                 RootObject oRootObject = new RootObject();
                 oRootObject = JsonConvert.DeserializeObject<RootObject>(data);
                 weathertype = null;
-                temp = oRootObject.main.temp - 273.15);
+                temp = oRootObject.main.temp - 273.15;
                 if (oRootObject.weather[0].description == "clear sky")
                     weathertype = ":sunny:" + " - Sunny";
                 await e.Message.RespondAsync("Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype);
