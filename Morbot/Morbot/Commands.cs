@@ -272,8 +272,6 @@ namespace Morbot
         }
         #endregion
         #region status command
-        
-
         [Group("changestatus",CanInvokeWithoutSubcommand = true), Aliases("status")]
         public class status
         {
@@ -295,7 +293,6 @@ namespace Morbot
                 {
                     await READY(e);
                 }
-                
                 if(name == "")
                 {
                     await e.Message.RespondAsync(e.User.Mention + " Select status from one of these: BETA WIP FIX READY .");
@@ -304,17 +301,13 @@ namespace Morbot
                 else
                 {
                     await e.Message.RespondAsync(e.User.Mention + name +" isn't a status. Select status from one of these: BETA WIP FIX READY .");
-
                     WriteCommandFailed(e, "User specified status " + name + "but this status does not exists. Sending status selection message.");
                 }
             }
-            
-
             [Command("null1")]
             public async Task BETA(CommandContext e)
-        {
+            {
                 WriteCommandsExec(e);
-               
                 string gamename = null;
                 Game game = new Game();
                 game.StreamType = GameStreamType.NoStream;
@@ -322,14 +315,11 @@ namespace Morbot
                 game.Name = gamename;
                 await e.Client.UpdateStatusAsync(game);
                 WriteCommandSucceeded(e,"Changed bot Playing status to BETA");
-
-        }
-
+            }
             [Command("null2")]
             public async Task WIP(CommandContext e)
             {
                 WriteCommandsExec(e);
-
                 string gamename = null;
                 Game game = new Game();
                 game.StreamType = GameStreamType.NoStream;
@@ -337,14 +327,11 @@ namespace Morbot
                 game.Name = gamename;
                 await e.Client.UpdateStatusAsync(game);
                 WriteCommandSucceeded(e, "Changed bot Playing status to WIP");
-
             }
-
             [Command("null3")]
             public async Task FIX(CommandContext e)
             {
                 WriteCommandsExec(e);
-
                 string gamename = null;
                 Game game = new Game();
                 game.StreamType = GameStreamType.NoStream;
@@ -352,14 +339,11 @@ namespace Morbot
                 game.Name = gamename;
                 await e.Client.UpdateStatusAsync(game);
                 WriteCommandSucceeded(e, "Changed bot Playing status to FIX");
-
             }
-
             [Command("null4")]
             public async Task READY(CommandContext e)
             {
                 WriteCommandsExec(e);
-
                 string gamename = null;
                 Game game = new Game();
                 game.StreamType = GameStreamType.NoStream;
@@ -367,7 +351,6 @@ namespace Morbot
                 game.Name = gamename;
                 await e.Client.UpdateStatusAsync(game);
                 WriteCommandSucceeded(e, "Changed bot Playing status to READY");
-
             }
         }
         #endregion
