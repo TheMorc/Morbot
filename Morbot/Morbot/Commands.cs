@@ -256,7 +256,7 @@ namespace Morbot
         }
         #endregion
         #region dog command
-        [Command("woof"),Aliases("dog", "doggy","dogpicture","hau","haw")]
+        [Command("woof"),Aliases("dog", "puppy","dogpicture","hau","haw")]
         public async Task woof(CommandContext e)
         {
             WriteCommandsExec(e);
