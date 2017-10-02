@@ -261,3 +261,4 @@ __pycache__/
 *.pyc
 /Morbot/Morbot/token
 /Morbot/Morbot/ytapikey
+/Morbot/Morbot/Thumbs.db

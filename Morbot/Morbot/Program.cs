@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.IO;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.Entities;
 
 namespace Morbot
 {
@@ -10,6 +11,8 @@ namespace Morbot
     {
         //simpul introduction to this bot
         static DiscordClient discord;
+        public static Game game = new Game();
+        static public string prefix = "--";
         static CommandsNextModule commands;
         public static void CWrite(string v, ConsoleColor color = ConsoleColor.White)
         {
@@ -106,10 +109,20 @@ namespace Morbot
 
             commands = discord.UseCommandsNext(new CommandsNextConfiguration
             {
-                StringPrefix = "--"
+                StringPrefix = prefix
             });
+
+            discord.Ready += async e =>
+            {
+                game.Name = prefix+"help|Bot ready.";
+                game.StreamType = GameStreamType.NoStream;
+                await discord.UpdateStatusAsync(game);
+            };
+
+            
             commands.RegisterCommands<Commands>();
             await discord.ConnectAsync();
+            
             await Task.Delay(-1);
         }
 

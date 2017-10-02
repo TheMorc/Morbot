@@ -8,27 +8,73 @@ using Google.Apis.Services;
 using System.Net.Http;
 using Newtonsoft.Json;
 using System.Collections.Generic;
-
+using Newtonsoft.Json.Linq;
+using DSharpPlus.Entities;
 namespace Morbot
-{
-
-
-    
+{ 
     public class Commands
     {
+        #region help for commands
+        public static void WriteCommandsExec(CommandContext e)
+        {
+            string minutes = null;
+            if (DateTime.Now.TimeOfDay.Minutes.ToString().Length == 1)
+            {
+                minutes = "0" + DateTime.Now.TimeOfDay.Minutes.ToString();
+            }
+            else
+            {
+                minutes = DateTime.Now.TimeOfDay.Minutes.ToString();
+            }
+            Program.CWrite("Command " + e.Command.Name + " was executed by " + e.User.Username + "#" + e.User.Discriminator + " on server:" + e.Guild.Name + " " + DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes, ConsoleColor.DarkGreen);
+        }
+        public static void WriteCommandSucceeded(CommandContext e,string whatitdid)
+        {
+            string minutes = null;
+            if (DateTime.Now.TimeOfDay.Minutes.ToString().Length == 1)
+            {
+                minutes = "0" + DateTime.Now.TimeOfDay.Minutes.ToString();
+            }
+            else
+            {
+                minutes = DateTime.Now.TimeOfDay.Minutes.ToString();
+            }
+
+            Program.CWrite("Executing command " + e.Command.Name + " succeeded without problem. What it did: " +whatitdid+  " " + DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes, ConsoleColor.DarkGreen);
+
+
+        }
+        public static void WriteCommandFailed(CommandContext e,string reason)
+        {
+            string minutes = null;
+            if (DateTime.Now.TimeOfDay.Minutes.ToString().Length == 1)
+            {
+                minutes = "0" + DateTime.Now.TimeOfDay.Minutes.ToString();
+            }
+            else
+            {
+                minutes = DateTime.Now.TimeOfDay.Minutes.ToString();
+            }
+
+            Program.CWrite("Executing command " + e.Command.Name + " failed! Reason: " + reason  + " "+ DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes, ConsoleColor.Red);
+
+
+        }
+        #endregion
         #region whoami command
         [Command("whoami")]
         public async Task whoami(CommandContext e)
         {
+            WriteCommandsExec(e);
             await e.Message.RespondAsync("I am MorcBot, and my programmer(Morc) wants to have this bot as help for Discord server.");
-            Program.CWrite("Command whoami was executed by " + e.User.Username + "#" + e.User.Discriminator + " on server:" + e.Guild.Name, ConsoleColor.DarkGreen);
+            WriteCommandSucceeded(e," Sent info about bot.");
         }
 #endregion
         #region latestvideo command
         [Command("latestvideo")]
         public async Task latestvideo(CommandContext e)
         {
-            Program.CWrite("Command latestvideo was executed by " + e.User.Username + "#" + e.User.Discriminator + " on server:" + e.Guild.Name, ConsoleColor.DarkGreen);
+            WriteCommandsExec(e);
             try
             {
                 var yt = new YouTubeService(new BaseClientService.Initializer()
@@ -51,9 +97,9 @@ namespace Morbot
                         playlistItemsListRequest.PageToken = nextPageToken;
                         // Retrieve the list of videos uploaded to the authenticated user's channel.
                         var playlistItemsListResponse = playlistItemsListRequest.Execute();
-
-                        await e.Message.RespondAsync(playlistItemsListResponse.Items[0].Snippet.Title + " https://youtu.be/" + playlistItemsListResponse.Items[0].Snippet.ResourceId.VideoId);
-
+                        string ytlink = "https://youtu.be/" + playlistItemsListResponse.Items[0].Snippet.ResourceId.VideoId;
+                        await e.Message.RespondAsync(playlistItemsListResponse.Items[0].Snippet.Title + " " + ytlink;
+                        WriteCommandSucceeded(e, "Sent yt link: " + ytlink);
                         nextPageToken = playlistItemsListResponse.NextPageToken;
                     }
                 }
@@ -61,6 +107,7 @@ namespace Morbot
             catch (Exception exy)
             {
 
+                WriteCommandFailed(e, "Failed sending link. Log:");
                 Program.CWrite(exy.ToString(), ConsoleColor.Red);
 
             }
@@ -130,8 +177,10 @@ namespace Morbot
         [Command("weather")]
             public async Task weather (CommandContext e)
             {
-            Program.CWrite("Command weather was executed by " + e.User.Username + "#" + e.User.Discriminator + " on server:" + e.Guild.Name, ConsoleColor.DarkGreen);
+            WriteCommandsExec(e);
             string data;
+            string weathertype = null;
+            double temp = 0;
             string page = "http://api.openweathermap.org/data/2.5/weather?q=Topolcany&mode=json&APPID=f087a4bd2e59b76b49fe81f9de972f7e";
             using (HttpClient client = new HttpClient())
             using (HttpResponseMessage response = await client.GetAsync(page))
@@ -141,46 +190,186 @@ namespace Morbot
                 data = await content.ReadAsStringAsync();
                 RootObject oRootObject = new RootObject();
                 oRootObject = JsonConvert.DeserializeObject<RootObject>(data);
-                string weathertype = null;
+                weathertype = null;
+                temp = oRootObject.main.temp - 273.15);
                 if (oRootObject.weather[0].description == "clear sky")
                     weathertype = ":sunny:" + " - Sunny";
-                await e.Message.RespondAsync("Town near Morc - Topoľčany:\n" + (oRootObject.main.temp - 273.15) + "°C \n" + weathertype);
+                await e.Message.RespondAsync("Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype);
 
             }
+
+            WriteCommandSucceeded(e, "Sent info about weather: " + temp + "°C " + weathertype);
         }
 
         #endregion
         #region time command
-                [Command("time")]
-                    public async Task time (CommandContext e)
-                    {
-                        Program.CWrite("Command time was executed by " + e.User.Username + "#" + e.User.Discriminator + " on server:" + e.Guild.Name, ConsoleColor.DarkGreen);
-                    string minutes = null;
-                    if (DateTime.Now.TimeOfDay.Minutes.ToString().Length == 1)
-                    {
-                        minutes = "0" + DateTime.Now.TimeOfDay.Minutes.ToString();
-                    }
-                    else
-                    {
-                        minutes = DateTime.Now.TimeOfDay.Minutes.ToString();
-                    }
-                    await e.Message.RespondAsync("Morc's time zone is UTC+01:00 so the time is: "+DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes);
-                    }
+        [Command("time")]
+            public async Task time (CommandContext e)
+            {
+            WriteCommandsExec(e);
+            string minutes = null;
+            if (DateTime.Now.TimeOfDay.Minutes.ToString().Length == 1)
+            {
+                minutes = "0" + DateTime.Now.TimeOfDay.Minutes.ToString();
+            }
+            else
+            {
+                minutes = DateTime.Now.TimeOfDay.Minutes.ToString();
+            }
+            await e.Message.RespondAsync("Morc's time zone is UTC+01:00 so the time is: "+DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes);
+
+
+            WriteCommandSucceeded(e,"Sent time.");
+        }
         #endregion
         #region randomwindows command
 
         string[] versions = { "w95.png", "w98.png", "wme.png", "w2k.png", "w7.png", "wvista.png", "wxp.png", "w8.png", "w10.png" };
-                [Command("randomwindows")]
+                [Command("randomwindows"),Aliases("RandomWindows","RandWind","randwind","ranwin","randomwin","RandomWin","rwin","randomw","randw")]
                 public async Task randomwindows(CommandContext e)
                 {
-                    Program.CWrite("Command randomwindows was executed by " + e.User.Username + "#" + e.User.Discriminator + " on server:" + e.Guild.Name, ConsoleColor.DarkGreen);
+            WriteCommandsExec(e);
             Random rnd = new Random();
             string ver = versions[rnd.Next(0, versions.Length)];
             await e.Message.RespondWithFileAsync(ver);
-                }
+
+
+            WriteCommandSucceeded(e,"Sent " + ver);
+        }
 
         #endregion
+        #region cat command
+        [Command("meow"), Aliases("cat", "kitty", "catpicture", "meov", "mjau")]
+        public async Task meow(CommandContext e)
+        {
+            WriteCommandsExec(e);
+            string url = null;
+            using (HttpClient cl = new HttpClient())
+            {
+                string data = await cl.GetStringAsync("https://random.cat/meow");
+                var pData = JObject.Parse(data);
+                url = pData["file"].ToString();
+                await e.RespondAsync(url);
+            }
 
+            WriteCommandSucceeded(e, "Sent cute cat picture. Link: "+ url);
+        }
+        #endregion
+        #region dog command
+        [Command("woof"),Aliases("dog", "doggy","dogpicture","hau","haw")]
+        public async Task woof(CommandContext e)
+        {
+            WriteCommandsExec(e);
+            string url = null;
+            using (HttpClient cl = new HttpClient())
+            {
+                string data = await cl.GetStringAsync("https://random.dog/woof.json");
+                var pData = JObject.Parse(data);
+                url = pData["url"].ToString();
+                await e.RespondAsync(url);
+            }
+            WriteCommandSucceeded(e,"Sent cute dog picture. Link: " + url);
+        }
+        #endregion
+        #region status command
+        
+
+        [Group("changestatus",CanInvokeWithoutSubcommand = true), Aliases("status")]
+        public class status
+        {
+            public async Task ExecuteGroupAsync(CommandContext e,string name = "")
+            {
+                if(name == "BETA")
+                {
+                    await BETA(e);
+                }
+                else if (name == "WIP")
+                {
+                    await WIP(e);
+                }
+                else if (name == "FIX")
+                {
+                    await FIX(e);
+                }
+                else if (name == "READY")
+                {
+                    await READY(e);
+                }
+                
+                if(name == "")
+                {
+                    await e.Message.RespondAsync(e.User.Mention + " Select status from one of these: BETA WIP FIX READY .");
+                    WriteCommandFailed(e, "User didnt specify any status.");
+                }
+                else
+                {
+                    await e.Message.RespondAsync(e.User.Mention + name +" isn't a status. Select status from one of these: BETA WIP FIX READY .");
+
+                    WriteCommandFailed(e, "User specified status " + name + "but this status does not exists. Sending status selection message.");
+                }
+            }
+            
+
+            [Command("null1")]
+            public async Task BETA(CommandContext e)
+        {
+                WriteCommandsExec(e);
+               
+                string gamename = null;
+                Game game = new Game();
+                game.StreamType = GameStreamType.NoStream;
+                gamename = Program.prefix + "help|BETA Mode";
+                game.Name = gamename;
+                await e.Client.UpdateStatusAsync(game);
+                WriteCommandSucceeded(e,"Changed bot Playing status to BETA");
+
+        }
+
+            [Command("null2")]
+            public async Task WIP(CommandContext e)
+            {
+                WriteCommandsExec(e);
+
+                string gamename = null;
+                Game game = new Game();
+                game.StreamType = GameStreamType.NoStream;
+                gamename = Program.prefix + "help|WIP Mode";
+                game.Name = gamename;
+                await e.Client.UpdateStatusAsync(game);
+                WriteCommandSucceeded(e, "Changed bot Playing status to WIP");
+
+            }
+
+            [Command("null3")]
+            public async Task FIX(CommandContext e)
+            {
+                WriteCommandsExec(e);
+
+                string gamename = null;
+                Game game = new Game();
+                game.StreamType = GameStreamType.NoStream;
+                gamename = Program.prefix + "help|FIX Mode";
+                game.Name = gamename;
+                await e.Client.UpdateStatusAsync(game);
+                WriteCommandSucceeded(e, "Changed bot Playing status to FIX");
+
+            }
+
+            [Command("null4")]
+            public async Task READY(CommandContext e)
+            {
+                WriteCommandsExec(e);
+
+                string gamename = null;
+                Game game = new Game();
+                game.StreamType = GameStreamType.NoStream;
+                gamename = Program.prefix + "help|Bot ready.";
+                game.Name = gamename;
+                await e.Client.UpdateStatusAsync(game);
+                WriteCommandSucceeded(e, "Changed bot Playing status to READY");
+
+            }
+        }
+        #endregion
     }
-    
 }
