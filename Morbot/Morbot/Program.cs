@@ -68,6 +68,53 @@ namespace Morbot
                 CWrite("Youtube Data API Key file already exists. Contents: " + txt, ConsoleColor.Green);
 
             }
+
+            if (!File.Exists("giphyapikey"))
+            {
+                File.Create("giphyapikey");
+                CWrite("Creation of giphyapikey file succeeded", ConsoleColor.Green);
+            }
+            else
+            {
+                string txt = "";
+                bool empty = false;
+                try
+                {
+                    txt = File.ReadAllLines("giphyapikey")[0];
+                }
+                catch (Exception ex)
+                {
+                    empty = true;
+                    CWrite("Contents of Giphy API Key file are empty! This discord bot cannot work until you fill everything!", ConsoleColor.Red);
+                }
+                if (!empty)
+                    CWrite("Giphy API Key file already exists. Contents: " + txt, ConsoleColor.Green);
+
+            }
+
+            if (!File.Exists("openwapikey"))
+            {
+                File.Create("openwapikey");
+                CWrite("Creation of openwapikey file succeeded", ConsoleColor.Green);
+            }
+            else
+            {
+                string txt = "";
+                bool empty = false;
+                try
+                {
+                    txt = File.ReadAllLines("openwapikey")[0];
+                }
+                catch (Exception ex)
+                {
+                    empty = true;
+                    CWrite("Contents of OpenWeather API Key file are empty! This discord bot cannot work until you fill everything!", ConsoleColor.Red);
+                }
+                if (!empty)
+                    CWrite("OpenWeather API Key file already exists. Contents: " + txt, ConsoleColor.Green);
+
+            }
+
             try
             {
                 CWrite("Everything seems to be working fine!", ConsoleColor.Green);

@@ -159,7 +159,7 @@ namespace Morbot
             public int sunset { get; set; }
         }
 
-        public class RootObject
+        public class RootObjectW
         {
             public Coord coord { get; set; }
             public List<Weather> weather { get; set; }
@@ -181,15 +181,15 @@ namespace Morbot
             string data;
             string weathertype = null;
             double temp = 0;
-            string page = "http://api.openweathermap.org/data/2.5/weather?q=Topolcany&mode=json&APPID=f087a4bd2e59b76b49fe81f9de972f7e";
+            string page = "http://api.openweathermap.org/data/2.5/weather?q=Topolcany&mode=json&APPID=" + File.ReadAllLines("openwapikey")[0];
             using (HttpClient client = new HttpClient())
             using (HttpResponseMessage response = await client.GetAsync(page))
             using (HttpContent content = response.Content)
             {
                 
                 data = await content.ReadAsStringAsync();
-                RootObject oRootObject = new RootObject();
-                oRootObject = JsonConvert.DeserializeObject<RootObject>(data);
+                RootObjectW oRootObject = new RootObjectW();
+                oRootObject = JsonConvert.DeserializeObject<RootObjectW>(data);
                 weathertype = null;
                 temp = oRootObject.main.temp - 273.15;
                 if (oRootObject.weather[0].description == "clear sky")
@@ -353,6 +353,88 @@ namespace Morbot
                 WriteCommandSucceeded(e, "Changed bot Playing status to READY");
             }
         }
+        #endregion
+        #region randomgif command
+        public class Data
+        {
+            public string type { get; set; }
+            public string id { get; set; }
+            public string url { get; set; }
+            public string image_original_url { get; set; }
+            public string image_url { get; set; }
+            public string image_mp4_url { get; set; }
+            public string image_frames { get; set; }
+            public string image_width { get; set; }
+            public string image_height { get; set; }
+            public string fixed_height_downsampled_url { get; set; }
+            public string fixed_height_downsampled_width { get; set; }
+            public string fixed_height_downsampled_height { get; set; }
+            public string fixed_width_downsampled_url { get; set; }
+            public string fixed_width_downsampled_width { get; set; }
+            public string fixed_width_downsampled_height { get; set; }
+            public string fixed_height_small_url { get; set; }
+            public string fixed_height_small_still_url { get; set; }
+            public string fixed_height_small_width { get; set; }
+            public string fixed_height_small_height { get; set; }
+            public string fixed_width_small_url { get; set; }
+            public string fixed_width_small_still_url { get; set; }
+            public string fixed_width_small_width { get; set; }
+            public string fixed_width_small_height { get; set; }
+            public string username { get; set; }
+            public string caption { get; set; }
+        }
+
+        public class Meta
+        {
+            public int status { get; set; }
+            public string msg { get; set; }
+            public string response_id { get; set; }
+        }
+
+        public class RootObjectG
+        {
+            public Data data { get; set; }
+            public Meta meta { get; set; }
+        }
+        [Command("randomgif")]
+        public async Task randomgif(CommandContext e)
+        {
+            WriteCommandsExec(e);
+            string data;
+            Random urlRandomizer = new Random();
+            int randomNumber = urlRandomizer.Next(0, 3);
+            string page = null;
+            if (randomNumber == 0)
+            {
+                page = "http://api.giphy.com/v1/gifs/random?q=horse&tag=dog&api_key=" + File.ReadAllLines("gpihyapikey")[0];
+            }
+            if (randomNumber == 1)
+            {
+                page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=cat&api_key=" + File.ReadAllLines("gpihyapikey")[0];
+            }
+
+            if (randomNumber == 2)
+            {
+                page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=dog&api_key=" + File.ReadAllLines("gpihyapikey")[0];
+            }
+
+            if (randomNumber == 3)
+            {
+                page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=windows&api_key=" + File.ReadAllLines("gpihyapikey")[0];
+            }
+            using (HttpClient client = new HttpClient())
+            using (HttpResponseMessage response = await client.GetAsync(page))
+            using (HttpContent content = response.Content)
+            { 
+                data = await content.ReadAsStringAsync();
+                RootObjectG oRootObject = new RootObjectG();
+                oRootObject = JsonConvert.DeserializeObject<RootObjectG>(data);
+                await e.RespondAsync(oRootObject.data.image_url + "\n \n" + "GIF by " + oRootObject.data.username);
+            }
+
+            WriteCommandSucceeded(e, "Sent GIF");
+        }
+
         #endregion
     }
 }
