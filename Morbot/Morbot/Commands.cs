@@ -14,6 +14,7 @@ namespace Morbot
 { 
     public class Commands
     {
+        //HELP FOR COMMANDS 
         #region help for commands
         public static void WriteCommandsExec(CommandContext e)
         {
@@ -26,7 +27,7 @@ namespace Morbot
             {
                 minutes = DateTime.Now.TimeOfDay.Minutes.ToString();
             }
-            Program.CWrite("Command " + e.Command.Name + " was executed by " + e.User.Username + "#" + e.User.Discriminator + " on server:" + e.Guild.Name + " " + DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes, ConsoleColor.DarkGreen);
+            Program.CWrite("["+DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes + "]Command " + e.Command.Name + " was executed by " + e.User.Username + "#" + e.User.Discriminator + " on server:" + e.Guild.Name, ConsoleColor.DarkGreen);
         }
         public static void WriteCommandSucceeded(CommandContext e,string whatitdid)
         {
@@ -40,7 +41,7 @@ namespace Morbot
                 minutes = DateTime.Now.TimeOfDay.Minutes.ToString();
             }
 
-            Program.CWrite("Executing command " + e.Command.Name + " succeeded without problem. What it did: " +whatitdid+  " " + DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes, ConsoleColor.DarkGreen);
+            Program.CWrite("[" + DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes + "]Executing command " + e.Command.Name + " succeeded without problem. What it did: " +whatitdid, ConsoleColor.DarkGreen);
 
 
         }
@@ -56,11 +57,16 @@ namespace Morbot
                 minutes = DateTime.Now.TimeOfDay.Minutes.ToString();
             }
 
-            Program.CWrite("Executing command " + e.Command.Name + " failed! Reason: " + reason  + " "+ DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes, ConsoleColor.Red);
+            Program.CWrite("[" + DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes + "]Executing command " + e.Command.Name + " failed! Reason: " + reason, ConsoleColor.Red);
 
 
         }
         #endregion
+
+
+        //Commands | 
+        //Commands | 
+        //Commands | 
         #region whoami command
         [Command("whoami")]
         public async Task whoami(CommandContext e)
@@ -114,13 +120,11 @@ namespace Morbot
         }
 #endregion
         #region weather command
-
         public class Coord
         {
             public double lon { get; set; }
             public double lat { get; set; }
         }
-
         public class Weather
         {
             public int id { get; set; }
@@ -128,7 +132,6 @@ namespace Morbot
             public string description { get; set; }
             public string icon { get; set; }
         }
-
         public class Main
         {
             public double temp { get; set; }
@@ -137,18 +140,15 @@ namespace Morbot
             public double temp_min { get; set; }
             public double temp_max { get; set; }
         }
-
         public class Wind
         {
             public double speed { get; set; }
             public int deg { get; set; }
         }
-
         public class Clouds
         {
             public int all { get; set; }
         }
-
         public class Sys
         {
             public int type { get; set; }
@@ -158,7 +158,6 @@ namespace Morbot
             public int sunrise { get; set; }
             public int sunset { get; set; }
         }
-
         public class RootObjectW
         {
             public Coord coord { get; set; }
@@ -178,27 +177,71 @@ namespace Morbot
             public async Task weather (CommandContext e)
             {
             WriteCommandsExec(e);
-            string data;
+            string data = "";
+            string api = "";
+            string url = "";
+            bool empty = false;
             string weathertype = null;
             double temp = 0;
-            string page = "http://api.openweathermap.org/data/2.5/weather?q=Topolcany&mode=json&APPID=" + File.ReadAllLines("openwapikey")[0];
-            using (HttpClient client = new HttpClient())
-            using (HttpResponseMessage response = await client.GetAsync(page))
-            using (HttpContent content = response.Content)
+            try
             {
-                
-                data = await content.ReadAsStringAsync();
-                RootObjectW oRootObject = new RootObjectW();
-                oRootObject = JsonConvert.DeserializeObject<RootObjectW>(data);
-                weathertype = null;
-                temp = oRootObject.main.temp - 273.15;
-                if (oRootObject.weather[0].description == "clear sky")
-                    weathertype = ":sunny:" + " - Sunny";
-                await e.Message.RespondAsync("Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype);
+                api = File.ReadAllLines("openwapikey")[0];
+            }
+            catch (Exception ex)
+            {
+                empty = true;
+            }
+            if(empty)
+            {
+                WriteCommandFailed(e,"OpenWeather API Key file is EMPTY!");
+                await e.Message.RespondAsync(e.User.Mention + " Bot has incorrectly set API Keys.");
 
             }
+            else
+            {
+                string page = "http://api.openweathermap.org/data/2.5/weather?q=Topolcany&mode=json&APPID=" + File.ReadAllLines("openwapikey")[0];
+                //Program.CWrite("1");
+                //HttpClient client = new HttpClient();
+                //Program.CWrite("1");
+                //HttpResponseMessage response = await client.GetAsync(page);
+                //Program.CWrite("1");
+                //HttpContent content = response.Content;
+                //    using ( client = new  HttpClient())
+                //    using ( response = await client.GetAsync(page))
+                //    using ( content = response.Content)
+                //    {
 
-            WriteCommandSucceeded(e, "Sent info about weather: " + temp + "°C " + weathertype);
+                //        Program.CWrite("1");
+                //        data = await content.ReadAsStringAsync();
+                //        Program.CWrite("1");
+                //        RootObjectW oRootObject = new RootObjectW();
+                //        Program.CWrite("1");
+                //        oRootObject = JsonConvert.DeserializeObject<RootObjectW>(data);
+                //        Program.CWrite("1");
+                //        weathertype = null;
+                //        temp = oRootObject.main.temp - 273.15;
+                //        if (oRootObject.weather[0].description == "clear sky")
+                //            weathertype = ":sunny:" + " - Sunny";
+                //        await e.Message.RespondAsync("Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype);
+
+                //    }
+
+                using (HttpClient cl = new HttpClient())
+                {
+                    data = await cl.GetStringAsync(page);
+                    RootObjectW oRootObject = new RootObjectW();
+                    oRootObject = JsonConvert.DeserializeObject<RootObjectW>(data);
+                    weathertype = null;
+                    temp = oRootObject.main.temp - 273.15;
+                    if (oRootObject.weather[0].description == "clear sky")
+                        weathertype = ":sunny:" + " - Sunny";
+                    await e.Message.RespondAsync("Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype);
+                }
+
+
+                WriteCommandSucceeded(e, "Sent info about weather: " + temp + "°C " + weathertype);
+            }
+           
         }
 
         #endregion
@@ -400,28 +443,12 @@ namespace Morbot
         public async Task randomgif(CommandContext e)
         {
             WriteCommandsExec(e);
-            string data;
+            string data = "";
+            string gifby = "";
+            string gifurl = "";
             Random urlRandomizer = new Random();
-            int randomNumber = urlRandomizer.Next(0, 3);
-            string page = null;
-            if (randomNumber == 0)
-            {
-                page = "http://api.giphy.com/v1/gifs/random?q=horse&tag=dog&api_key=" + File.ReadAllLines("gpihyapikey")[0];
-            }
-            if (randomNumber == 1)
-            {
-                page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=cat&api_key=" + File.ReadAllLines("gpihyapikey")[0];
-            }
-
-            if (randomNumber == 2)
-            {
-                page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=dog&api_key=" + File.ReadAllLines("gpihyapikey")[0];
-            }
-
-            if (randomNumber == 3)
-            {
-                page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=windows&api_key=" + File.ReadAllLines("gpihyapikey")[0];
-            }
+            string[] GIFtype = { "cat", "dog" };
+            string page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + GIFtype[urlRandomizer.Next(0, GIFtype.Length)] + "&api_key=" + File.ReadAllLines("giphyapikey")[0];
             using (HttpClient client = new HttpClient())
             using (HttpResponseMessage response = await client.GetAsync(page))
             using (HttpContent content = response.Content)
@@ -429,10 +456,19 @@ namespace Morbot
                 data = await content.ReadAsStringAsync();
                 RootObjectG oRootObject = new RootObjectG();
                 oRootObject = JsonConvert.DeserializeObject<RootObjectG>(data);
-                await e.RespondAsync(oRootObject.data.image_url + "\n \n" + "GIF by " + oRootObject.data.username);
+                gifurl = oRootObject.data.image_url;
+                if(oRootObject.data.username == "")
+                {
+                    gifby = "";
+                }
+                else
+                {
+                    gifby = "GIF By: " + oRootObject.data.username;
+                }
+                await e.RespondAsync(gifurl + "\n \n" + gifby + oRootObject.data.username);
             }
 
-            WriteCommandSucceeded(e, "Sent GIF");
+            WriteCommandSucceeded(e, "Sent GIF: " + gifurl);
         }
 
         #endregion
