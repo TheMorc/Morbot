@@ -486,7 +486,7 @@ namespace Morbot
                     {
                         gifby = "GIF By: " + oRootObject.data.username;
                     }
-                    await e.RespondAsync("\u200B" + e.User.Mention + " " + gifurl + "\n \n" + gifby + oRootObject.data.username);
+                    await e.RespondAsync("\u200B" + e.User.Mention + " " + gifurl + "\n \n" + gifby);
                 }
 
                 WriteCommandSucceeded(e, "Sent GIF: " + gifurl);
