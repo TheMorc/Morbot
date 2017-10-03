@@ -10,6 +10,8 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using DSharpPlus.Entities;
+using System.Linq;
+
 namespace Morbot
 { 
     public class Commands
@@ -18,52 +20,19 @@ namespace Morbot
         #region help for commands
         public static void WriteCommandsExec(CommandContext e)
         {
-            string minutes = null;
-            if (DateTime.Now.TimeOfDay.Minutes.ToString().Length == 1)
-            {
-                minutes = "0" + DateTime.Now.TimeOfDay.Minutes.ToString();
-            }
-            else
-            {
-                minutes = DateTime.Now.TimeOfDay.Minutes.ToString();
-            }
-            Program.CWrite("["+DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes + "]Command " + e.Command.Name + " was executed by " + e.User.Username + "#" + e.User.Discriminator + " on server:" + e.Guild.Name, ConsoleColor.DarkGreen);
+            Program.CWrite("Command " + e.Command.Name + " was executed by " + e.User.Username + "#" + e.User.Discriminator + " on server:" + e.Guild.Name, ConsoleColor.DarkGreen);
         }
         public static void WriteCommandSucceeded(CommandContext e,string whatitdid)
         {
-            string minutes = null;
-            if (DateTime.Now.TimeOfDay.Minutes.ToString().Length == 1)
-            {
-                minutes = "0" + DateTime.Now.TimeOfDay.Minutes.ToString();
-            }
-            else
-            {
-                minutes = DateTime.Now.TimeOfDay.Minutes.ToString();
-            }
-
-            Program.CWrite("[" + DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes + "]Executing command " + e.Command.Name + " succeeded without problem. What it did: " +whatitdid, ConsoleColor.DarkGreen);
-
-
+            Program.CWrite("Executing command " + e.Command.Name + " succeeded without problem. What it did: " +whatitdid, ConsoleColor.DarkGreen);
         }
         public static void WriteCommandFailed(CommandContext e,string reason)
         {
-            string minutes = null;
-            if (DateTime.Now.TimeOfDay.Minutes.ToString().Length == 1)
-            {
-                minutes = "0" + DateTime.Now.TimeOfDay.Minutes.ToString();
-            }
-            else
-            {
-                minutes = DateTime.Now.TimeOfDay.Minutes.ToString();
-            }
-
-            Program.CWrite("[" + DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes + "]Executing command " + e.Command.Name + " failed! Reason: " + reason, ConsoleColor.Red);
-
-
+            Program.CWrite("Executing command " + e.Command.Name + " failed! Reason: " + reason, ConsoleColor.Red);
         }
         #endregion
 
-
+        
         //Commands | 
         //Commands | 
         //Commands | 
@@ -72,50 +41,89 @@ namespace Morbot
         public async Task whoami(CommandContext e)
         {
             WriteCommandsExec(e);
-            await e.Message.RespondAsync("I am MorcBot, and my programmer(Morc) wants to have this bot as help for Discord server.");
-            WriteCommandSucceeded(e," Sent info about bot.");
+            await e.Message.RespondAsync(e.User.Mention + " I am MorcBot, and my programmer(Morc) wants to have this bot as help for Discord server.");
+            WriteCommandSucceeded(e, " Sent info about bot.");
         }
-#endregion
+        #endregion
+        #region commands command
+        [Command("commands")]
+        public async Task commands(CommandContext ex)
+        {
+            WriteCommandsExec(ex);
+            string commandlist = null;
+            foreach (string server in ex.CommandsNext.RegisteredCommands.Values.Select(e => e.Name))
+            {
+                string help = "";
+                try { help = commandlist.Remove(server.Length, commandlist.Length - server.Length); } catch { }
+                if (help == server) { }
+                else
+                { commandlist = server + "\n--" + commandlist;}
+            }
+            await ex.Message.RespondAsync(ex.User.Mention + " Command List:\n" + "--" +  commandlist.Remove(commandlist.Length-2,2));
+            WriteCommandSucceeded(ex, " Sent command list.");
+        }
+        #endregion
         #region latestvideo command
         [Command("latestvideo")]
         public async Task latestvideo(CommandContext e)
         {
             WriteCommandsExec(e);
+            string api = "";
+            bool empty = false;
             try
             {
-                var yt = new YouTubeService(new BaseClientService.Initializer()
-                {
-                    ApiKey = File.ReadAllLines("ytapikey")[0]
-                });
-                var channelsListRequest = yt.Channels.List("contentDetails");
-                channelsListRequest.ForUsername = "riskoautobus";
-                var channelsListResponse = channelsListRequest.Execute();
-                foreach (var channel in channelsListResponse.Items)
-                {
-                    // of videos uploaded to the authenticated user's channel.
-                    var uploadsListId = channel.ContentDetails.RelatedPlaylists.Uploads;
-                    var nextPageToken = "";
-                    while (nextPageToken != null)
-                    {
-                        var playlistItemsListRequest = yt.PlaylistItems.List("snippet");
-                        playlistItemsListRequest.PlaylistId = uploadsListId;
-                        playlistItemsListRequest.MaxResults = 50;
-                        playlistItemsListRequest.PageToken = nextPageToken;
-                        // Retrieve the list of videos uploaded to the authenticated user's channel.
-                        var playlistItemsListResponse = playlistItemsListRequest.Execute();
-                        string ytlink = "https://youtu.be/" + playlistItemsListResponse.Items[0].Snippet.ResourceId.VideoId;
-                        await e.Message.RespondAsync(playlistItemsListResponse.Items[0].Snippet.Title + " " + ytlink);
-                        WriteCommandSucceeded(e, "Sent yt link: " + ytlink);
-                        nextPageToken = playlistItemsListResponse.NextPageToken;
-                    }
-                }
+                api = File.ReadAllLines("ytapikey")[0];
             }
-            catch (Exception exy)
+            catch (Exception ex)
+            {
+                empty = true;
+            }
+            if (empty)
+            {
+                WriteCommandFailed(e, "YouTube Data API Key file is EMPTY!");
+                await e.Message.RespondAsync(e.User.Mention + " Bot has incorrectly set API Keys.");
+
+            }
+            else
             {
 
-                WriteCommandFailed(e, "Failed sending link. Log:");
-                Program.CWrite(exy.ToString(), ConsoleColor.Red);
+                try
+                {
+                    var yt = new YouTubeService(new BaseClientService.Initializer()
+                    {
+                        ApiKey = File.ReadAllLines("ytapikey")[0]
+                    });
+                    var channelsListRequest = yt.Channels.List("contentDetails");
+                    channelsListRequest.ForUsername = "riskoautobus";
+                    var channelsListResponse = channelsListRequest.Execute();
+                    foreach (var channel in channelsListResponse.Items)
+                    {
+                        // of videos uploaded to the authenticated user's channel.
+                        var uploadsListId = channel.ContentDetails.RelatedPlaylists.Uploads;
+                        var nextPageToken = "";
+                        while (nextPageToken != null)
+                        {
+                            var playlistItemsListRequest = yt.PlaylistItems.List("snippet");
+                            playlistItemsListRequest.PlaylistId = uploadsListId;
+                            playlistItemsListRequest.MaxResults = 50;
+                            playlistItemsListRequest.PageToken = nextPageToken;
+                            // Retrieve the list of videos uploaded to the authenticated user's channel.
+                            var playlistItemsListResponse = playlistItemsListRequest.Execute();
+                            string ytlink = "https://youtu.be/" + playlistItemsListResponse.Items[0].Snippet.ResourceId.VideoId;
+                            await e.Message.RespondAsync(playlistItemsListResponse.Items[0].Snippet.Title + " " + ytlink);
+                            WriteCommandSucceeded(e, "Sent yt link: " + ytlink);
+                            nextPageToken = playlistItemsListResponse.NextPageToken;
+                        }
+                    }
+                }
+                catch (Exception exy)
+                {
 
+                    WriteCommandFailed(e, "Failed sending link. Log:");
+                    await e.Message.RespondAsync(e.User.Mention + " Error occured when sending video link. Contact programmer..");
+                    Program.CWrite(exy.ToString(), ConsoleColor.Red);
+
+                }
             }
         }
 #endregion
@@ -200,32 +208,6 @@ namespace Morbot
             else
             {
                 string page = "http://api.openweathermap.org/data/2.5/weather?q=Topolcany&mode=json&APPID=" + File.ReadAllLines("openwapikey")[0];
-                //Program.CWrite("1");
-                //HttpClient client = new HttpClient();
-                //Program.CWrite("1");
-                //HttpResponseMessage response = await client.GetAsync(page);
-                //Program.CWrite("1");
-                //HttpContent content = response.Content;
-                //    using ( client = new  HttpClient())
-                //    using ( response = await client.GetAsync(page))
-                //    using ( content = response.Content)
-                //    {
-
-                //        Program.CWrite("1");
-                //        data = await content.ReadAsStringAsync();
-                //        Program.CWrite("1");
-                //        RootObjectW oRootObject = new RootObjectW();
-                //        Program.CWrite("1");
-                //        oRootObject = JsonConvert.DeserializeObject<RootObjectW>(data);
-                //        Program.CWrite("1");
-                //        weathertype = null;
-                //        temp = oRootObject.main.temp - 273.15;
-                //        if (oRootObject.weather[0].description == "clear sky")
-                //            weathertype = ":sunny:" + " - Sunny";
-                //        await e.Message.RespondAsync("Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype);
-
-                //    }
-
                 using (HttpClient cl = new HttpClient())
                 {
                     data = await cl.GetStringAsync(page);
@@ -235,10 +217,8 @@ namespace Morbot
                     temp = oRootObject.main.temp - 273.15;
                     if (oRootObject.weather[0].description == "clear sky")
                         weathertype = ":sunny:" + " - Sunny";
-                    await e.Message.RespondAsync("Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype);
+                    await e.Message.RespondAsync(e.User.Mention + " Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype);
                 }
-
-
                 WriteCommandSucceeded(e, "Sent info about weather: " + temp + "°C " + weathertype);
             }
            
@@ -259,7 +239,7 @@ namespace Morbot
             {
                 minutes = DateTime.Now.TimeOfDay.Minutes.ToString();
             }
-            await e.Message.RespondAsync("Morc's time zone is UTC+01:00 so the time is: "+DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes);
+            await e.Message.RespondAsync(e.User.Mention + " Morc's time zone is UTC+01:00 so the time is: " + DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes);
 
 
             WriteCommandSucceeded(e,"Sent time.");
@@ -274,6 +254,7 @@ namespace Morbot
             WriteCommandsExec(e);
             Random rnd = new Random();
             string ver = versions[rnd.Next(0, versions.Length)];
+            await e.Message.RespondAsync(e.User.Mention);
             await e.Message.RespondWithFileAsync(ver);
 
 
@@ -292,7 +273,7 @@ namespace Morbot
                 string data = await cl.GetStringAsync("https://random.cat/meow");
                 var pData = JObject.Parse(data);
                 url = pData["file"].ToString();
-                await e.RespondAsync(url);
+                await e.RespondAsync(e.User.Mention + " " + url);
             }
 
             WriteCommandSucceeded(e, "Sent cute cat picture. Link: "+ url);
@@ -309,7 +290,7 @@ namespace Morbot
                 string data = await cl.GetStringAsync("https://random.dog/woof.json");
                 var pData = JObject.Parse(data);
                 url = pData["url"].ToString();
-                await e.RespondAsync(url);
+                await e.RespondAsync(e.User.Mention + " " + url);
             }
             WriteCommandSucceeded(e,"Sent cute dog picture. Link: " + url);
         }
@@ -448,27 +429,46 @@ namespace Morbot
             string gifurl = "";
             Random urlRandomizer = new Random();
             string[] GIFtype = { "cat", "dog" };
-            string page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + GIFtype[urlRandomizer.Next(0, GIFtype.Length)] + "&api_key=" + File.ReadAllLines("giphyapikey")[0];
-            using (HttpClient client = new HttpClient())
-            using (HttpResponseMessage response = await client.GetAsync(page))
-            using (HttpContent content = response.Content)
-            { 
-                data = await content.ReadAsStringAsync();
-                RootObjectG oRootObject = new RootObjectG();
-                oRootObject = JsonConvert.DeserializeObject<RootObjectG>(data);
-                gifurl = oRootObject.data.image_url;
-                if(oRootObject.data.username == "")
-                {
-                    gifby = "";
-                }
-                else
-                {
-                    gifby = "GIF By: " + oRootObject.data.username;
-                }
-                await e.RespondAsync(gifurl + "\n \n" + gifby + oRootObject.data.username);
+            string api = "";
+            bool empty = false;
+            try
+            {
+                api = File.ReadAllLines("ytapikey")[0];
             }
+            catch (Exception ex)
+            {
+                empty = true;
+            }
+            if (empty)
+            {
+                WriteCommandFailed(e, "Giphy API Key file is EMPTY!");
+                await e.Message.RespondAsync(e.User.Mention + " Bot has incorrectly set API Keys.");
 
-            WriteCommandSucceeded(e, "Sent GIF: " + gifurl);
+            }
+            else
+            {
+                string page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + GIFtype[urlRandomizer.Next(0, GIFtype.Length)] + "&api_key=" + File.ReadAllLines("giphyapikey")[0];
+                using (HttpClient client = new HttpClient())
+                using (HttpResponseMessage response = await client.GetAsync(page))
+                using (HttpContent content = response.Content)
+                {
+                    data = await content.ReadAsStringAsync();
+                    RootObjectG oRootObject = new RootObjectG();
+                    oRootObject = JsonConvert.DeserializeObject<RootObjectG>(data);
+                    gifurl = oRootObject.data.image_url;
+                    if (oRootObject.data.username == "")
+                    {
+                        gifby = "";
+                    }
+                    else
+                    {
+                        gifby = "GIF By: " + oRootObject.data.username;
+                    }
+                    await e.RespondAsync(e.User.Mention + " " + gifurl + "\n \n" + gifby + oRootObject.data.username);
+                }
+
+                WriteCommandSucceeded(e, "Sent GIF: " + gifurl);
+            }
         }
 
         #endregion

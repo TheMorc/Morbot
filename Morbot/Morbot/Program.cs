@@ -4,6 +4,7 @@ using System.IO;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
+using System.Linq;
 
 namespace Morbot
 {
@@ -16,8 +17,17 @@ namespace Morbot
         static CommandsNextModule commands;
         public static void CWrite(string v, ConsoleColor color = ConsoleColor.White)
         {
+            string minutes = null;
+            if (DateTime.Now.TimeOfDay.Minutes.ToString().Length == 1)
+            {
+                minutes = "0" + DateTime.Now.TimeOfDay.Minutes.ToString();
+            }
+            else
+            {
+                minutes = DateTime.Now.TimeOfDay.Minutes.ToString();
+            }
             Console.ForegroundColor = color;
-            Console.WriteLine(v);
+            Console.WriteLine("[" + DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes + "]" + v);
             Console.ForegroundColor = ConsoleColor.White;
         }
         static void Main(string[] args)
@@ -138,8 +148,6 @@ namespace Morbot
             }
         static async Task MainAsync(string[] args)
         {
-            
-            //initializing discord client that is needed to have a working discord bot(really? i dont need this line but as always do it! xDDD)
             discord = new DiscordClient(new DiscordConfiguration
             {
                 Token = File.ReadAllLines("token")[0],
@@ -149,15 +157,32 @@ namespace Morbot
             {
                 StringPrefix = prefix
             });
-            discord.Ready += async e =>
-            {
-                game.Name = prefix+"help|Bot ready.";
-                game.StreamType = GameStreamType.NoStream;
-                await discord.UpdateStatusAsync(game);
-            };
+            
             commands.RegisterCommands<Commands>();
             await discord.ConnectAsync();
-            
+            discord.Ready += async ex =>
+            {
+                game.Name = prefix + "help|Bot ready.";
+                game.StreamType = GameStreamType.NoStream;
+                await discord.UpdateStatusAsync(game);
+                //string serverlist = null;
+                
+                //foreach (string server in discord.Guilds.Values.Select(e => e.Name))
+                //{
+
+                    
+                //    CWrite(server);
+                //    string help = "";
+                //    try { help = serverlist.Remove(server.Length, serverlist.Length - server.Length); } catch { }
+                //    if (help == server) { }
+                //    else
+                //    {
+                //        serverlist = server + serverlist;
+                //    }
+                //}
+
+                //CWrite("I am on these servers: " + serverlist, ConsoleColor.Green);
+            };
             await Task.Delay(-1);
         }
 
