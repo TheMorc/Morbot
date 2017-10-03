@@ -24,3 +24,9 @@ A *"small"* example of bot made with **[DSharpPlus API](https://github.com/Naaml
 - **--status** also known as **--changestatus** | changes game(the "Playing" status) of bot.
 
 **}**
+
+
+# Credits:
+- People that made **[DSharpPlus API](https://github.com/NaamloosDT/DSharpPlus)**
+- Emzi0767 for his great help source code **[DSharpPlus Example Bot](https://github.com/Emzi0767/DSharpPlus-Example-Bot)**
+- Guys on **[Discord API](https://discord.gg/discord-api)** and **[The Sp00ky Loli Farm](https://discordapp.com/invite/0oZpaYcAjfvkDuE4)** servers.
