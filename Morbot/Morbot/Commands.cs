@@ -32,7 +32,7 @@ namespace Morbot
         }
         #endregion
         //admin only commands!
-        #region commands command
+        #region servers command
         [Command("servers"),RequirePermissions(DSharpPlus.Permissions.ManageGuild),Hidden]
         public async Task servers(CommandContext ex)
         {
@@ -129,9 +129,11 @@ namespace Morbot
                             playlistItemsListRequest.PlaylistId = uploadsListId;
                             playlistItemsListRequest.MaxResults = 50;
                             playlistItemsListRequest.PageToken = nextPageToken;
+                            
                             // Retrieve the list of videos uploaded to the authenticated user's channel.
                             var playlistItemsListResponse = playlistItemsListRequest.Execute();
                             string ytlink = "https://youtu.be/" + playlistItemsListResponse.Items[0].Snippet.ResourceId.VideoId;
+                            
                             await e.Message.RespondAsync("\u200B" + playlistItemsListResponse.Items[0].Snippet.Title + " " + ytlink);
                             WriteCommandSucceeded(e, "Sent yt link: " + ytlink);
                             nextPageToken = playlistItemsListResponse.NextPageToken;
