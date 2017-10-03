@@ -31,8 +31,30 @@ namespace Morbot
             Program.CWrite("Executing command " + e.Command.Name + " failed! Reason: " + reason, ConsoleColor.Red);
         }
         #endregion
+        //admin only commands!
+        #region commands command
+        [Command("servers")]
+        public async Task servers(CommandContext ex)
+        {
+            string serverlist = null;
+            WriteCommandsExec(ex);
+            foreach (string server in ex.Client.Guilds.Values.Select(e => e.Name))
+                {
 
-        
+
+                    Program.CWrite(server);
+                    string help = "";
+                    try { help = serverlist.Remove(server.Length, serverlist.Length - server.Length); } catch { }
+                    if (help == server) { }
+                    else
+                    {
+                        serverlist = server +"\n"+ serverlist;
+                    }
+                }
+                await ex.Member.SendMessageAsync("\u200B" + ex.User.Mention +"\nServers:\n" + serverlist);
+            WriteCommandSucceeded(ex, " Sent list of servers on which this bot is!");
+        }
+        #endregion
         //Commands | 
         //Commands | 
         //Commands | 
@@ -41,7 +63,7 @@ namespace Morbot
         public async Task whoami(CommandContext e)
         {
             WriteCommandsExec(e);
-            await e.Message.RespondAsync(e.User.Mention + " I am MorcBot, and my programmer(Morc) wants to have this bot as help for Discord server.");
+            await e.Message.RespondAsync("\u200B" + e.User.Mention + " I am MorcBot, and my programmer(Morc) wants to have this bot as help for Discord server.");
             WriteCommandSucceeded(e, " Sent info about bot.");
         }
         #endregion
@@ -59,7 +81,7 @@ namespace Morbot
                 else
                 { commandlist = server + "\n--" + commandlist;}
             }
-            await ex.Message.RespondAsync(ex.User.Mention + " Command List:\n" + "--" +  commandlist.Remove(commandlist.Length-2,2));
+            await ex.Message.RespondAsync("\u200B" + ex.User.Mention + "\nCommand List:\n" + "--" +  commandlist.Remove(commandlist.Length-2,2));
             WriteCommandSucceeded(ex, " Sent command list.");
         }
         #endregion
@@ -81,7 +103,7 @@ namespace Morbot
             if (empty)
             {
                 WriteCommandFailed(e, "YouTube Data API Key file is EMPTY!");
-                await e.Message.RespondAsync(e.User.Mention + " Bot has incorrectly set API Keys.");
+                await e.Message.RespondAsync("\u200B" + e.User.Mention + " Bot has incorrectly set API Keys.");
 
             }
             else
@@ -110,7 +132,7 @@ namespace Morbot
                             // Retrieve the list of videos uploaded to the authenticated user's channel.
                             var playlistItemsListResponse = playlistItemsListRequest.Execute();
                             string ytlink = "https://youtu.be/" + playlistItemsListResponse.Items[0].Snippet.ResourceId.VideoId;
-                            await e.Message.RespondAsync(playlistItemsListResponse.Items[0].Snippet.Title + " " + ytlink);
+                            await e.Message.RespondAsync("\u200B" + playlistItemsListResponse.Items[0].Snippet.Title + " " + ytlink);
                             WriteCommandSucceeded(e, "Sent yt link: " + ytlink);
                             nextPageToken = playlistItemsListResponse.NextPageToken;
                         }
@@ -120,7 +142,7 @@ namespace Morbot
                 {
 
                     WriteCommandFailed(e, "Failed sending link. Log:");
-                    await e.Message.RespondAsync(e.User.Mention + " Error occured when sending video link. Contact programmer..");
+                    await e.Message.RespondAsync("\u200B" + e.User.Mention + " Error occured when sending video link. Contact programmer..");
                     Program.CWrite(exy.ToString(), ConsoleColor.Red);
 
                 }
@@ -202,7 +224,7 @@ namespace Morbot
             if(empty)
             {
                 WriteCommandFailed(e,"OpenWeather API Key file is EMPTY!");
-                await e.Message.RespondAsync(e.User.Mention + " Bot has incorrectly set API Keys.");
+                await e.Message.RespondAsync("\u200B" + e.User.Mention + " Bot has incorrectly set API Keys.");
 
             }
             else
@@ -217,7 +239,7 @@ namespace Morbot
                     temp = oRootObject.main.temp - 273.15;
                     if (oRootObject.weather[0].description == "clear sky")
                         weathertype = ":sunny:" + " - Sunny";
-                    await e.Message.RespondAsync(e.User.Mention + " Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype);
+                    await e.Message.RespondAsync("\u200B" + e.User.Mention + " Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype);
                 }
                 WriteCommandSucceeded(e, "Sent info about weather: " + temp + "°C " + weathertype);
             }
@@ -239,7 +261,7 @@ namespace Morbot
             {
                 minutes = DateTime.Now.TimeOfDay.Minutes.ToString();
             }
-            await e.Message.RespondAsync(e.User.Mention + " Morc's time zone is UTC+01:00 so the time is: " + DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes);
+            await e.Message.RespondAsync("\u200B" + e.User.Mention + " Morc's time zone is UTC+01:00 so the time is: " + DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes);
 
 
             WriteCommandSucceeded(e,"Sent time.");
@@ -254,7 +276,7 @@ namespace Morbot
             WriteCommandsExec(e);
             Random rnd = new Random();
             string ver = versions[rnd.Next(0, versions.Length)];
-            await e.Message.RespondAsync(e.User.Mention);
+            await e.Message.RespondAsync("\u200B" + e.User.Mention);
             await e.Message.RespondWithFileAsync(ver);
 
 
@@ -273,7 +295,7 @@ namespace Morbot
                 string data = await cl.GetStringAsync("https://random.cat/meow");
                 var pData = JObject.Parse(data);
                 url = pData["file"].ToString();
-                await e.RespondAsync(e.User.Mention + " " + url);
+                await e.RespondAsync("\u200B" + e.User.Mention + " " + url);
             }
 
             WriteCommandSucceeded(e, "Sent cute cat picture. Link: "+ url);
@@ -290,7 +312,7 @@ namespace Morbot
                 string data = await cl.GetStringAsync("https://random.dog/woof.json");
                 var pData = JObject.Parse(data);
                 url = pData["url"].ToString();
-                await e.RespondAsync(e.User.Mention + " " + url);
+                await e.RespondAsync("\u200B" + e.User.Mention + " " + url);
             }
             WriteCommandSucceeded(e,"Sent cute dog picture. Link: " + url);
         }
@@ -319,12 +341,12 @@ namespace Morbot
                 }
                 if(name == "")
                 {
-                    await e.Message.RespondAsync(e.User.Mention + " Select status from one of these: BETA WIP FIX READY .");
+                    await e.Message.RespondAsync("\u200B" + e.User.Mention + " Select status from one of these: BETA WIP FIX READY .");
                     WriteCommandFailed(e, "User didnt specify any status.");
                 }
                 else
                 {
-                    await e.Message.RespondAsync(e.User.Mention + name +" isn't a status. Select status from one of these: BETA WIP FIX READY .");
+                    await e.Message.RespondAsync("\u200B" + e.User.Mention + name +" isn't a status. Select status from one of these: BETA WIP FIX READY .");
                     WriteCommandFailed(e, "User specified status " + name + "but this status does not exists. Sending status selection message.");
                 }
             }
@@ -433,7 +455,7 @@ namespace Morbot
             bool empty = false;
             try
             {
-                api = File.ReadAllLines("ytapikey")[0];
+                api = File.ReadAllLines("giphyapikey")[0];
             }
             catch (Exception ex)
             {
@@ -442,7 +464,7 @@ namespace Morbot
             if (empty)
             {
                 WriteCommandFailed(e, "Giphy API Key file is EMPTY!");
-                await e.Message.RespondAsync(e.User.Mention + " Bot has incorrectly set API Keys.");
+                await e.Message.RespondAsync("\u200B" + e.User.Mention + " Bot has incorrectly set API Keys.");
 
             }
             else
@@ -464,7 +486,7 @@ namespace Morbot
                     {
                         gifby = "GIF By: " + oRootObject.data.username;
                     }
-                    await e.RespondAsync(e.User.Mention + " " + gifurl + "\n \n" + gifby + oRootObject.data.username);
+                    await e.RespondAsync("\u200B" + e.User.Mention + " " + gifurl + "\n \n" + gifby + oRootObject.data.username);
                 }
 
                 WriteCommandSucceeded(e, "Sent GIF: " + gifurl);
