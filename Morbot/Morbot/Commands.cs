@@ -33,7 +33,7 @@ namespace Morbot
         #endregion
         //admin only commands!
         #region commands command
-        [Command("servers")]
+        [Command("servers"),RequirePermissions(DSharpPlus.Permissions.ManageGuild),Hidden]
         public async Task servers(CommandContext ex)
         {
             string serverlist = null;
