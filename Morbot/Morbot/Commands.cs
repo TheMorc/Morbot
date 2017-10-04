@@ -56,8 +56,6 @@ namespace Morbot
         }
         #endregion
         //Commands | 
-        //Commands | 
-        //Commands | 
         #region whoami command
         [Command("whoami")]
         public async Task whoami(CommandContext e)
@@ -461,7 +459,6 @@ namespace Morbot
                     await gifSearch(e,name);
                 }
             }
-            
 
             private async Task gifSearch(CommandContext e, string name = "")
             {
