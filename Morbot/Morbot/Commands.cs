@@ -403,7 +403,7 @@ namespace Morbot
             }
         }
         #endregion
-        #region randomgif command
+        #region randomgifv2 command
         public class Data
         {
             public string type { get; set; }
@@ -445,57 +445,217 @@ namespace Morbot
             public Data data { get; set; }
             public Meta meta { get; set; }
         }
-        [Command("randomgif")]
-        public async Task randomgif(CommandContext e)
+        [Group("randomgif", CanInvokeWithoutSubcommand = true), Aliases("randgif")]
+        public class randomgif2
         {
-            WriteCommandsExec(e);
-            string data = "";
-            string gifby = "";
-            string gifurl = "";
-            Random urlRandomizer = new Random();
-            string[] GIFtype = { "cat", "dog" };
-            string api = "";
-            bool empty = false;
-            try
+            public async Task ExecuteGroupAsync(CommandContext e, string name = "")
             {
-                api = File.ReadAllLines("giphyapikey")[0];
-            }
-            catch
-            {
-                empty = true;
-            }
-            if (empty)
-            {
-                WriteCommandFailed(e, "Giphy API Key file is EMPTY!");
-                await e.Message.RespondAsync("\u200B" + e.User.Mention + " Bot has incorrectly set API Keys.");
-
-            }
-            else
-            {
-                string page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + GIFtype[urlRandomizer.Next(0, GIFtype.Length)] + "&api_key=" + File.ReadAllLines("giphyapikey")[0];
-                using (HttpClient client = new HttpClient())
-                using (HttpResponseMessage response = await client.GetAsync(page))
-                using (HttpContent content = response.Content)
+                
+                if (name == "")
                 {
-                    data = await content.ReadAsStringAsync();
-                    RootObjectG oRootObject = new RootObjectG();
-                    oRootObject = JsonConvert.DeserializeObject<RootObjectG>(data);
-                    gifurl = oRootObject.data.image_url;
-                    if (oRootObject.data.username == "")
+                    await rgif(e);
+                    
+                }
+                else
+                {
+                    await gifwname(e, name);
+                }
+            }
+            [Command("rgif"),Hidden]
+            public async Task rgif(CommandContext e)
+            {
+                WriteCommandsExec(e);
+                    string data = "";
+                    string gifby = "";
+                    string gifurl = "";
+                    Random urlRandomizer = new Random();
+                    string[] GIFtype = { "cat", "dog" };
+                    string api = "";
+                    bool empty = false;
+                    try
                     {
-                        gifby = "";
+                        api = File.ReadAllLines("giphyapikey")[0];
+                    }
+                    catch
+                    {
+                        empty = true;
+                    }
+                    if (empty)
+                    {
+                        WriteCommandFailed(e, "Giphy API Key file is EMPTY!");
+                        await e.Message.RespondAsync("\u200B" + e.User.Mention + " Bot has incorrectly set API Keys.");
+
                     }
                     else
                     {
-                        gifby = "GIF By: " + oRootObject.data.username;
+                        string page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + GIFtype[urlRandomizer.Next(0, GIFtype.Length)] + "&api_key=" + File.ReadAllLines("giphyapikey")[0];
+                        using (HttpClient client = new HttpClient())
+                        using (HttpResponseMessage response = await client.GetAsync(page))
+                        using (HttpContent content = response.Content)
+                        {
+                            data = await content.ReadAsStringAsync();
+                            RootObjectG oRootObject = new RootObjectG();
+                            oRootObject = JsonConvert.DeserializeObject<RootObjectG>(data);
+                            gifurl = oRootObject.data.image_url;
+                            if (oRootObject.data.username == "")
+                            {
+                                gifby = "";
+                            }
+                            else
+                            {
+                                gifby = "GIF By: " + oRootObject.data.username;
+                            }
+                            await e.RespondAsync("\u200B" + e.User.Mention + " " + gifurl + "\n \n" + gifby);
+                        }
+
+                        WriteCommandSucceeded(e, "Sent GIF: " + gifurl);
                     }
-                    await e.RespondAsync("\u200B" + e.User.Mention + " " + gifurl + "\n \n" + gifby);
-                }
-
-                WriteCommandSucceeded(e, "Sent GIF: " + gifurl);
             }
-        }
+            [Command("gifwname"),Hidden]
+            public async Task gifwname(CommandContext e, string gifname)
+            {
+                WriteCommandsExec(e);
+                string data = "";
+                string gifby = "";
+                string gifurl = "";
+                string api = "";
+                bool empty = false;
+                try
+                {
+                    api = File.ReadAllLines("giphyapikey")[0];
+                }
+                catch
+                {
+                    empty = true;
+                }
+                if (empty)
+                {
+                    WriteCommandFailed(e, "Giphy API Key file is EMPTY!");
+                    await e.Message.RespondAsync("\u200B" + e.User.Mention + " Bot has incorrectly set API Keys.");
 
+                }
+                else
+                {
+                    string page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + gifname + "&api_key=" + File.ReadAllLines("giphyapikey")[0];
+                    using (HttpClient client = new HttpClient())
+                    using (HttpResponseMessage response = await client.GetAsync(page))
+                    using (HttpContent content = response.Content)
+                    {
+                        data = await content.ReadAsStringAsync();
+                        RootObjectG oRootObject = new RootObjectG();
+                        oRootObject = JsonConvert.DeserializeObject<RootObjectG>(data);
+                        gifurl = oRootObject.data.image_url;
+                        if (oRootObject.data.username == "")
+                        {
+                            gifby = "";
+                        }
+                        else
+                        {
+                            gifby = "GIF By: " + oRootObject.data.username;
+                        }
+                        await e.RespondAsync("\u200B" + e.User.Mention + " " + gifurl + "\n \n" + gifby);
+                    }
+
+                    WriteCommandSucceeded(e, "Sent GIF: " + gifurl);
+                }
+            }
+            
+        }
         #endregion
+        //old version of randomgif command.. for historical purposes
+        //#region randomgif command
+        //public class Data
+        //{
+        //    public string type { get; set; }
+        //    public string id { get; set; }
+        //    public string url { get; set; }
+        //    public string image_original_url { get; set; }
+        //    public string image_url { get; set; }
+        //    public string image_mp4_url { get; set; }
+        //    public string image_frames { get; set; }
+        //    public string image_width { get; set; }
+        //    public string image_height { get; set; }
+        //    public string fixed_height_downsampled_url { get; set; }
+        //    public string fixed_height_downsampled_width { get; set; }
+        //    public string fixed_height_downsampled_height { get; set; }
+        //    public string fixed_width_downsampled_url { get; set; }
+        //    public string fixed_width_downsampled_width { get; set; }
+        //    public string fixed_width_downsampled_height { get; set; }
+        //    public string fixed_height_small_url { get; set; }
+        //    public string fixed_height_small_still_url { get; set; }
+        //    public string fixed_height_small_width { get; set; }
+        //    public string fixed_height_small_height { get; set; }
+        //    public string fixed_width_small_url { get; set; }
+        //    public string fixed_width_small_still_url { get; set; }
+        //    public string fixed_width_small_width { get; set; }
+        //    public string fixed_width_small_height { get; set; }
+        //    public string username { get; set; }
+        //    public string caption { get; set; }
+        //}
+
+        //public class Meta
+        //{
+        //    public int status { get; set; }
+        //    public string msg { get; set; }
+        //    public string response_id { get; set; }
+        //}
+
+        //public class RootObjectG
+        //{
+        //    public Data data { get; set; }
+        //    public Meta meta { get; set; }
+        //}
+        //[Command("randomgif")]
+        //public async Task randomgif(CommandContext e)
+        //{
+        //    WriteCommandsExec(e);
+        //    string data = "";
+        //    string gifby = "";
+        //    string gifurl = "";
+        //    Random urlRandomizer = new Random();
+        //    string[] GIFtype = { "cat", "dog" };
+        //    string api = "";
+        //    bool empty = false;
+        //    try
+        //    {
+        //        api = File.ReadAllLines("giphyapikey")[0];
+        //    }
+        //    catch
+        //    {
+        //        empty = true;
+        //    }
+        //    if (empty)
+        //    {
+        //        WriteCommandFailed(e, "Giphy API Key file is EMPTY!");
+        //        await e.Message.RespondAsync("\u200B" + e.User.Mention + " Bot has incorrectly set API Keys.");
+
+        //    }
+        //    else
+        //    {
+        //        string page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + GIFtype[urlRandomizer.Next(0, GIFtype.Length)] + "&api_key=" + File.ReadAllLines("giphyapikey")[0];
+        //        using (HttpClient client = new HttpClient())
+        //        using (HttpResponseMessage response = await client.GetAsync(page))
+        //        using (HttpContent content = response.Content)
+        //        {
+        //            data = await content.ReadAsStringAsync();
+        //            RootObjectG oRootObject = new RootObjectG();
+        //            oRootObject = JsonConvert.DeserializeObject<RootObjectG>(data);
+        //            gifurl = oRootObject.data.image_url;
+        //            if (oRootObject.data.username == "")
+        //            {
+        //                gifby = "";
+        //            }
+        //            else
+        //            {
+        //                gifby = "GIF By: " + oRootObject.data.username;
+        //            }
+        //            await e.RespondAsync("\u200B" + e.User.Mention + " " + gifurl + "\n \n" + gifby);
+        //        }
+
+        //        WriteCommandSucceeded(e, "Sent GIF: " + gifurl);
+        //    }
+        //}
+
+        //#endregion
     }
 }
