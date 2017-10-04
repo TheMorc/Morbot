@@ -453,71 +453,24 @@ namespace Morbot
                 
                 if (name == "")
                 {
-                    await rgif(e);
-                    
+                    await gifSearch(e);
+
                 }
                 else
                 {
-                    await gifwname(e, name);
+                    await gifSearch(e,name);
                 }
             }
-            [Command("rgif"),Hidden]
-            public async Task rgif(CommandContext e)
-            {
-                WriteCommandsExec(e);
-                    string data = "";
-                    string gifby = "";
-                    string gifurl = "";
-                    Random urlRandomizer = new Random();
-                    string[] GIFtype = { "cat", "dog" };
-                    string api = "";
-                    bool empty = false;
-                    try
-                    {
-                        api = File.ReadAllLines("giphyapikey")[0];
-                    }
-                    catch
-                    {
-                        empty = true;
-                    }
-                    if (empty)
-                    {
-                        WriteCommandFailed(e, "Giphy API Key file is EMPTY!");
-                        await e.Message.RespondAsync("\u200B" + e.User.Mention + " Bot has incorrectly set API Keys.");
+            
 
-                    }
-                    else
-                    {
-                        string page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + GIFtype[urlRandomizer.Next(0, GIFtype.Length)] + "&api_key=" + File.ReadAllLines("giphyapikey")[0];
-                        using (HttpClient client = new HttpClient())
-                        using (HttpResponseMessage response = await client.GetAsync(page))
-                        using (HttpContent content = response.Content)
-                        {
-                            data = await content.ReadAsStringAsync();
-                            RootObjectG oRootObject = new RootObjectG();
-                            oRootObject = JsonConvert.DeserializeObject<RootObjectG>(data);
-                            gifurl = oRootObject.data.image_url;
-                            if (oRootObject.data.username == "")
-                            {
-                                gifby = "";
-                            }
-                            else
-                            {
-                                gifby = "GIF By: " + oRootObject.data.username;
-                            }
-                            await e.RespondAsync("\u200B" + e.User.Mention + " " + gifurl + "\n \n" + gifby);
-                        }
-
-                        WriteCommandSucceeded(e, "Sent GIF: " + gifurl);
-                    }
-            }
-            [Command("gifwname"),Hidden]
-            public async Task gifwname(CommandContext e, string gifname)
+            private async Task gifSearch(CommandContext e, string name = "")
             {
                 WriteCommandsExec(e);
                 string data = "";
                 string gifby = "";
                 string gifurl = "";
+                Random urlRandomizer = new Random();
+                string[] GIFtype = { "cat", "dog" };
                 string api = "";
                 bool empty = false;
                 try
@@ -536,7 +489,16 @@ namespace Morbot
                 }
                 else
                 {
-                    string page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + gifname + "&api_key=" + File.ReadAllLines("giphyapikey")[0];
+                    string page = null;
+                    if(name == "")
+                    {
+                       page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + GIFtype[urlRandomizer.Next(0, GIFtype.Length)] + "&api_key=" + File.ReadAllLines("giphyapikey")[0];
+
+                    }
+                    else
+                    {
+                        page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + name + "&api_key=" + File.ReadAllLines("giphyapikey")[0];
+                    }
                     using (HttpClient client = new HttpClient())
                     using (HttpResponseMessage response = await client.GetAsync(page))
                     using (HttpContent content = response.Content)
