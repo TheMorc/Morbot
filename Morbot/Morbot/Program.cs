@@ -46,7 +46,7 @@ namespace Morbot
                 {
                     txt = File.ReadAllLines("token")[0];
                 }
-                catch (Exception ex)
+                catch
                 {
                     empty = true;
                     CWrite("Contents of Token file are empty! This discord bot cannot work until you fill everything!", ConsoleColor.Red);
@@ -68,7 +68,7 @@ namespace Morbot
                 {
                     txt = File.ReadAllLines("ytapikey")[0];
                 }
-                catch (Exception ex)
+                catch
                 {
                     empty = true;
                     CWrite("Contents of Youtube Data API Key file are empty! This discord bot cannot work until you fill everything!", ConsoleColor.Red);
@@ -92,7 +92,7 @@ namespace Morbot
                 {
                     txt = File.ReadAllLines("giphyapikey")[0];
                 }
-                catch (Exception ex)
+                catch
                 {
                     empty = true;
                     CWrite("Contents of Giphy API Key file are empty! This discord bot cannot work until you fill everything!", ConsoleColor.Red);
@@ -115,7 +115,7 @@ namespace Morbot
                 {
                     txt = File.ReadAllLines("openwapikey")[0];
                 }
-                catch (Exception ex)
+                catch
                 {
                     empty = true;
                     CWrite("Contents of OpenWeather API Key file are empty! This discord bot cannot work until you fill everything!", ConsoleColor.Red);

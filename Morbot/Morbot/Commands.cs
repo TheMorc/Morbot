@@ -96,7 +96,7 @@ namespace Morbot
             {
                 api = File.ReadAllLines("ytapikey")[0];
             }
-            catch (Exception ex)
+            catch
             {
                 empty = true;
             }
@@ -211,7 +211,6 @@ namespace Morbot
             WriteCommandsExec(e);
             string data = "";
             string api = "";
-            string url = "";
             bool empty = false;
             string weathertype = null;
             double temp = 0;
@@ -219,7 +218,7 @@ namespace Morbot
             {
                 api = File.ReadAllLines("openwapikey")[0];
             }
-            catch (Exception ex)
+            catch
             {
                 empty = true;
             }
@@ -241,7 +240,9 @@ namespace Morbot
                     temp = oRootObject.main.temp - 273.15;
                     if (oRootObject.weather[0].description == "clear sky")
                         weathertype = ":sunny:" + " - Sunny";
-                    await e.Message.RespondAsync("\u200B" + e.User.Mention + " Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype);
+                    if (oRootObject.weather[0].description == "few clouds")
+                        weathertype = ":cloud:" + " - Clouds";
+                    await e.Message.RespondAsync("\u200B" + e.User.Mention + "\n Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype);
                 }
                 WriteCommandSucceeded(e, "Sent info about weather: " + temp + "°C " + weathertype);
             }
@@ -459,7 +460,7 @@ namespace Morbot
             {
                 api = File.ReadAllLines("giphyapikey")[0];
             }
-            catch (Exception ex)
+            catch
             {
                 empty = true;
             }
