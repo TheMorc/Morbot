@@ -4,7 +4,6 @@ using System.IO;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
-using System.Linq;
 
 namespace Morbot
 {

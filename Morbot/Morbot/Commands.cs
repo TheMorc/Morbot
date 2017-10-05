@@ -35,7 +35,7 @@ namespace Morbot
         //admin only commands!
         #region servers command
         [Command("servers"),RequirePermissions(DSharpPlus.Permissions.ManageGuild),Hidden]
-        public async Task servers(CommandContext ex)
+        public async Task Servers(CommandContext ex)
         {
             string serverlist = null;
             WriteCommandsExec(ex);
@@ -60,34 +60,16 @@ namespace Morbot
         //Commands | 
         #region whoami command
         [Command("whoami")]
-        public async Task whoami(CommandContext e)
+        public async Task Whoami(CommandContext e)
         {
             WriteCommandsExec(e);
             await e.Message.RespondAsync("\u200B" + e.User.Mention + " I am MorcBot, and my programmer(Morc) wants to have this bot as help for Discord server.");
             WriteCommandSucceeded(e, " Sent info about bot.");
         }
         #endregion
-        #region commands command
-        [Command("commands")]
-        public async Task commands(CommandContext ex)
-        {
-            WriteCommandsExec(ex);
-            string commandlist = null;
-            foreach (string server in ex.CommandsNext.RegisteredCommands.Values.Select(e => e.Name))
-            {
-                string help = "";
-                try { help = commandlist.Remove(server.Length, commandlist.Length - server.Length); } catch { }
-                if (help == server) { }
-                else
-                { commandlist = server + "\n--" + commandlist;}
-            }
-            await ex.Message.RespondAsync("\u200B" + ex.User.Mention + "\nCommand List:\n" + "--" +  commandlist.Remove(commandlist.Length-2,2));
-            WriteCommandSucceeded(ex, " Sent command list.");
-        }
-        #endregion
         #region latestvideo command
         [Command("latestvideo")]
-        public async Task latestvideo(CommandContext e)
+        public async Task Latestvideo(CommandContext e)
         {
             WriteCommandsExec(e);
             string api = "";
@@ -206,7 +188,7 @@ namespace Morbot
             public int cod { get; set; }
         }
         [Command("weather")]
-            public async Task weather (CommandContext e)
+            public async Task CWeather (CommandContext e)
             {
             WriteCommandsExec(e);
             string data = "";
@@ -262,7 +244,7 @@ namespace Morbot
             public string value { get; set; }
         }
         [Command("randomnorrisjoke"),Aliases("norris","norrisjoke","chucknorris","chuckjoke","randomchuckjoke")]
-        public async Task chucknorris(CommandContext e)
+        public async Task ChuckNorris(CommandContext e)
         {
             WriteCommandsExec(e);
             string data = "";
@@ -282,7 +264,7 @@ namespace Morbot
         #endregion
         #region time command
         [Command("time")]
-            public async Task time (CommandContext e)
+            public async Task Time (CommandContext e)
             {
             WriteCommandsExec(e);
             string minutes = null;
@@ -301,25 +283,21 @@ namespace Morbot
         }
         #endregion
         #region randomwindows command
-
         string[] versions = { "w95.png", "w98.png", "wme.png", "w2k.png", "w7.png", "wvista.png", "wxp.png", "w8.png", "w10.png" };
-                [Command("randomwindows"),Aliases("RandomWindows","RandWind","randwind","ranwin","randomwin","RandomWin","rwin","randomw","randw")]
-                public async Task randomwindows(CommandContext e)
-                {
-            WriteCommandsExec(e);
-            Random rnd = new Random();
-            string ver = versions[rnd.Next(0, versions.Length)];
-            await e.Message.RespondAsync("\u200B" + e.User.Mention);
-            await e.Message.RespondWithFileAsync(ver);
-
-
+        [Command("randomwindows"),Aliases("RandomWindows","RandWind","randwind","ranwin","randomwin","RandomWin","rwin","randomw","randw")]
+        public async Task RandomWindows(CommandContext e)
+        {
+                    WriteCommandsExec(e);
+                    Random rnd = new Random();
+                    string ver = versions[rnd.Next(0, versions.Length)];
+                    await e.Message.RespondAsync("\u200B" + e.User.Mention);
+                    await e.Message.RespondWithFileAsync(ver);
             WriteCommandSucceeded(e,"Sent " + ver);
         }
-
         #endregion
         #region cat command
         [Command("meow"), Aliases("cat", "kitty", "catpicture", "meov", "mjau")]
-        public async Task meow(CommandContext e)
+        public async Task Meow(CommandContext e)
         {
             WriteCommandsExec(e);
             string url = null;
@@ -336,7 +314,7 @@ namespace Morbot
         #endregion
         #region dog command
         [Command("woof"),Aliases("dog", "puppy","dogpicture","hau","haw")]
-        public async Task woof(CommandContext e)
+        public async Task Woof(CommandContext e)
         {
             WriteCommandsExec(e);
             string url = null;
@@ -352,7 +330,7 @@ namespace Morbot
         #endregion
         #region status command
         [Group("changestatus",CanInvokeWithoutSubcommand = true), Aliases("status")]
-        public class status
+        public class Status
         {
             public async Task ExecuteGroupAsync(CommandContext e,string name = "")
             {
@@ -391,11 +369,12 @@ namespace Morbot
             public async Task BETA(CommandContext e)
             {
                 WriteCommandsExec(e);
-                string gamename = null;
-                DiscordGame game = new DiscordGame();
-                game.StreamType = GameStreamType.NoStream;
-                gamename = Program.prefix + "help|BETA Mode";
-                game.Name = gamename;
+                string gamename = Program.prefix + "help|BETA Mode";
+                DiscordGame game = new DiscordGame()
+                {
+                    StreamType = GameStreamType.NoStream,
+                    Name = gamename
+                };
                 await e.Client.UpdateStatusAsync(game);
                 WriteCommandSucceeded(e,"Changed bot Playing status to BETA");
             }
@@ -403,11 +382,12 @@ namespace Morbot
             public async Task WIP(CommandContext e)
             {
                 WriteCommandsExec(e);
-                string gamename = null;
-                DiscordGame game = new DiscordGame();
-                game.StreamType = GameStreamType.NoStream;
-                gamename = Program.prefix + "help|WIP Mode";
-                game.Name = gamename;
+                string gamename = Program.prefix + "help|WIP Mode";
+                DiscordGame game = new DiscordGame()
+                {
+                    StreamType = GameStreamType.NoStream,
+                    Name = gamename
+                };
                 await e.Client.UpdateStatusAsync(game);
                 WriteCommandSucceeded(e, "Changed bot Playing status to WIP");
             }
@@ -415,11 +395,12 @@ namespace Morbot
             public async Task FIX(CommandContext e)
             {
                 WriteCommandsExec(e);
-                string gamename = null;
-                DiscordGame game = new DiscordGame();
-                game.StreamType = GameStreamType.NoStream;
-                gamename = Program.prefix + "help|FIX Mode";
-                game.Name = gamename;
+                string gamename = Program.prefix + "help|FIX Mode";
+                DiscordGame game = new DiscordGame()
+                {
+                    StreamType = GameStreamType.NoStream,
+                    Name = gamename
+                };
                 await e.Client.UpdateStatusAsync(game);
                 WriteCommandSucceeded(e, "Changed bot Playing status to FIX");
             }
@@ -427,11 +408,12 @@ namespace Morbot
             public async Task READY(CommandContext e)
             {
                 WriteCommandsExec(e);
-                string gamename = null;
-                DiscordGame game = new DiscordGame();
-                game.StreamType = GameStreamType.NoStream;
-                gamename = Program.prefix + "help|Bot ready.";
-                game.Name = gamename;
+                string gamename = Program.prefix + "help|Bot ready.";
+                DiscordGame game = new DiscordGame()
+                {
+                    StreamType = GameStreamType.NoStream,
+                    Name = gamename
+                };
                 await e.Client.UpdateStatusAsync(game);
                 WriteCommandSucceeded(e, "Changed bot Playing status to READY");
             }
@@ -480,7 +462,7 @@ namespace Morbot
             public Meta meta { get; set; }
         }
         [Command("randomgif"), Aliases("randgif")]
-        public async Task gifSearch(CommandContext e, [RemainingText]string arg1)
+        public async Task GIFSearch(CommandContext e, [RemainingText]string arg1)
             {
                 WriteCommandsExec(e);
                 string data = "";
@@ -639,5 +621,25 @@ namespace Morbot
 
         //#endregion
         #endregion
+        #region commands command.. new beta of DSharpPlus adds help command..
+        //#region commands command
+        //[Command("commands")]
+        //public async Task commands(CommandContext ex)
+        //{
+        //    WriteCommandsExec(ex);
+        //    string commandlist = null;
+        //    foreach (string server in ex.CommandsNext.RegisteredCommands.Values.Select(e => e.Name))
+        //    {
+        //        string help = "";
+        //        try { help = commandlist.Remove(server.Length, commandlist.Length - server.Length); } catch { }
+        //        if (help == server) { }
+        //        else
+        //        { commandlist = server + "\n--" + commandlist; }
+        //    }
+        //    await ex.Message.RespondAsync("\u200B" + ex.User.Mention + "\nCommand List:\n" + "--" + commandlist.Remove(commandlist.Length - 2, 2));
+        //    WriteCommandSucceeded(ex, " Sent command list.");
+        //}
+        //#endregion
+#endregion
     }
 }
