@@ -10,11 +10,11 @@ namespace Morbot
 {
     class Program
     {
-        //simpul introduction to this bot
         static DiscordClient discord;
         public static DiscordGame game = new DiscordGame();
         static public string prefix = "--";
         static CommandsNextModule commands;
+
         public static void CWrite(string v, ConsoleColor color = ConsoleColor.White)
         {
             string minutes = null;
@@ -30,6 +30,7 @@ namespace Morbot
             Console.WriteLine("[" + DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes + "]" + v);
             Console.ForegroundColor = ConsoleColor.White;
         }
+
         static void Main(string[] args)
         {
             CWrite("Morbot - started!", ConsoleColor.White);
@@ -139,13 +140,14 @@ namespace Morbot
                     
                 }
                 
-                CWrite("Bot got issue! (Error code: " + ex.Message + " )..", ConsoleColor.Red);
+                CWrite("Bot got issue! (Error: " + ex.Message + " )..", ConsoleColor.Red);
                 while (true)
                 {
                     Console.ReadKey();
                 }
             }
             }
+
         static async Task MainAsync(string[] args)
         {
             discord = new DiscordClient(new DiscordConfiguration
@@ -165,23 +167,6 @@ namespace Morbot
                 game.Name = prefix + "help|Bot ready.";
                 game.StreamType = GameStreamType.NoStream;
                 await discord.UpdateStatusAsync(game);
-                //string serverlist = null;
-                
-                //foreach (string server in discord.Guilds.Values.Select(e => e.Name))
-                //{
-
-                    
-                //    CWrite(server);
-                //    string help = "";
-                //    try { help = serverlist.Remove(server.Length, serverlist.Length - server.Length); } catch { }
-                //    if (help == server) { }
-                //    else
-                //    {
-                //        serverlist = server + serverlist;
-                //    }
-                //}
-
-                //CWrite("I am on these servers: " + serverlist, ConsoleColor.Green);
             };
             await Task.Delay(-1);
         }

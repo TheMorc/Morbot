@@ -31,6 +31,7 @@ namespace Morbot
             Program.CWrite("Executing command " + e.Command.Name + " failed! Reason: " + reason, ConsoleColor.Red);
         }
         #endregion
+
         //admin only commands!
         #region servers command
         [Command("servers"),RequirePermissions(DSharpPlus.Permissions.ManageGuild),Hidden]
@@ -55,6 +56,7 @@ namespace Morbot
             WriteCommandSucceeded(ex, " Sent list of servers on which this bot is!");
         }
         #endregion
+
         //Commands | 
         #region whoami command
         [Command("whoami")]
@@ -537,7 +539,9 @@ namespace Morbot
             
         }
         #endregion
-        //old version of randomgif command.. for historical purposes
+
+        //deprecated/old commands
+        #region old version of randomgif command.. for historical purposes
         //#region randomgif command
         //public class Data
         //{
@@ -632,5 +636,6 @@ namespace Morbot
         //}
 
         //#endregion
+        #endregion
     }
 }
