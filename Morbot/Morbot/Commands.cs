@@ -356,7 +356,7 @@ namespace Morbot
             {
                 WriteCommandsExec(e);
                 string gamename = null;
-                Game game = new Game();
+                DiscordGame game = new DiscordGame();
                 game.StreamType = GameStreamType.NoStream;
                 gamename = Program.prefix + "help|BETA Mode";
                 game.Name = gamename;
@@ -368,7 +368,7 @@ namespace Morbot
             {
                 WriteCommandsExec(e);
                 string gamename = null;
-                Game game = new Game();
+                DiscordGame game = new DiscordGame();
                 game.StreamType = GameStreamType.NoStream;
                 gamename = Program.prefix + "help|WIP Mode";
                 game.Name = gamename;
@@ -380,7 +380,7 @@ namespace Morbot
             {
                 WriteCommandsExec(e);
                 string gamename = null;
-                Game game = new Game();
+                DiscordGame game = new DiscordGame();
                 game.StreamType = GameStreamType.NoStream;
                 gamename = Program.prefix + "help|FIX Mode";
                 game.Name = gamename;
@@ -392,7 +392,7 @@ namespace Morbot
             {
                 WriteCommandsExec(e);
                 string gamename = null;
-                Game game = new Game();
+                DiscordGame game = new DiscordGame();
                 game.StreamType = GameStreamType.NoStream;
                 gamename = Program.prefix + "help|Bot ready.";
                 game.Name = gamename;

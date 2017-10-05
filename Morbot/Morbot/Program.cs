@@ -12,7 +12,7 @@ namespace Morbot
     {
         //simpul introduction to this bot
         static DiscordClient discord;
-        public static Game game = new Game();
+        public static DiscordGame game = new DiscordGame();
         static public string prefix = "--";
         static CommandsNextModule commands;
         public static void CWrite(string v, ConsoleColor color = ConsoleColor.White)
