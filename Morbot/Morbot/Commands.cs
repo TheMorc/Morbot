@@ -248,6 +248,34 @@ namespace Morbot
         }
 
         #endregion
+        #region randomnorrisjoke command
+        public class RootObjectnorris
+        {
+            public object category { get; set; }
+            public string icon_url { get; set; }
+            public string id { get; set; }
+            public string url { get; set; }
+            public string value { get; set; }
+        }
+        [Command("randomnorrisjoke"),Aliases("norris","norrisjoke","chucknorris","chuckjoke","randomchuckjoke")]
+        public async Task chucknorris(CommandContext e)
+        {
+            WriteCommandsExec(e);
+            string data = "";
+            string url="";
+                string page = "https://api.chucknorris.io/jokes/random";
+                using (HttpClient cl = new HttpClient())
+                {
+                    data = await cl.GetStringAsync(page);
+                    RootObjectnorris chuck = new RootObjectnorris();
+                    chuck = JsonConvert.DeserializeObject<RootObjectnorris>(data);
+                    url = chuck.url;
+                    await e.Message.RespondAsync("\u200B" + e.User.Mention + "\n " + chuck.value);
+                }
+                WriteCommandSucceeded(e, "Sent random chuck norris joke! Url: "+url);
+        }
+
+        #endregion
         #region time command
         [Command("time")]
             public async Task time (CommandContext e)
