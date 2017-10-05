@@ -242,6 +242,8 @@ namespace Morbot
                         weathertype = ":sunny:" + " - Sunny";
                     if (oRootObject.weather[0].description == "few clouds")
                         weathertype = ":cloud:" + " - Clouds";
+                    if (oRootObject.weather[0].description == "light rain")
+                        weathertype = ":cloud_rain:" + " - Rain";
                     await e.Message.RespondAsync("\u200B" + e.User.Mention + "\n Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype);
                 }
                 WriteCommandSucceeded(e, "Sent info about weather: " + temp + "°C " + weathertype);
