@@ -1,11 +1,13 @@
 # Morbot [![Add this bot to your Discord Server](https://img.shields.io/badge/Morbot-add%20it%20to%20your%20Discord%20Server!-green.svg?style=flat-square)](https://discordapp.com/api/oauth2/authorize?client_id=219188936940060684&scope=bot)
-A *"small"* example of bot made with **[DSharpPlus API](https://github.com/NaamloosDT/DSharpPlus)** on programming language **C#**
+A *"little bigger"* example of bot made with **[DSharpPlus API](https://github.com/NaamloosDT/DSharpPlus)** on programming language **C#**
 
-**This bot includes(to date of 4.10.2017 and in random order(it does not matter..))**
+**This bot includes** *(to date of 5.October.2017 and in random order(it does not matter anyway..))*
 
 **{**
 
-- **--commands** | command that tells you commands?!?!?!
+- **~~--commands | command that tells you commands?!?!?!~~** *This command is deprecated it is replaced by --help command added automatically by DSharpPlus API in latest beta(3.2.0-beta-00305)*
+
+- **--randomnorrisjoke** also known as **--norris**, **--norrisjoke**, **--chucknorris**, **--chuckjoke** and **--randomchuckjoke** | this command gets random chuck norris joke from **[Chuck Norris API](https://api.chucknorris.io/)**.
 
 - **--whoami** | command that tells you about the bot and the programmer
 
