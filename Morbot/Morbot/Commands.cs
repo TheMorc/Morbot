@@ -443,24 +443,8 @@ namespace Morbot
             public Data data { get; set; }
             public Meta meta { get; set; }
         }
-        [Group("randomgif", CanInvokeWithoutSubcommand = true), Aliases("randgif")]
-        public class randomgif2
-        {
-            public async Task ExecuteGroupAsync(CommandContext e, string name = "")
-            {
-                
-                if (name == "")
-                {
-                    await gifSearch(e);
-
-                }
-                else
-                {
-                    await gifSearch(e,name);
-                }
-            }
-
-            private async Task gifSearch(CommandContext e, string name = "")
+        [Command("randomgif"), Aliases("randgif")]
+        public async Task gifSearch(CommandContext e, [RemainingText]string arg1)
             {
                 WriteCommandsExec(e);
                 string data = "";
@@ -487,14 +471,14 @@ namespace Morbot
                 else
                 {
                     string page = null;
-                    if(name == "")
+                    if(arg1 == "")
                     {
                        page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + GIFtype[urlRandomizer.Next(0, GIFtype.Length)] + "&api_key=" + File.ReadAllLines("giphyapikey")[0];
 
                     }
                     else
                     {
-                        page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + name + "&api_key=" + File.ReadAllLines("giphyapikey")[0];
+                        page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + arg1  + "&api_key=" + File.ReadAllLines("giphyapikey")[0];
                     }
                     using (HttpClient client = new HttpClient())
                     using (HttpResponseMessage response = await client.GetAsync(page))
@@ -515,9 +499,9 @@ namespace Morbot
                         await e.RespondAsync("\u200B" + e.User.Mention + " " + gifurl + "\n \n" + gifby);
                     }
 
-                    WriteCommandSucceeded(e, "Sent GIF: " + gifurl);
+                    WriteCommandSucceeded(e, "Searching for GIF: " + arg1 + " Sent GIF: " + gifurl);
                 }
-            }
+            
             
         }
         #endregion
