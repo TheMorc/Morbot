@@ -327,28 +327,32 @@ namespace Morbot
                 if(name == "BETA")
                 {
                     await BETA(e);
+                    await e.Message.RespondAsync("\u200B" + e.User.Mention + "\nStatus set to BETA");
                 }
                 else if (name == "WIP")
                 {
                     await WIP(e);
+                    await e.Message.RespondAsync("\u200B" + e.User.Mention + "\nStatus set to WIP");
                 }
                 else if (name == "FIX")
                 {
                     await FIX(e);
+                    await e.Message.RespondAsync("\u200B" + e.User.Mention + "\nStatus set to FIX");
                 }
                 else if (name == "READY")
                 {
                     await READY(e);
+                    await e.Message.RespondAsync("\u200B" + e.User.Mention + "\nStatus set to READY");
                 }
-                if(name == "")
+                else if(name == "")
                 {
-                    await e.Message.RespondAsync("\u200B" + e.User.Mention + " Select status from one of these: BETA WIP FIX READY .");
+                    await e.Message.RespondAsync("\u200B" + e.User.Mention + "\nSelect status from one of these: BETA WIP FIX READY .");
                     WriteCommandFailed(e, "User didnt specify any status.");
                 }
                 else
                 {
-                    await e.Message.RespondAsync("\u200B" + e.User.Mention + name +" isn't a status. Select status from one of these: BETA WIP FIX READY .");
-                    WriteCommandFailed(e, "User specified status " + name + "but this status does not exists. Sending status selection message.");
+                    await e.Message.RespondAsync("\u200B" + e.User.Mention + name +"\nisn't a status. Select status from one of these: BETA WIP FIX READY .");
+                    WriteCommandFailed(e, "User specified status " + name + " but this status does not exists. Sending status selection message.");
                 }
             }
             [Command("null1")]
