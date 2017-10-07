@@ -3,6 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp1.1</TargetFramework>
+    <PostBuildEvent>git commit -am "Succesful build at $(date -u +'%Y.%m.%d %H:%M:%S')"</PostBuildEvent>
   </PropertyGroup>
 
   <ItemGroup>
