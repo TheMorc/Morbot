@@ -119,8 +119,7 @@ namespace Morbot
                             // Retrieve the list of videos uploaded to the authenticated user's channel.
                             var playlistItemsListResponse = playlistItemsListRequest.Execute();
                             string ytlink = "https://youtu.be/" + playlistItemsListResponse.Items[0].Snippet.ResourceId.VideoId;
-                            
-                            await e.Message.RespondAsync("\u200B" + playlistItemsListResponse.Items[0].Snippet.Title + " " + ytlink);
+                            await e.Message.RespondAsync("\u200B " + ytlink);
                             nextPageToken = playlistItemsListResponse.NextPageToken;
                         }
                     }
@@ -218,14 +217,21 @@ namespace Morbot
                     RootObjectW oRootObject = new RootObjectW();
                     oRootObject = JsonConvert.DeserializeObject<RootObjectW>(data);
                     weathertype = null;
+                    DiscordColor wcolor = DiscordColor.None;
                     temp = oRootObject.main.temp - 273.15;
-                    if (oRootObject.weather[0].description == "clear sky")
+                    if (oRootObject.weather[0].description == "clear sky") { 
                         weathertype = ":sunny:" + " - Sunny";
-                    if (oRootObject.weather[0].description == "few clouds")
+                        wcolor = DiscordColor.Yellow;
+                    }
+                    if (oRootObject.weather[0].description == "few clouds") { 
                         weathertype = ":cloud:" + " - Clouds";
-                    if (oRootObject.weather[0].description == "light rain")
+                        wcolor = DiscordColor.Gray;
+                    }
+                    if (oRootObject.weather[0].description == "light rain") { 
                         weathertype = ":cloud_rain:" + " - Rain";
-                    await e.Message.RespondAsync("\u200B" + e.User.Mention + "\n Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype);
+                        wcolor = DiscordColor.Cyan;
+                    }
+                    await CreateMessage(e,desc:"Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype,color: wcolor);
                 }
             }
            
@@ -241,7 +247,7 @@ namespace Morbot
             public string url { get; set; }
             public string value { get; set; }
         }
-        [Command("randomnorrisjoke"),Aliases("norris","norrisjoke","chucknorris","chuckjoke","randomchuckjoke")]
+        [Command("randomnorrisjoke"),Aliases("norris","norrisjoke","chucknorris","chuck","chuckjoke","randomchuckjoke")]
         public async Task ChuckNorris(CommandContext e)
         {
             string data = "";
@@ -253,7 +259,7 @@ namespace Morbot
                     RootObjectnorris chuck = new RootObjectnorris();
                     chuck = JsonConvert.DeserializeObject<RootObjectnorris>(data);
                     url = chuck.url;
-                    await e.Message.RespondAsync("\u200B" + e.User.Mention + "\n " + chuck.value);
+                    await CreateMessage(e, title: "Chuck Norris joke:", desc: chuck.value,thumbnailurl: chuck.icon_url,url: "https://api.chucknorris.io",color: DiscordColor.Green);
                 }
         }
 
@@ -271,8 +277,7 @@ namespace Morbot
             {
                 minutes = DateTime.Now.TimeOfDay.Minutes.ToString();
             }
-            await e.Message.RespondAsync("\u200B" + e.User.Mention + " Morc's time zone is UTC+01:00 so the time is: " + DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes);
-            
+            await CreateMessage(e, desc: "Morc's time zone is UTC+01:00 so the time is: " + DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes,color: DiscordColor.Orange);
         }
         #endregion
         #region randomwindows command
@@ -282,7 +287,6 @@ namespace Morbot
         {
                     Random rnd = new Random();
                     string ver = versions[rnd.Next(0, versions.Length)];
-                    await e.Message.RespondAsync("\u200B" + e.User.Mention);
                     await e.Message.RespondWithFileAsync(ver);
         }
         #endregion
@@ -296,7 +300,7 @@ namespace Morbot
                 string data = await cl.GetStringAsync("https://random.cat/meow");
                 var pData = JObject.Parse(data);
                 url = pData["file"].ToString();
-                await e.RespondAsync("\u200B" + e.User.Mention + " " + url);
+                await CreateMessage(e, imageurl: url,color: DiscordColor.Green);
             }
             
         }
@@ -311,7 +315,7 @@ namespace Morbot
                 string data = await cl.GetStringAsync("https://random.dog/woof.json");
                 var pData = JObject.Parse(data);
                 url = pData["url"].ToString();
-                await e.RespondAsync("\u200B" + e.User.Mention + " " + url);
+                await CreateMessage(e, imageurl: url, color: DiscordColor.Green);
             }
         }
         #endregion
@@ -324,30 +328,30 @@ namespace Morbot
                 if(name == "BETA")
                 {
                     await BETA(e);
-                    await e.Message.RespondAsync("\u200B" + e.User.Mention + "\nStatus set to BETA");
+                    await CreateMessage(e, desc: "Status set to " + name,color:DiscordColor.Green);
                 }
                 else if (name == "WIP")
                 {
                     await WIP(e);
-                    await e.Message.RespondAsync("\u200B" + e.User.Mention + "\nStatus set to WIP");
+                    await CreateMessage(e, desc: "Status set to " + name, color: DiscordColor.Green);
                 }
                 else if (name == "FIX")
                 {
                     await FIX(e);
-                    await e.Message.RespondAsync("\u200B" + e.User.Mention + "\nStatus set to FIX");
+                    await CreateMessage(e, desc: "Status set to " + name, color: DiscordColor.Green);
                 }
                 else if (name == "READY")
                 {
                     await READY(e);
-                    await e.Message.RespondAsync("\u200B" + e.User.Mention + "\nStatus set to READY");
+                    await CreateMessage(e, desc: "Status set to " + name, color: DiscordColor.Green);
                 }
                 else if(name == "")
                 {
-                    await e.Message.RespondAsync("\u200B" + e.User.Mention + "\nSelect status from one of these: BETA WIP FIX READY .");
+                    await CreateMessage(e, desc: "Select status from one of these: BETA WIP FIX READY !", color: DiscordColor.Red);
                 }
                 else
                 {
-                    await e.Message.RespondAsync("\u200B" + e.User.Mention + name +"\nisn't a status. Select status from one of these: BETA WIP FIX READY .");
+                    await CreateMessage(e, desc: name + " isn't a status. Select status from one of these: BETA WIP FIX READY !", color: DiscordColor.Red);
                 }
             }
             [Command("null1")]
@@ -459,7 +463,7 @@ namespace Morbot
                 }
                 if (empty)
                 {
-                    await e.Message.RespondAsync("\u200B" + e.User.Mention + " Bot has incorrectly set API Keys.");
+                await CreateMessage(e, desc: "Incorrecty set API keys!", color: DiscordColor.Red);
 
                 }
                 else
@@ -491,8 +495,8 @@ namespace Morbot
                         {
                             gifby = "GIF By: " + oRootObject.data.username;
                         }
-                        await e.RespondAsync("\u200B" + e.User.Mention + " " + gifurl + "\n \n" + gifby);
-                    }
+                        await CreateMessage(e,desc:gifby, imageurl: gifurl, color: DiscordColor.Green);
+                }
                     
                 }
             
