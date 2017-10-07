@@ -14,21 +14,27 @@ using System.Linq;
 
 namespace Morbot
 { 
+    
     public class Commands
     {
         //HELP FOR COMMANDS 
         #region help for commands
-        public static void WriteCommandsExec(CommandContext e)
+        public static async Task CreateMessage(CommandContext e, string titleurl = null,string imageurl = null,string thumbnailurl = null,string url = null, string desc = "", string title = "Morbot (Made in :flag_sk:)", DiscordColor color = default(DiscordColor),bool sendToUser = false)
         {
-            Program.CWrite("Command " + e.Command.Name + " was executed by " + e.User.Username + "#" + e.User.Discriminator + " on server:" + e.Guild.Name, ConsoleColor.DarkGreen);
-        }
-        public static void WriteCommandSucceeded(CommandContext e,string whatitdid)
-        {
-            Program.CWrite("Executing command " + e.Command.Name + " succeeded without problem. What it did: " +whatitdid, ConsoleColor.DarkGreen);
-        }
-        public static void WriteCommandFailed(CommandContext e,string reason)
-        {
-            Program.CWrite("Executing command " + e.Command.Name + " failed! Reason: " + reason, ConsoleColor.Red);
+
+            var embed = new DiscordEmbedBuilder
+            {
+                Title = title,
+                Color = color,
+                Description = desc,
+                ImageUrl = imageurl,
+                ThumbnailUrl = thumbnailurl,
+                Url = url
+            };
+            if(sendToUser)
+            await e.Member.SendMessageAsync("", embed: embed);
+            else
+            await e.RespondAsync("", embed: embed);
         }
         #endregion
 
@@ -38,12 +44,8 @@ namespace Morbot
         public async Task Servers(CommandContext ex)
         {
             string serverlist = null;
-            WriteCommandsExec(ex);
             foreach (string server in ex.Client.Guilds.Values.Select(e => e.Name))
                 {
-
-
-                    Program.CWrite(server);
                     string help = "";
                     try { help = serverlist.Remove(server.Length, serverlist.Length - server.Length); } catch { }
                     if (help == server) { }
@@ -52,8 +54,7 @@ namespace Morbot
                         serverlist = server +"\n"+ serverlist;
                     }
                 }
-                await ex.Member.SendMessageAsync("\u200B" + ex.User.Mention +"\nServers:\n" + serverlist);
-            WriteCommandSucceeded(ex, " Sent list of servers on which this bot is!");
+            await CreateMessage(ex, desc: "Servers: " + serverlist, sendToUser: true,color: DiscordColor.Cyan);
         }
         #endregion
 
@@ -62,16 +63,20 @@ namespace Morbot
         [Command("whoami")]
         public async Task Whoami(CommandContext e)
         {
-            WriteCommandsExec(e);
-            await e.Message.RespondAsync("\u200B" + e.User.Mention + " I am MorcBot, and my programmer(Morc) wants to have this bot as help for Discord server.");
-            WriteCommandSucceeded(e, " Sent info about bot.");
+            await CreateMessage(e,desc: "I am Morbot, and my programmer(Morc) wants to have this bot as help for Discord server.",color: DiscordColor.Cyan);
+        }
+        #endregion
+        #region test command
+        [Command("test"),RequireOwner]
+        public async Task test(CommandContext e)
+        {
+            await CreateMessage(e);
         }
         #endregion
         #region latestvideo command
         [Command("latestvideo")]
         public async Task Latestvideo(CommandContext e)
         {
-            WriteCommandsExec(e);
             string api = "";
             bool empty = false;
             try
@@ -84,7 +89,6 @@ namespace Morbot
             }
             if (empty)
             {
-                WriteCommandFailed(e, "YouTube Data API Key file is EMPTY!");
                 await e.Message.RespondAsync("\u200B" + e.User.Mention + " Bot has incorrectly set API Keys.");
 
             }
@@ -117,17 +121,14 @@ namespace Morbot
                             string ytlink = "https://youtu.be/" + playlistItemsListResponse.Items[0].Snippet.ResourceId.VideoId;
                             
                             await e.Message.RespondAsync("\u200B" + playlistItemsListResponse.Items[0].Snippet.Title + " " + ytlink);
-                            WriteCommandSucceeded(e, "Sent yt link: " + ytlink);
                             nextPageToken = playlistItemsListResponse.NextPageToken;
                         }
                     }
                 }
                 catch (Exception exy)
                 {
-
-                    WriteCommandFailed(e, "Failed sending link. Log:");
+                    
                     await e.Message.RespondAsync("\u200B" + e.User.Mention + " Error occured when sending video link. Contact programmer..");
-                    Program.CWrite(exy.ToString(), ConsoleColor.Red);
 
                 }
             }
@@ -190,7 +191,6 @@ namespace Morbot
         [Command("weather")]
             public async Task CWeather (CommandContext e)
             {
-            WriteCommandsExec(e);
             string data = "";
             string api = "";
             bool empty = false;
@@ -206,7 +206,6 @@ namespace Morbot
             }
             if(empty)
             {
-                WriteCommandFailed(e,"OpenWeather API Key file is EMPTY!");
                 await e.Message.RespondAsync("\u200B" + e.User.Mention + " Bot has incorrectly set API Keys.");
 
             }
@@ -228,7 +227,6 @@ namespace Morbot
                         weathertype = ":cloud_rain:" + " - Rain";
                     await e.Message.RespondAsync("\u200B" + e.User.Mention + "\n Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype);
                 }
-                WriteCommandSucceeded(e, "Sent info about weather: " + temp + "°C " + weathertype);
             }
            
         }
@@ -246,7 +244,6 @@ namespace Morbot
         [Command("randomnorrisjoke"),Aliases("norris","norrisjoke","chucknorris","chuckjoke","randomchuckjoke")]
         public async Task ChuckNorris(CommandContext e)
         {
-            WriteCommandsExec(e);
             string data = "";
             string url="";
                 string page = "https://api.chucknorris.io/jokes/random";
@@ -258,7 +255,6 @@ namespace Morbot
                     url = chuck.url;
                     await e.Message.RespondAsync("\u200B" + e.User.Mention + "\n " + chuck.value);
                 }
-                WriteCommandSucceeded(e, "Sent random chuck norris joke! Url: "+url);
         }
 
         #endregion
@@ -266,7 +262,6 @@ namespace Morbot
         [Command("time")]
             public async Task Time (CommandContext e)
             {
-            WriteCommandsExec(e);
             string minutes = null;
             if (DateTime.Now.TimeOfDay.Minutes.ToString().Length == 1)
             {
@@ -277,9 +272,7 @@ namespace Morbot
                 minutes = DateTime.Now.TimeOfDay.Minutes.ToString();
             }
             await e.Message.RespondAsync("\u200B" + e.User.Mention + " Morc's time zone is UTC+01:00 so the time is: " + DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes);
-
-
-            WriteCommandSucceeded(e,"Sent time.");
+            
         }
         #endregion
         #region randomwindows command
@@ -287,19 +280,16 @@ namespace Morbot
         [Command("randomwindows"),Aliases("RandomWindows","RandWind","randwind","ranwin","randomwin","RandomWin","rwin","randomw","randw")]
         public async Task RandomWindows(CommandContext e)
         {
-                    WriteCommandsExec(e);
                     Random rnd = new Random();
                     string ver = versions[rnd.Next(0, versions.Length)];
                     await e.Message.RespondAsync("\u200B" + e.User.Mention);
                     await e.Message.RespondWithFileAsync(ver);
-            WriteCommandSucceeded(e,"Sent " + ver);
         }
         #endregion
         #region cat command
         [Command("meow"), Aliases("cat", "kitty", "catpicture", "meov", "mjau")]
         public async Task Meow(CommandContext e)
         {
-            WriteCommandsExec(e);
             string url = null;
             using (HttpClient cl = new HttpClient())
             {
@@ -308,15 +298,13 @@ namespace Morbot
                 url = pData["file"].ToString();
                 await e.RespondAsync("\u200B" + e.User.Mention + " " + url);
             }
-
-            WriteCommandSucceeded(e, "Sent cute cat picture. Link: "+ url);
+            
         }
         #endregion
         #region dog command
         [Command("woof"),Aliases("dog", "puppy","dogpicture","hau","haw")]
         public async Task Woof(CommandContext e)
         {
-            WriteCommandsExec(e);
             string url = null;
             using (HttpClient cl = new HttpClient())
             {
@@ -325,7 +313,6 @@ namespace Morbot
                 url = pData["url"].ToString();
                 await e.RespondAsync("\u200B" + e.User.Mention + " " + url);
             }
-            WriteCommandSucceeded(e,"Sent cute dog picture. Link: " + url);
         }
         #endregion
         #region status command
@@ -357,18 +344,15 @@ namespace Morbot
                 else if(name == "")
                 {
                     await e.Message.RespondAsync("\u200B" + e.User.Mention + "\nSelect status from one of these: BETA WIP FIX READY .");
-                    WriteCommandFailed(e, "User didnt specify any status.");
                 }
                 else
                 {
                     await e.Message.RespondAsync("\u200B" + e.User.Mention + name +"\nisn't a status. Select status from one of these: BETA WIP FIX READY .");
-                    WriteCommandFailed(e, "User specified status " + name + " but this status does not exists. Sending status selection message.");
                 }
             }
             [Command("null1")]
             public async Task BETA(CommandContext e)
             {
-                WriteCommandsExec(e);
                 string gamename = Program.prefix + "help|BETA Mode";
                 DiscordGame game = new DiscordGame()
                 {
@@ -376,12 +360,10 @@ namespace Morbot
                     Name = gamename
                 };
                 await e.Client.UpdateStatusAsync(game);
-                WriteCommandSucceeded(e,"Changed bot Playing status to BETA");
             }
             [Command("null2")]
             public async Task WIP(CommandContext e)
             {
-                WriteCommandsExec(e);
                 string gamename = Program.prefix + "help|WIP Mode";
                 DiscordGame game = new DiscordGame()
                 {
@@ -389,12 +371,10 @@ namespace Morbot
                     Name = gamename
                 };
                 await e.Client.UpdateStatusAsync(game);
-                WriteCommandSucceeded(e, "Changed bot Playing status to WIP");
             }
             [Command("null3")]
             public async Task FIX(CommandContext e)
             {
-                WriteCommandsExec(e);
                 string gamename = Program.prefix + "help|FIX Mode";
                 DiscordGame game = new DiscordGame()
                 {
@@ -402,12 +382,10 @@ namespace Morbot
                     Name = gamename
                 };
                 await e.Client.UpdateStatusAsync(game);
-                WriteCommandSucceeded(e, "Changed bot Playing status to FIX");
             }
             [Command("null4")]
             public async Task READY(CommandContext e)
             {
-                WriteCommandsExec(e);
                 string gamename = Program.prefix + "help|Bot ready.";
                 DiscordGame game = new DiscordGame()
                 {
@@ -415,7 +393,6 @@ namespace Morbot
                     Name = gamename
                 };
                 await e.Client.UpdateStatusAsync(game);
-                WriteCommandSucceeded(e, "Changed bot Playing status to READY");
             }
         }
         #endregion
@@ -462,11 +439,11 @@ namespace Morbot
             public Meta meta { get; set; }
         }
         [Command("randomgif"), Aliases("randgif")]
-        public async Task GIFSearch(CommandContext e, [RemainingText]string arg1)
+        public async Task GIFSearch(CommandContext e, [RemainingText]string arg1 = "")
             {
-                WriteCommandsExec(e);
                 string data = "";
                 string gifby = "";
+                
                 string gifurl = "";
                 Random urlRandomizer = new Random();
                 string[] GIFtype = { "cat", "dog" };
@@ -482,7 +459,6 @@ namespace Morbot
                 }
                 if (empty)
                 {
-                    WriteCommandFailed(e, "Giphy API Key file is EMPTY!");
                     await e.Message.RespondAsync("\u200B" + e.User.Mention + " Bot has incorrectly set API Keys.");
 
                 }
@@ -491,7 +467,8 @@ namespace Morbot
                     string page = null;
                     if(arg1 == "")
                     {
-                       page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + GIFtype[urlRandomizer.Next(0, GIFtype.Length)] + "&api_key=" + File.ReadAllLines("giphyapikey")[0];
+                    arg1 = GIFtype[urlRandomizer.Next(0, GIFtype.Length)];
+                       page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + arg1 + "&api_key=" + File.ReadAllLines("giphyapikey")[0];
 
                     }
                     else
@@ -516,8 +493,7 @@ namespace Morbot
                         }
                         await e.RespondAsync("\u200B" + e.User.Mention + " " + gifurl + "\n \n" + gifby);
                     }
-
-                    WriteCommandSucceeded(e, "Searching for GIF: " + arg1 + " Sent GIF: " + gifurl);
+                    
                 }
             
             
