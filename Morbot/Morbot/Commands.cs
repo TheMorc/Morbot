@@ -205,8 +205,7 @@ namespace Morbot
             }
             if(empty)
             {
-                await e.Message.RespondAsync("\u200B" + e.User.Mention + " Bot has incorrectly set API Keys.");
-
+                await CreateMessage(e, desc: "Incorrecty set API keys!", color: DiscordColor.Red);
             }
             else
             {
@@ -464,7 +463,6 @@ namespace Morbot
                 if (empty)
                 {
                 await CreateMessage(e, desc: "Incorrecty set API keys!", color: DiscordColor.Red);
-
                 }
                 else
                 {
