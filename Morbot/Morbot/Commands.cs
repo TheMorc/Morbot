@@ -303,7 +303,7 @@ namespace Morbot
         }
         #endregion
         #region status command
-        [Group("changestatus", CanInvokeWithoutSubcommand = true), Aliases("status"),, Description("This command changes status of bot.(the Playing below name in users)")]
+        [Group("changestatus", CanInvokeWithoutSubcommand = true), Aliases("status"), Description("This command changes status of bot.(the Playing below name in users)")]
         public class Status
         {
             public async Task ExecuteGroupAsync(CommandContext e, string name = "")
