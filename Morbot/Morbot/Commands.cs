@@ -72,6 +72,43 @@ namespace Morbot
             await CreateMessage(e, desc: "I am Morbot, and Morc creates this bot for Discord server but also as example.\nMade with DSharpPlus API(ver: " + e.Client.VersionString + ")", color: DiscordColor.Cyan);
         }
         #endregion
+        #region love command
+        [Command("love"), Description("Who needs command that generates random number and sends it?? ANYONE! but this is great example for array string command!!")]
+        public async Task Love(CommandContext e, params string[] name)
+        {
+            Random rand = new Random();
+            string loveemoji = "";
+            DiscordColor laavcolor = DiscordColor.None;
+            int num = rand.Next(0, 100);
+            if (num < 0)
+            {
+                loveemoji = ":broken_heart:";
+                laavcolor = DiscordColor.Brown;
+            }
+            else if (num < 30)
+            {
+                loveemoji = ":blue_heart:";
+                laavcolor = DiscordColor.Blue;
+            }
+            else if (num < 50)
+            {
+                loveemoji = ":green_heart:";
+                laavcolor = DiscordColor.Green;
+            }
+            else if (num < 70)
+            {
+                loveemoji = ":yellow_heart:";
+                laavcolor = DiscordColor.Yellow;
+            }
+            else if (num < 100)
+            {
+                loveemoji = ":heart:";
+                laavcolor = DiscordColor.Red;
+            }
+            string laav = name[0] + " - " + num + "% " + loveemoji + " - " + name[1];
+            await CreateMessage(e, desc: laav, color: laavcolor);
+        }
+        #endregion
         #region ping command
         [Command("ping"), Description("What simpler than this! This sends ping in miliseconds!")]
         public async Task Ping(CommandContext e)
