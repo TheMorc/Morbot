@@ -67,6 +67,13 @@ namespace Morbot
             await CreateMessage(e, desc: "I am Morbot, and my programmer(Morc) wants to have this bot as help for Discord server.", color: DiscordColor.Cyan);
         }
         #endregion
+        #region ping command
+        [Command("ping")]
+        public async Task Ping(CommandContext e)
+        {
+            await CreateMessage(e, desc: "Ping: " + e.Client.Ping + "ms", color: DiscordColor.Green);
+        }
+        #endregion
         #region test command
         [Command("test"), RequireOwner, Hidden]
         public async Task test(CommandContext e)
@@ -423,12 +430,13 @@ namespace Morbot
         {
             string gifby = "";
             string gifurl = "";
-            Random urlRandomizer = new Random();
+            Random Rand = new Random();
             string[] GIFtype = { "cat", "dog" };
+            string[] Emoji = { ":cat:", ":dog:", ":joy_cat:", ":poop:" };
             string page = null;
             if (arg1 == "")
             {
-                arg1 = GIFtype[urlRandomizer.Next(0, GIFtype.Length)];
+                arg1 = GIFtype[Rand.Next(0, GIFtype.Length)];
                 page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + arg1 + "&api_key=" + Program.configuration.GiphyAPIKey;
 
             }
@@ -452,7 +460,7 @@ namespace Morbot
                     }
                     else
                     {
-                        gifby = ":joy_cat: By: " + oRootObject.data.username;
+                        gifby = Emoji[Rand.Next(0, Emoji.Length)] + " By: " + oRootObject.data.username;
                     }
                     await CreateMessage(e, desc: gifby, imageurl: gifurl, color: DiscordColor.Green);
                 }
