@@ -345,7 +345,7 @@ namespace Morbot
             [Command("null1")]
             public async Task BETA(CommandContext e)
             {
-                string gamename = Program.prefix + "help|BETA Mode";
+                string gamename = Program.prefix + "help|BETA Mode|V:" + Program.version;
                 DiscordGame game = new DiscordGame()
                 {
                     StreamType = GameStreamType.NoStream,
@@ -356,7 +356,7 @@ namespace Morbot
             [Command("null2")]
             public async Task WIP(CommandContext e)
             {
-                string gamename = Program.prefix + "help|WIP Mode";
+                string gamename = Program.prefix + "help|WIP Mode|V:" + Program.version;
                 DiscordGame game = new DiscordGame()
                 {
                     StreamType = GameStreamType.NoStream,
@@ -367,7 +367,7 @@ namespace Morbot
             [Command("null3")]
             public async Task FIX(CommandContext e)
             {
-                string gamename = Program.prefix + "help|FIX Mode";
+                string gamename = Program.prefix + "help|FIX Mode|V:" + Program.version;
                 DiscordGame game = new DiscordGame()
                 {
                     StreamType = GameStreamType.NoStream,
@@ -378,7 +378,7 @@ namespace Morbot
             [Command("null4")]
             public async Task READY(CommandContext e)
             {
-                string gamename = Program.prefix + "help|Bot ready.";
+                string gamename = Program.prefix + "help|Ready|V:" + Program.version;
                 DiscordGame game = new DiscordGame()
                 {
                     StreamType = GameStreamType.NoStream,

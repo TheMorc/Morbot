@@ -16,7 +16,7 @@ namespace Morbot
         static public string prefix = "--";
         static CommandsNextModule commands;
         public static configJSON configuration = new configJSON();
-        public static string version = "1.5.1";
+        public static string version = "1.5.2";
         public class configJSON
         {
             public string DiscordBotToken { get; set; }
@@ -61,7 +61,7 @@ namespace Morbot
             await discord.ConnectAsync();
             discord.Ready += async ex =>
             {
-                game.Name = prefix + "help|Bot ready.";
+                game.Name = prefix + "help|Ready|V:" + version;
                 game.StreamType = GameStreamType.NoStream;
                 await discord.UpdateStatusAsync(game);
             };
