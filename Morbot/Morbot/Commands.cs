@@ -17,6 +17,7 @@ namespace Morbot
     
     public class Commands
     {
+        public string error_message = ":no_entry: Bot is set incorrectly!";
         //HELP FOR COMMANDS 
         #region help for commands
         public static async Task CreateMessage(CommandContext e, string titleurl = null,string imageurl = null,string thumbnailurl = null,string url = null, string desc = "", string title = "Morbot (Made in :flag_sk:)", DiscordColor color = default(DiscordColor),bool sendToUser = false)
@@ -77,30 +78,12 @@ namespace Morbot
         [Command("latestvideo")]
         public async Task Latestvideo(CommandContext e)
         {
-            string api = "";
-            bool empty = false;
-            try
-            {
-                api = File.ReadAllLines("ytapikey")[0];
-            }
-            catch
-            {
-                empty = true;
-            }
-            if (empty)
-            {
-                await e.Message.RespondAsync("\u200B" + e.User.Mention + " Bot has incorrectly set API Keys.");
-
-            }
-            else
-            {
-
                 try
                 {
-                    var yt = new YouTubeService(new BaseClientService.Initializer()
-                    {
-                        ApiKey = File.ReadAllLines("ytapikey")[0]
-                    });
+                var yt = new YouTubeService(new BaseClientService.Initializer()
+                {
+                    ApiKey = Program.configuration.YoutubeDataAPIKey
+                });
                     var channelsListRequest = yt.Channels.List("contentDetails");
                     channelsListRequest.ForUsername = "riskoautobus";
                     var channelsListResponse = channelsListRequest.Execute();
@@ -126,11 +109,9 @@ namespace Morbot
                 }
                 catch (Exception exy)
                 {
-                    
-                    await e.Message.RespondAsync("\u200B" + e.User.Mention + " Error occured when sending video link. Contact programmer..");
-
+                await CreateMessage(e, desc: error_message, color: DiscordColor.Red);
                 }
-            }
+            
         }
 #endregion
         #region weather command
@@ -191,25 +172,10 @@ namespace Morbot
             public async Task CWeather (CommandContext e)
             {
             string data = "";
-            string api = "";
-            bool empty = false;
             string weathertype = null;
             double temp = 0;
-            try
-            {
-                api = File.ReadAllLines("openwapikey")[0];
-            }
-            catch
-            {
-                empty = true;
-            }
-            if(empty)
-            {
-                await CreateMessage(e, desc: "Incorrecty set API keys!", color: DiscordColor.Red);
-            }
-            else
-            {
-                string page = "http://api.openweathermap.org/data/2.5/weather?q=Topolcany&mode=json&APPID=" + File.ReadAllLines("openwapikey")[0];
+            
+                string page = "http://api.openweathermap.org/data/2.5/weather?q=Topolcany&mode=json&APPID=" + Program.configuration.OpenWeatherAPIKey;
                 using (HttpClient cl = new HttpClient())
                 {
                     data = await cl.GetStringAsync(page);
@@ -222,7 +188,12 @@ namespace Morbot
                         weathertype = ":sunny:" + " - Sunny";
                         wcolor = DiscordColor.Yellow;
                     }
-                    if (oRootObject.weather[0].description == "few clouds") { 
+                    if (oRootObject.weather[0].description == "broken clouds") { 
+                        weathertype = ":cloud:" + " - Clouds";
+                        wcolor = DiscordColor.Gray;
+                    }
+                    if (oRootObject.weather[0].description == "few clouds")
+                    {
                         weathertype = ":cloud:" + " - Clouds";
                         wcolor = DiscordColor.Gray;
                     }
@@ -232,7 +203,7 @@ namespace Morbot
                     }
                     await CreateMessage(e,desc:"Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype,color: wcolor);
                 }
-            }
+            
            
         }
 
@@ -444,44 +415,26 @@ namespace Morbot
         [Command("randomgif"), Aliases("randgif")]
         public async Task GIFSearch(CommandContext e, [RemainingText]string arg1 = "")
             {
-                string data = "";
                 string gifby = "";
-                
                 string gifurl = "";
                 Random urlRandomizer = new Random();
                 string[] GIFtype = { "cat", "dog" };
-                string api = "";
-                bool empty = false;
-                try
-                {
-                    api = File.ReadAllLines("giphyapikey")[0];
-                }
-                catch
-                {
-                    empty = true;
-                }
-                if (empty)
-                {
-                await CreateMessage(e, desc: "Incorrecty set API keys!", color: DiscordColor.Red);
-                }
-                else
-                {
                     string page = null;
                     if(arg1 == "")
                     {
                     arg1 = GIFtype[urlRandomizer.Next(0, GIFtype.Length)];
-                       page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + arg1 + "&api_key=" + File.ReadAllLines("giphyapikey")[0];
+                       page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + arg1 + "&api_key=" + Program.configuration.GiphyAPIKey;
 
                     }
                     else
                     {
-                        page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + arg1  + "&api_key=" + File.ReadAllLines("giphyapikey")[0];
+                        page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + arg1  + "&api_key=" + Program.configuration.GiphyAPIKey;
                     }
                     using (HttpClient client = new HttpClient())
                     using (HttpResponseMessage response = await client.GetAsync(page))
                     using (HttpContent content = response.Content)
                     {
-                        data = await content.ReadAsStringAsync();
+                        string data = await content.ReadAsStringAsync();
                         RootObjectG oRootObject = new RootObjectG();
                         oRootObject = JsonConvert.DeserializeObject<RootObjectG>(data);
                         gifurl = oRootObject.data.image_url;
@@ -619,5 +572,5 @@ namespace Morbot
         //}
         //#endregion
 #endregion
-    }
+    
 }

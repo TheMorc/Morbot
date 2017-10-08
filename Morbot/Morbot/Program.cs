@@ -4,8 +4,8 @@ using System.IO;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
-using DSharpPlus.EventArgs;
-using DSharpPlus.CommandsNext.Exceptions;
+using Newtonsoft.Json;
+using System.Text;
 
 namespace Morbot
 {
@@ -15,98 +15,41 @@ namespace Morbot
         public static DiscordGame game = new DiscordGame();
         static public string prefix = "--";
         static CommandsNextModule commands;
+        public static configJSON configuration = new configJSON();
         
+        public class configJSON
+        {
+            public string DiscordBotToken { get; set; }
+            public string YoutubeDataAPIKey { get; set; }
+            public string OpenWeatherAPIKey { get; set; }
+            public string GiphyAPIKey { get; set; }
+        }
+
         static void Main(string[] args)
         {
-            
-            if (!File.Exists("token"))
-            {
-                File.Create("token");
-            }
-            else
-            {
-                string txt = "";
-                bool empty = false;
-                try
-                {
-                    txt = File.ReadAllLines("token")[0];
-                }
-                catch
-                {
-                    empty = true;
-                }
-                
-
-            }
-            if (!File.Exists("ytapikey"))
-            {
-                File.Create("ytapikey");
-            }
-            else
-            {
-                string txt = "";
-                bool empty = false;
-                try
-                {
-                    txt = File.ReadAllLines("ytapikey")[0];
-                }
-                catch
-                {
-                    empty = true;
-                }
-
-            }
-
-            if (!File.Exists("giphyapikey"))
-            {
-                File.Create("giphyapikey");
-            }
-            else
-            {
-                string txt = "";
-                bool empty = false;
-                try
-                {
-                    txt = File.ReadAllLines("giphyapikey")[0];
-                }
-                catch
-                {
-                    empty = true;
-                }
-
-            }
-
-            if (!File.Exists("openwapikey"))
-            {
-                File.Create("openwapikey");
-            }
-            else
-            {
-                string txt = "";
-                bool empty = false;
-                try
-                {
-                    txt = File.ReadAllLines("openwapikey")[0];
-                }
-                catch
-                {
-                    empty = true;
-                }
-
-            }
-                MainAsync(args).ConfigureAwait(false).GetAwaiter().GetResult();
-            
-            }
+            MainAsync(args).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
         
         
 
         static async Task MainAsync(string[] args)
         {
-
+            if (!File.Exists("config.json"))
+            {
+                File.Create("config.json");
+            }
+            else
+            {
+                var json = "";
+                using (var fs = File.OpenRead("config.json"))
+                using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
+                    json = await sr.ReadToEndAsync();
+                configuration = JsonConvert.DeserializeObject<configJSON>(json);
+            }
 
             discord = new DiscordClient(new DiscordConfiguration
             {
-                Token = File.ReadAllLines("token")[0],
+                Token = configuration.DiscordBotToken,
                 TokenType = TokenType.Bot,
                 AutoReconnect = true,
                 LogLevel = LogLevel.Debug,
