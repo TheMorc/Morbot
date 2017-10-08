@@ -16,7 +16,7 @@ namespace Morbot
         static public string prefix = "--";
         static CommandsNextModule commands;
         public static configJSON configuration = new configJSON();
-
+        public static string version = "1.5.1";
         public class configJSON
         {
             public string DiscordBotToken { get; set; }

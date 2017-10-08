@@ -17,11 +17,16 @@ namespace Morbot
 
     public class Commands
     {
+        static readonly string embed_title = "Morbot (Version: " + Program.version + ", Made in :flag_sk:)";
         public string error_message = ":no_entry: Bot is set incorrectly! \n";
         //HELP FOR COMMANDS 
         #region help for commands
-        public static async Task CreateMessage(CommandContext e, string titleurl = null, string imageurl = null, string thumbnailurl = null, string url = null, string desc = "", string title = "Morbot (Made in :flag_sk:)", DiscordColor color = default(DiscordColor), bool sendToUser = false)
+        public static async Task CreateMessage(CommandContext e, string titleurl = null, string imageurl = null, string thumbnailurl = null, string url = null, string desc = "", string title = "", DiscordColor color = default(DiscordColor), bool sendToUser = false)
         {
+            if (title == "")
+            {
+                title = embed_title;
+            }
 
             var embed = new DiscordEmbedBuilder
             {
