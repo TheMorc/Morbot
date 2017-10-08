@@ -16,7 +16,7 @@ namespace Morbot
         static public string prefix = "--";
         static CommandsNextModule commands;
         public static configJSON configuration = new configJSON();
-        
+
         public class configJSON
         {
             public string DiscordBotToken { get; set; }
@@ -29,8 +29,6 @@ namespace Morbot
         {
             MainAsync(args).ConfigureAwait(false).GetAwaiter().GetResult();
         }
-        
-        
 
         static async Task MainAsync(string[] args)
         {
