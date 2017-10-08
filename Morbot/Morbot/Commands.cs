@@ -41,7 +41,7 @@ namespace Morbot
 
         //admin only commands!
         #region servers command
-        [Command("servers"), RequirePermissions(DSharpPlus.Permissions.ManageGuild), Hidden]
+        [Command("servers"), RequirePermissions(DSharpPlus.Permissions.ManageGuild), Hidden, Description("Should be hidden! But this command shows list of servers that it is on...")]
         public async Task Servers(CommandContext ex)
         {
             string serverlist = null;
@@ -61,28 +61,28 @@ namespace Morbot
 
         //Commands | 
         #region whoami command
-        [Command("whoami")]
+        [Command("whoami"), Description("Bot responds with info about bot! It is that simple...")]
         public async Task Whoami(CommandContext e)
         {
-            await CreateMessage(e, desc: "I am Morbot, and my programmer(Morc) wants to have this bot as help for Discord server.", color: DiscordColor.Cyan);
+            await CreateMessage(e, desc: "I am Morbot, and Morc creates this bot for Discord server but also as example.\nMade with DSharpPlus API(ver: " + e.Client.VersionString + ")", color: DiscordColor.Cyan);
         }
         #endregion
         #region ping command
-        [Command("ping")]
+        [Command("ping"), Description("What simpler than this! This sends ping in miliseconds!")]
         public async Task Ping(CommandContext e)
         {
             await CreateMessage(e, desc: "Ping: " + e.Client.Ping + "ms", color: DiscordColor.Green);
         }
         #endregion
         #region test command
-        [Command("test"), RequireOwner, Hidden]
+        [Command("test"), RequireOwner, Hidden, Description("Hidden command! Only for testing purposes!!")]
         public async Task test(CommandContext e)
         {
             await CreateMessage(e);
         }
         #endregion
         #region latestvideo command
-        [Command("latestvideo"), Aliases("latestmorcvideo", "morcvideo", "lastvideo", "lastvideobymorc")]
+        [Command("latestvideo"), Aliases("latestmorcvideo", "morcvideo", "lastvideo", "lastvideobymorc"), Description("This command pulls link of last video posted by Morc")]
         public async Task Latestvideo(CommandContext e)
         {
             try
@@ -175,7 +175,7 @@ namespace Morbot
             public string name { get; set; }
             public int cod { get; set; }
         }
-        [Command("weather")]
+        [Command("weather"), Description("Bot responds with actual temperature in °C.Weather gets pulled from OpenWeather and city is Topoľčany(small town near village Biskupová where Morc lives).")]
         public async Task CWeather(CommandContext e)
         {
             string data = "";
@@ -230,7 +230,7 @@ namespace Morbot
             public string url { get; set; }
             public string value { get; set; }
         }
-        [Command("randomnorrisjoke"), Aliases("norris", "norrisjoke", "chucknorris", "chuck", "chuckjoke", "randomchuckjoke")]
+        [Command("randomnorrisjoke"), Aliases("norris", "norrisjoke", "chucknorris", "chuck", "chuckjoke", "randomchuckjoke"), Description("Chuck Norris was born earlier than he died! Command pulls random joke from ChuckNorris API..")]
         public async Task ChuckNorris(CommandContext e)
         {
             string data = "";
@@ -248,7 +248,7 @@ namespace Morbot
 
         #endregion
         #region time command
-        [Command("time")]
+        [Command("time"), Description("WHO WANTS THIS COMMAND???")]
         public async Task Time(CommandContext e)
         {
             string minutes = null;
@@ -265,7 +265,7 @@ namespace Morbot
         #endregion
         #region randomwindows command
         string[] versions = { "w95.png", "w98.png", "wme.png", "w2k.png", "w7.png", "wvista.png", "wxp.png", "w8.png", "w10.png" };
-        [Command("randomwindows"), Aliases("RandomWindows", "RandWind", "randwind", "ranwin", "randomwin", "RandomWin", "rwin", "randomw", "randw")]
+        [Command("randomwindows"), Aliases("RandomWindows", "RandWind", "randwind", "ranwin", "randomwin", "RandomWin", "rwin", "randomw", "randw"), Description("Command sends random picture(Windows 95/98/ME/2000/XP/Vista/7/8/10).")]
         public async Task RandomWindows(CommandContext e)
         {
             Random rnd = new Random();
@@ -274,7 +274,7 @@ namespace Morbot
         }
         #endregion
         #region cat command
-        [Command("meow"), Aliases("cat", "kitty", "catpicture", "meov", "mjau")]
+        [Command("meow"), Aliases("cat", "kitty", "catpicture", "meov", "mjau"), Description("Command cat and dog does the same thing. Sends cute picture/gif of cat or dog!")]
         public async Task Meow(CommandContext e)
         {
             string url = null;
@@ -289,7 +289,7 @@ namespace Morbot
         }
         #endregion
         #region dog command
-        [Command("woof"), Aliases("dog", "puppy", "dogpicture", "hau", "haw")]
+        [Command("woof"), Aliases("dog", "puppy", "dogpicture", "hau", "haw"), Description("Command cat and dog does the same thing. Sends cute picture/gif of cat or dog!")]
         public async Task Woof(CommandContext e)
         {
             string url = null;
@@ -303,7 +303,7 @@ namespace Morbot
         }
         #endregion
         #region status command
-        [Group("changestatus", CanInvokeWithoutSubcommand = true), Aliases("status")]
+        [Group("changestatus", CanInvokeWithoutSubcommand = true), Aliases("status"),, Description("This command changes status of bot.(the Playing below name in users)")]
         public class Status
         {
             public async Task ExecuteGroupAsync(CommandContext e, string name = "")
@@ -425,7 +425,7 @@ namespace Morbot
             public Data data { get; set; }
             public Meta meta { get; set; }
         }
-        [Command("randomgif"), Aliases("randgif")]
+        [Command("randomgif"), Aliases("randgif"), Description("If anything isnt specified with command, then it responds with random dog or cat(dog or cat randomized by bot) gif(by giphy).")]
         public async Task GIFSearch(CommandContext e, [RemainingText]string arg1 = "")
         {
             string gifby = "";
