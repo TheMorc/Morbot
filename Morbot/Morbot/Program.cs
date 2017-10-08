@@ -13,16 +13,17 @@ namespace Morbot
     {
         static DiscordClient discord;
         public static DiscordGame game = new DiscordGame();
-        static public string prefix = "--";
+        static public string prefix = "";
         static CommandsNextModule commands;
         public static configJSON configuration = new configJSON();
-        public static string version = "1.5.3";
+        public static string version = "1.5.4";
         public class configJSON
         {
             public string DiscordBotToken { get; set; }
             public string YoutubeDataAPIKey { get; set; }
             public string OpenWeatherAPIKey { get; set; }
             public string GiphyAPIKey { get; set; }
+            public string Prefix { get; set; }
         }
 
         static void Main(string[] args)
@@ -53,6 +54,7 @@ namespace Morbot
                 LogLevel = LogLevel.Debug,
                 UseInternalLogHandler = true
             });
+            prefix = configuration.Prefix;
             commands = discord.UseCommandsNext(new CommandsNextConfiguration
             {
                 StringPrefix = prefix
