@@ -80,7 +80,7 @@ namespace Morbot
             string loveemoji = "";
             DiscordColor laavcolor = DiscordColor.None;
             int num = rand.Next(0, 100);
-            if (num < 0)
+            if (num < 15)
             {
                 loveemoji = ":broken_heart:";
                 laavcolor = DiscordColor.Brown;
@@ -105,7 +105,7 @@ namespace Morbot
                 loveemoji = ":heart:";
                 laavcolor = DiscordColor.Red;
             }
-            string laav = name[0] + " - " + num + "% " + loveemoji + " - " + name[1];
+            string laav = name[0] + " + " + name[1] + " = " + num + "%   " + loveemoji;
             await CreateMessage(e, desc: laav, color: laavcolor);
         }
         #endregion
