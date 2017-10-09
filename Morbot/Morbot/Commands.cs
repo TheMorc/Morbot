@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -11,16 +10,15 @@ using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using DSharpPlus.Entities;
 using System.Linq;
-
 namespace Morbot
 {
-
     public class Commands
     {
-        static readonly string embed_title = "Morbot (Version: " + Program.version + ", Made in :flag_sk:)";
+        static readonly string embed_title = "Morbot ( Version: " + Program.version + ", Made in :flag_sk: )";
         public string error_message = ":no_entry: Bot encoutered an error!!! \n";
-        //HELP FOR COMMANDS 
-        #region help for commands
+
+        //small api
+        #region createmessage command
         public static async Task CreateMessage(CommandContext e, string titleurl = null, string imageurl = null, string thumbnailurl = null, string url = null, string desc = "", string title = "", DiscordColor color = default(DiscordColor), bool sendToUser = false)
         {
             if (title == "")
@@ -45,7 +43,7 @@ namespace Morbot
         }
         #endregion
 
-        //admin only commands!
+        //admin only commands
         #region servers command
         [Command("servers"), RequirePermissions(DSharpPlus.Permissions.ManageGuild), Hidden, Description("Should be hidden! But this command shows list of servers that it is on...")]
         public async Task Servers(CommandContext ex)
@@ -65,7 +63,7 @@ namespace Morbot
         }
         #endregion
 
-        //Commands | 
+        //Commands
         #region whoami command
         [Command("whoami"), Description("Bot responds with info about bot! It is that simple...")]
         public async Task Whoami(CommandContext e)
@@ -581,124 +579,6 @@ namespace Morbot
 
 
 
-        #endregion
-
-        //deprecated/old commands
-        #region old version of randomgif command.. for historical purposes
-        //#region randomgif command
-        //public class Data
-        //{
-        //    public string type { get; set; }
-        //    public string id { get; set; }
-        //    public string url { get; set; }
-        //    public string image_original_url { get; set; }
-        //    public string image_url { get; set; }
-        //    public string image_mp4_url { get; set; }
-        //    public string image_frames { get; set; }
-        //    public string image_width { get; set; }
-        //    public string image_height { get; set; }
-        //    public string fixed_height_downsampled_url { get; set; }
-        //    public string fixed_height_downsampled_width { get; set; }
-        //    public string fixed_height_downsampled_height { get; set; }
-        //    public string fixed_width_downsampled_url { get; set; }
-        //    public string fixed_width_downsampled_width { get; set; }
-        //    public string fixed_width_downsampled_height { get; set; }
-        //    public string fixed_height_small_url { get; set; }
-        //    public string fixed_height_small_still_url { get; set; }
-        //    public string fixed_height_small_width { get; set; }
-        //    public string fixed_height_small_height { get; set; }
-        //    public string fixed_width_small_url { get; set; }
-        //    public string fixed_width_small_still_url { get; set; }
-        //    public string fixed_width_small_width { get; set; }
-        //    public string fixed_width_small_height { get; set; }
-        //    public string username { get; set; }
-        //    public string caption { get; set; }
-        //}
-
-        //public class Meta
-        //{
-        //    public int status { get; set; }
-        //    public string msg { get; set; }
-        //    public string response_id { get; set; }
-        //}
-
-        //public class RootObjectG
-        //{
-        //    public Data data { get; set; }
-        //    public Meta meta { get; set; }
-        //}
-        //[Command("randomgif")]
-        //public async Task randomgif(CommandContext e)
-        //{
-        //    WriteCommandsExec(e);
-        //    string data = "";
-        //    string gifby = "";
-        //    string gifurl = "";
-        //    Random urlRandomizer = new Random();
-        //    string[] GIFtype = { "cat", "dog" };
-        //    string api = "";
-        //    bool empty = false;
-        //    try
-        //    {
-        //        api = File.ReadAllLines("giphyapikey")[0];
-        //    }
-        //    catch
-        //    {
-        //        empty = true;
-        //    }
-        //    if (empty)
-        //    {
-        //        WriteCommandFailed(e, "Giphy API Key file is EMPTY!");
-        //        await e.Message.RespondAsync("\u200B" + e.User.Mention + " Bot has incorrectly set API Keys.");
-
-        //    }
-        //    else
-        //    {
-        //        string page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + GIFtype[urlRandomizer.Next(0, GIFtype.Length)] + "&api_key=" + File.ReadAllLines("giphyapikey")[0];
-        //        using (HttpClient client = new HttpClient())
-        //        using (HttpResponseMessage response = await client.GetAsync(page))
-        //        using (HttpContent content = response.Content)
-        //        {
-        //            data = await content.ReadAsStringAsync();
-        //            RootObjectG oRootObject = new RootObjectG();
-        //            oRootObject = JsonConvert.DeserializeObject<RootObjectG>(data);
-        //            gifurl = oRootObject.data.image_url;
-        //            if (oRootObject.data.username == "")
-        //            {
-        //                gifby = "";
-        //            }
-        //            else
-        //            {
-        //                gifby = "GIF By: " + oRootObject.data.username;
-        //            }
-        //            await e.RespondAsync("\u200B" + e.User.Mention + " " + gifurl + "\n \n" + gifby);
-        //        }
-
-        //        WriteCommandSucceeded(e, "Sent GIF: " + gifurl);
-        //    }
-        //}
-
-        //#endregion
-        #endregion
-        #region commands command.. new beta of DSharpPlus adds help command..
-        //#region commands command
-        //[Command("commands")]
-        //public async Task commands(CommandContext ex)
-        //{
-        //    WriteCommandsExec(ex);
-        //    string commandlist = null;
-        //    foreach (string server in ex.CommandsNext.RegisteredCommands.Values.Select(e => e.Name))
-        //    {
-        //        string help = "";
-        //        try { help = commandlist.Remove(server.Length, commandlist.Length - server.Length); } catch { }
-        //        if (help == server) { }
-        //        else
-        //        { commandlist = server + "\n--" + commandlist; }
-        //    }
-        //    await ex.Message.RespondAsync("\u200B" + ex.User.Mention + "\nCommand List:\n" + "--" + commandlist.Remove(commandlist.Length - 2, 2));
-        //    WriteCommandSucceeded(ex, " Sent command list.");
-        //}
-        //#endregion
         #endregion
     }
 }
