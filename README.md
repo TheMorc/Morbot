@@ -1,4 +1,4 @@
-# Morbot [![Add this bot to your Discord Server](https://img.shields.io/badge/Morbot-add%20it%20to%20your%20Discord%20Server!-green.svg?style=flat-square)](https://discordapp.com/api/oauth2/authorize?client_id=219188936940060684&scope=bot)
+# Morbot [![Discord](https://img.shields.io/discord/102860784329052160.svg?style=flat-square)](https://discord.gg/Gneap49) [![Add this bot to your Discord Server](https://img.shields.io/badge/Morbot-add%20it%20to%20your%20Discord%20Server!-green.svg?style=flat-square)](https://discordapp.com/api/oauth2/authorize?client_id=219188936940060684&scope=bot)
 A *"little bigger"* example of bot made with **[DSharpPlus API](https://github.com/NaamloosDT/DSharpPlus)** on programming language **C#**
 
 **This bot includes** *(to date of 8.October.2017 and in random order(it does not matter anyway..))*
