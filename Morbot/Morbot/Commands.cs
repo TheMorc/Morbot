@@ -505,7 +505,7 @@ namespace Morbot
                     {
                         gifby = Emoji[Rand.Next(0, Emoji.Length)] + " By: " + oRootObject.data.username;
                     }
-                    await CreateMessage(e, desc: gifby, imageurl: gifurl, color: DiscordColor.Green);
+                    await CreateMessage(e, thumbnailurl: "https://www.inboxsdk.com/images/logos/giphy.png", desc: gifby, imageurl: gifurl, color: DiscordColor.Green);
                 }
             }
             catch (Exception ex)
@@ -520,60 +520,62 @@ namespace Morbot
 
         #endregion
         #region picture command
-
-        public class DisplaySize
+        public class Hit
         {
-            public bool is_watermarked { get; set; }
-            public string name { get; set; }
-            public string uri { get; set; }
+            public int previewHeight { get; set; }
+            public int likes { get; set; }
+            public int favorites { get; set; }
+            public string tags { get; set; }
+            public int webformatHeight { get; set; }
+            public int views { get; set; }
+            public int webformatWidth { get; set; }
+            public int previewWidth { get; set; }
+            public int comments { get; set; }
+            public int downloads { get; set; }
+            public string pageURL { get; set; }
+            public string previewURL { get; set; }
+            public string webformatURL { get; set; }
+            public int imageWidth { get; set; }
+            public int user_id { get; set; }
+            public string user { get; set; }
+            public string type { get; set; }
+            public int id { get; set; }
+            public string userImageURL { get; set; }
+            public int imageHeight { get; set; }
         }
 
-        public class ReferralDestination
+        public class GIFRootObject
         {
-            public string site_name { get; set; }
-            public string uri { get; set; }
-        }
-
-        public class Image
-        {
-            public string id { get; set; }
-            public List<DisplaySize> display_sizes { get; set; }
-            public List<ReferralDestination> referral_destinations { get; set; }
-            public string title { get; set; }
-        }
-
-        public class IMGRootObject
-        {
-            public int result_count { get; set; }
-            public List<Image> images { get; set; }
+            public int totalHits { get; set; }
+            public List<Hit> hits { get; set; }
+            public int total { get; set; }
         }
         [Command("picture"), Aliases("pic", "pix", "image", "img", "photo"), Description("This command works only if something is specified for ex 'Zetor' then it sends picture of zetor tractor.."), Hidden]
         public async Task IMGSearch(CommandContext e, [RemainingText]string arg1 = "")
         {
             Random rand = new Random();
-            string page = "https://api.gettyimages.com/v3/search/images?fields=id,title&sort_order=newest&phrase=" + arg1;
+            string page = "https://pixabay.com/api/?key=" + Program.configuration.PixabayAPIKey + "&q=" + arg1 + "&image_type=photo";
+
             try
             {
-                var client = new HttpClient();
-                client.DefaultRequestHeaders.Add("Api-Key", "dwa23zvu9szjhcy946v7ppf9");
-                string data = await client.GetStringAsync(page);
-                IMGRootObject oRootObject = new IMGRootObject();
-                oRootObject = JsonConvert.DeserializeObject<IMGRootObject>(data);
-                foreach (Image img in oRootObject.images)
+                using (HttpClient client = new HttpClient())
+                using (HttpResponseMessage response = await client.GetAsync(page))
+                using (HttpContent content = response.Content)
                 {
-                    foreach (DisplaySize disze in img.display_sizes)
-                    {
-                        Console.WriteLine(disze.uri);
-                    }
+                    string data = await content.ReadAsStringAsync();
+                    GIFRootObject oRootObject = new GIFRootObject();
+                    oRootObject = JsonConvert.DeserializeObject<GIFRootObject>(data);
+                    int num = rand.Next(0, oRootObject.hits.Capacity);
+                    await CreateMessage(e, desc: "Photo by: " + oRootObject.hits[num].user + "\nViews: " + oRootObject.hits[num].views, imageurl: oRootObject.hits[num].webformatURL, thumbnailurl: "https://pixabay.com/static/img/logo_square.png");
                 }
-                await CreateMessage(e, imageurl: oRootObject.images[rand.Next(0, (oRootObject.images.Capacity))].display_sizes[0].uri, color: DiscordColor.Green);
-
             }
             catch (Exception ex)
             {
 
                 await CreateMessage(e, desc: error_message + ex, color: DiscordColor.Red);
             }
+
+
 
         }
 

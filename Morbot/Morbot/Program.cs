@@ -16,12 +16,13 @@ namespace Morbot
         static public string prefix = "";
         static CommandsNextModule commands;
         public static configJSON configuration = new configJSON();
-        public static string version = "1.5.6";
+        public static string version = "1.5.7";
         public class configJSON
         {
             public string DiscordBotToken { get; set; }
             public string YoutubeDataAPIKey { get; set; }
             public string OpenWeatherAPIKey { get; set; }
+            public string PixabayAPIKey { get; set; }
             public string GiphyAPIKey { get; set; }
             public string Prefix { get; set; }
         }
