@@ -18,7 +18,7 @@ namespace Morbot
     public class Commands
     {
         static readonly string embed_title = "Morbot (Version: " + Program.version + ", Made in :flag_sk:)";
-        public string error_message = ":no_entry: Bot is set incorrectly! \n";
+        public string error_message = ":no_entry: Bot encoutered an error!!! \n";
         //HELP FOR COMMANDS 
         #region help for commands
         public static async Task CreateMessage(CommandContext e, string titleurl = null, string imageurl = null, string thumbnailurl = null, string url = null, string desc = "", string title = "", DiscordColor color = default(DiscordColor), bool sendToUser = false)
@@ -326,7 +326,7 @@ namespace Morbot
                 string data = await cl.GetStringAsync("https://random.cat/meow");
                 var pData = JObject.Parse(data);
                 url = pData["file"].ToString();
-                await CreateMessage(e, imageurl: url, color: DiscordColor.Green);
+                await CreateMessage(e, thumbnailurl: "http://random.cat/random.cat-logo.png", imageurl: url, color: DiscordColor.Green);
             }
 
         }
