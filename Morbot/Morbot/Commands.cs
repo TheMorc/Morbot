@@ -35,7 +35,8 @@ namespace Morbot
                 Description = desc,
                 ImageUrl = imageurl,
                 ThumbnailUrl = thumbnailurl,
-                Url = url
+                Url = url,
+                Timestamp = DateTime.Now
             };
             if (sendToUser)
                 await e.Member.SendMessageAsync("", embed: embed);
@@ -425,7 +426,7 @@ namespace Morbot
             }
         }
         #endregion
-        #region randomgifv2 command
+        #region gifv2 command
         public class Data
         {
             public string type { get; set; }
@@ -467,7 +468,7 @@ namespace Morbot
             public Data data { get; set; }
             public Meta meta { get; set; }
         }
-        [Command("randomgif"), Aliases("randgif"), Description("If anything isnt specified with command, then it responds with random dog or cat(dog or cat randomized by bot) gif(by giphy).")]
+        [Command("gif"), Description("If anything isnt specified with command, then it responds with random dog or cat(dog or cat randomized by bot) gif(by giphy).")]
         public async Task GIFSearch(CommandContext e, [RemainingText]string arg1 = "")
         {
             string gifby = "";
@@ -516,125 +517,186 @@ namespace Morbot
         }
 
 
+
+        #endregion
+        #region picture command
+
+        public class DisplaySize
+        {
+            public bool is_watermarked { get; set; }
+            public string name { get; set; }
+            public string uri { get; set; }
+        }
+
+        public class ReferralDestination
+        {
+            public string site_name { get; set; }
+            public string uri { get; set; }
+        }
+
+        public class Image
+        {
+            public string id { get; set; }
+            public List<DisplaySize> display_sizes { get; set; }
+            public List<ReferralDestination> referral_destinations { get; set; }
+            public string title { get; set; }
+        }
+
+        public class IMGRootObject
+        {
+            public int result_count { get; set; }
+            public List<Image> images { get; set; }
+        }
+        [Command("picture"), Aliases("pic", "pix", "image", "img", "photo"), Description("This command works only if something is specified for ex 'Zetor' then it sends picture of zetor tractor.."), Hidden]
+        public async Task IMGSearch(CommandContext e, [RemainingText]string arg1 = "")
+        {
+            Random rand = new Random();
+            string page = "https://api.gettyimages.com/v3/search/images?fields=id,title&sort_order=newest&phrase=" + arg1;
+            try
+            {
+                var client = new HttpClient();
+                client.DefaultRequestHeaders.Add("Api-Key", "dwa23zvu9szjhcy946v7ppf9");
+                string data = await client.GetStringAsync(page);
+                IMGRootObject oRootObject = new IMGRootObject();
+                oRootObject = JsonConvert.DeserializeObject<IMGRootObject>(data);
+                foreach (Image img in oRootObject.images)
+                {
+                    foreach (DisplaySize disze in img.display_sizes)
+                    {
+                        Console.WriteLine(disze.uri);
+                    }
+                }
+                await CreateMessage(e, imageurl: oRootObject.images[rand.Next(0, (oRootObject.images.Capacity))].display_sizes[0].uri, color: DiscordColor.Green);
+
+            }
+            catch (Exception ex)
+            {
+
+                await CreateMessage(e, desc: error_message + ex, color: DiscordColor.Red);
+            }
+
+        }
+
+
+
+        #endregion
+
+        //deprecated/old commands
+        #region old version of randomgif command.. for historical purposes
+        //#region randomgif command
+        //public class Data
+        //{
+        //    public string type { get; set; }
+        //    public string id { get; set; }
+        //    public string url { get; set; }
+        //    public string image_original_url { get; set; }
+        //    public string image_url { get; set; }
+        //    public string image_mp4_url { get; set; }
+        //    public string image_frames { get; set; }
+        //    public string image_width { get; set; }
+        //    public string image_height { get; set; }
+        //    public string fixed_height_downsampled_url { get; set; }
+        //    public string fixed_height_downsampled_width { get; set; }
+        //    public string fixed_height_downsampled_height { get; set; }
+        //    public string fixed_width_downsampled_url { get; set; }
+        //    public string fixed_width_downsampled_width { get; set; }
+        //    public string fixed_width_downsampled_height { get; set; }
+        //    public string fixed_height_small_url { get; set; }
+        //    public string fixed_height_small_still_url { get; set; }
+        //    public string fixed_height_small_width { get; set; }
+        //    public string fixed_height_small_height { get; set; }
+        //    public string fixed_width_small_url { get; set; }
+        //    public string fixed_width_small_still_url { get; set; }
+        //    public string fixed_width_small_width { get; set; }
+        //    public string fixed_width_small_height { get; set; }
+        //    public string username { get; set; }
+        //    public string caption { get; set; }
+        //}
+
+        //public class Meta
+        //{
+        //    public int status { get; set; }
+        //    public string msg { get; set; }
+        //    public string response_id { get; set; }
+        //}
+
+        //public class RootObjectG
+        //{
+        //    public Data data { get; set; }
+        //    public Meta meta { get; set; }
+        //}
+        //[Command("randomgif")]
+        //public async Task randomgif(CommandContext e)
+        //{
+        //    WriteCommandsExec(e);
+        //    string data = "";
+        //    string gifby = "";
+        //    string gifurl = "";
+        //    Random urlRandomizer = new Random();
+        //    string[] GIFtype = { "cat", "dog" };
+        //    string api = "";
+        //    bool empty = false;
+        //    try
+        //    {
+        //        api = File.ReadAllLines("giphyapikey")[0];
+        //    }
+        //    catch
+        //    {
+        //        empty = true;
+        //    }
+        //    if (empty)
+        //    {
+        //        WriteCommandFailed(e, "Giphy API Key file is EMPTY!");
+        //        await e.Message.RespondAsync("\u200B" + e.User.Mention + " Bot has incorrectly set API Keys.");
+
+        //    }
+        //    else
+        //    {
+        //        string page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + GIFtype[urlRandomizer.Next(0, GIFtype.Length)] + "&api_key=" + File.ReadAllLines("giphyapikey")[0];
+        //        using (HttpClient client = new HttpClient())
+        //        using (HttpResponseMessage response = await client.GetAsync(page))
+        //        using (HttpContent content = response.Content)
+        //        {
+        //            data = await content.ReadAsStringAsync();
+        //            RootObjectG oRootObject = new RootObjectG();
+        //            oRootObject = JsonConvert.DeserializeObject<RootObjectG>(data);
+        //            gifurl = oRootObject.data.image_url;
+        //            if (oRootObject.data.username == "")
+        //            {
+        //                gifby = "";
+        //            }
+        //            else
+        //            {
+        //                gifby = "GIF By: " + oRootObject.data.username;
+        //            }
+        //            await e.RespondAsync("\u200B" + e.User.Mention + " " + gifurl + "\n \n" + gifby);
+        //        }
+
+        //        WriteCommandSucceeded(e, "Sent GIF: " + gifurl);
+        //    }
+        //}
+
+        //#endregion
+        #endregion
+        #region commands command.. new beta of DSharpPlus adds help command..
+        //#region commands command
+        //[Command("commands")]
+        //public async Task commands(CommandContext ex)
+        //{
+        //    WriteCommandsExec(ex);
+        //    string commandlist = null;
+        //    foreach (string server in ex.CommandsNext.RegisteredCommands.Values.Select(e => e.Name))
+        //    {
+        //        string help = "";
+        //        try { help = commandlist.Remove(server.Length, commandlist.Length - server.Length); } catch { }
+        //        if (help == server) { }
+        //        else
+        //        { commandlist = server + "\n--" + commandlist; }
+        //    }
+        //    await ex.Message.RespondAsync("\u200B" + ex.User.Mention + "\nCommand List:\n" + "--" + commandlist.Remove(commandlist.Length - 2, 2));
+        //    WriteCommandSucceeded(ex, " Sent command list.");
+        //}
+        //#endregion
+        #endregion
     }
-    #endregion
-
-    //deprecated/old commands
-    #region old version of randomgif command.. for historical purposes
-    //#region randomgif command
-    //public class Data
-    //{
-    //    public string type { get; set; }
-    //    public string id { get; set; }
-    //    public string url { get; set; }
-    //    public string image_original_url { get; set; }
-    //    public string image_url { get; set; }
-    //    public string image_mp4_url { get; set; }
-    //    public string image_frames { get; set; }
-    //    public string image_width { get; set; }
-    //    public string image_height { get; set; }
-    //    public string fixed_height_downsampled_url { get; set; }
-    //    public string fixed_height_downsampled_width { get; set; }
-    //    public string fixed_height_downsampled_height { get; set; }
-    //    public string fixed_width_downsampled_url { get; set; }
-    //    public string fixed_width_downsampled_width { get; set; }
-    //    public string fixed_width_downsampled_height { get; set; }
-    //    public string fixed_height_small_url { get; set; }
-    //    public string fixed_height_small_still_url { get; set; }
-    //    public string fixed_height_small_width { get; set; }
-    //    public string fixed_height_small_height { get; set; }
-    //    public string fixed_width_small_url { get; set; }
-    //    public string fixed_width_small_still_url { get; set; }
-    //    public string fixed_width_small_width { get; set; }
-    //    public string fixed_width_small_height { get; set; }
-    //    public string username { get; set; }
-    //    public string caption { get; set; }
-    //}
-
-    //public class Meta
-    //{
-    //    public int status { get; set; }
-    //    public string msg { get; set; }
-    //    public string response_id { get; set; }
-    //}
-
-    //public class RootObjectG
-    //{
-    //    public Data data { get; set; }
-    //    public Meta meta { get; set; }
-    //}
-    //[Command("randomgif")]
-    //public async Task randomgif(CommandContext e)
-    //{
-    //    WriteCommandsExec(e);
-    //    string data = "";
-    //    string gifby = "";
-    //    string gifurl = "";
-    //    Random urlRandomizer = new Random();
-    //    string[] GIFtype = { "cat", "dog" };
-    //    string api = "";
-    //    bool empty = false;
-    //    try
-    //    {
-    //        api = File.ReadAllLines("giphyapikey")[0];
-    //    }
-    //    catch
-    //    {
-    //        empty = true;
-    //    }
-    //    if (empty)
-    //    {
-    //        WriteCommandFailed(e, "Giphy API Key file is EMPTY!");
-    //        await e.Message.RespondAsync("\u200B" + e.User.Mention + " Bot has incorrectly set API Keys.");
-
-    //    }
-    //    else
-    //    {
-    //        string page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + GIFtype[urlRandomizer.Next(0, GIFtype.Length)] + "&api_key=" + File.ReadAllLines("giphyapikey")[0];
-    //        using (HttpClient client = new HttpClient())
-    //        using (HttpResponseMessage response = await client.GetAsync(page))
-    //        using (HttpContent content = response.Content)
-    //        {
-    //            data = await content.ReadAsStringAsync();
-    //            RootObjectG oRootObject = new RootObjectG();
-    //            oRootObject = JsonConvert.DeserializeObject<RootObjectG>(data);
-    //            gifurl = oRootObject.data.image_url;
-    //            if (oRootObject.data.username == "")
-    //            {
-    //                gifby = "";
-    //            }
-    //            else
-    //            {
-    //                gifby = "GIF By: " + oRootObject.data.username;
-    //            }
-    //            await e.RespondAsync("\u200B" + e.User.Mention + " " + gifurl + "\n \n" + gifby);
-    //        }
-
-    //        WriteCommandSucceeded(e, "Sent GIF: " + gifurl);
-    //    }
-    //}
-
-    //#endregion
-    #endregion
-    #region commands command.. new beta of DSharpPlus adds help command..
-    //#region commands command
-    //[Command("commands")]
-    //public async Task commands(CommandContext ex)
-    //{
-    //    WriteCommandsExec(ex);
-    //    string commandlist = null;
-    //    foreach (string server in ex.CommandsNext.RegisteredCommands.Values.Select(e => e.Name))
-    //    {
-    //        string help = "";
-    //        try { help = commandlist.Remove(server.Length, commandlist.Length - server.Length); } catch { }
-    //        if (help == server) { }
-    //        else
-    //        { commandlist = server + "\n--" + commandlist; }
-    //    }
-    //    await ex.Message.RespondAsync("\u200B" + ex.User.Mention + "\nCommand List:\n" + "--" + commandlist.Remove(commandlist.Length - 2, 2));
-    //    WriteCommandSucceeded(ex, " Sent command list.");
-    //}
-    //#endregion
-    #endregion
-
 }
