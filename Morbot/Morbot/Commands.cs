@@ -10,16 +10,86 @@ using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using DSharpPlus.Entities;
 using System.Linq;
+using System.IO;
+using DSharpPlus.VoiceNext;
+using System.Diagnostics;
+using static Morbot.Commands;
+
 namespace Morbot
 {
     public class Commands
     {
         static readonly string embed_title = "Morbot ( Version: " + Program.version + ", Made in :flag_sk: )";
         public string error_message = ":no_entry: Bot encoutered an error!!! \n";
+        //TASKS FOR COMMANDS ala translate, createmessage etc.
+        #region tasks for commands
+        public async Task<string> translate(string text)
+        {
+            string resultstring = "";
+            string data = "";
+            string page = "https://translate.yandex.net/api/v1.5/tr.json/translate?key=" + Program.configuration.YandexAPIKey + "&text=" + text + "&lang=" + text.Remove(6, text.Length - 6);
+            using (HttpClient cl = new HttpClient())
+            {
+                data = await cl.GetStringAsync(page);
+                RootObjectresult result = new RootObjectresult();
+                result = JsonConvert.DeserializeObject<RootObjectresult>(data);
+                foreach (string resul in result.text)
+                {
+                    resultstring = resultstring + "   " + resul;
+                }
+            }
+            return resultstring;
+        }
+        public async Task connectToVoiceChannel(CommandContext e)
+        {
+            DiscordChannel chn = null;
+            var vstat = e.Member?.VoiceState;
+            if (chn == null)
+                chn = vstat.Channel;
 
-        //small api
-        #region createmessage command
-        public static async Task CreateMessage(CommandContext e, string titleurl = null, string imageurl = null, string thumbnailurl = null, string url = null, string desc = "", string title = "", DiscordColor color = default(DiscordColor), bool sendToUser = false)
+            var vnext = e.Client.GetVoiceNextClient();
+            if (vnext == null)
+            {
+                await e.RespondAsync("VNext is not enabled or configured.");
+                return;
+            }
+
+            var vnc = vnext.GetConnection(e.Guild);
+            if (vnc == null)
+            {
+                await e.RespondAsync("Not connected in this guild. Connecting to user's voice channel :)");
+                vnc = await vnext.ConnectAsync(chn);
+                await e.RespondAsync($"Connected to `{chn.Name}`");
+            }
+
+            while (vnc.IsPlaying)
+                await vnc.WaitForPlaybackFinishAsync();
+        }
+        public async Task SetSpeaking(CommandContext e, bool SetSpeaking)
+        {
+            DiscordChannel chn = null;
+            var vstat = e.Member?.VoiceState;
+            if (chn == null)
+                chn = vstat.Channel;
+
+            var vnext = e.Client.GetVoiceNextClient();
+            if (vnext == null)
+            {
+                await e.RespondAsync("VNext is not enabled or configured.");
+                return;
+            }
+
+            var vnc = vnext.GetConnection(e.Guild);
+            if (vnc == null)
+            {
+                await e.RespondAsync("Not connected in this guild. Connecting to user's voice channel :)");
+                vnc = await vnext.ConnectAsync(chn);
+                await e.RespondAsync($"Connected to `{chn.Name}`");
+            }
+
+            await vnc.SendSpeakingAsync(SetSpeaking);
+        }
+        public static async Task CreateMessage(CommandContext e, string titleurl = null, string imageurl = null, string thumbnailurl = "https://github.com/NaamloosDT/DSharpPlus/blob/4858631e87392a8586a685bd0e9cb2a96f7d1ffb/logo/d%23+_smaller.png?raw=true", string url = null, string desc = "", string title = "", DiscordColor color = default(DiscordColor), bool sendToUser = false)
         {
             if (title == "")
             {
@@ -40,6 +110,52 @@ namespace Morbot
                 await e.Member.SendMessageAsync("", embed: embed);
             else
                 await e.RespondAsync("", embed: embed);
+        }
+        private async Task music(CommandContext e, string v)
+        {
+
+            var vnext = e.Client.GetVoiceNextClient();
+            var vnc = vnext.GetConnection(e.Guild);
+
+            Exception exc = null;
+            try
+            {
+                var ffmpeg_inf = new ProcessStartInfo
+                {
+                    FileName = "ffmpeg",
+                    Arguments = $"-i \"{v}\" -ac 2 -f s16le -ar 48000 pipe:1",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                };
+                var ffmpeg = Process.Start(ffmpeg_inf);
+                var ffout = ffmpeg.StandardOutput.BaseStream;
+
+                // let's buffer ffmpeg output
+                using (var ms = new MemoryStream())
+                {
+                    await ffout.CopyToAsync(ms);
+                    ms.Position = 0;
+
+                    var buff = new byte[3840]; // buffer to hold the PCM data
+                    var br = 0;
+                    while ((br = ms.Read(buff, 0, buff.Length)) > 0)
+                    {
+                        if (br < buff.Length) // it's possible we got less than expected, let's null the remaining part of the buffer
+                            for (var i = br; i < buff.Length; i++)
+                                buff[i] = 0;
+
+                        await vnc.SendAsync(buff, 20); // we're sending 20ms of data
+                    }
+                }
+            }
+            catch (Exception ex) { exc = ex; }
+            finally
+            {
+                await vnc.SendSpeakingAsync(false);
+                await CreateMessage(e, color: DiscordColor.Red, desc: $"An exception occured during playback: `{exc.GetType()}: {exc.Message}`");
+            }
+
         }
         #endregion
 
@@ -272,7 +388,7 @@ namespace Morbot
             public string value { get; set; }
         }
         [Command("randomnorrisjoke"), Aliases("norris", "norrisjoke", "chucknorris", "chuck", "chuckjoke", "randomchuckjoke"), Description("Chuck Norris was born earlier than he died! Command pulls random joke from ChuckNorris API..")]
-        public async Task ChuckNorris(CommandContext e)
+        public async Task ChuckNorris(CommandContext e, string language = "")
         {
             string data = "";
             string url = "";
@@ -283,7 +399,62 @@ namespace Morbot
                 RootObjectnorris chuck = new RootObjectnorris();
                 chuck = JsonConvert.DeserializeObject<RootObjectnorris>(data);
                 url = chuck.url;
-                await CreateMessage(e, title: "Chuck Norris joke:", desc: chuck.value, thumbnailurl: chuck.icon_url, url: "https://api.chucknorris.io", color: DiscordColor.Green);
+                if (language == "")
+                {
+                    await CreateMessage(e, title: "Chuck Norris joke:", desc: chuck.value, thumbnailurl: chuck.icon_url, url: "https://api.chucknorris.io", color: DiscordColor.Green);
+                }
+                else
+                {
+
+                    await CreateMessage(e, title: "Chuck Norris joke in English:", desc: chuck.value, thumbnailurl: chuck.icon_url, url: "https://api.chucknorris.io", color: DiscordColor.Green);
+                    string translation = await translate(language + " " + chuck.value);
+                    await CreateMessage(e, title: "Chuck Norris joke in " + translation.Remove(9, translation.Length - 9) + ":", desc: translation.Remove(0, 9), thumbnailurl: chuck.icon_url, url: "https://api.chucknorris.io", color: DiscordColor.Green);
+                }
+            }
+        }
+
+        #endregion
+        #region translate command
+        public class RootObjectlanguages
+        {
+            public List<string> dirs { get; set; }
+        }
+        public class RootObjectresult
+        {
+            public int code { get; set; }
+            public string lang { get; set; }
+            public List<string> text { get; set; }
+        }
+        [Command("translate"), Description("eee what else? one! what else? two what else?? ..... translate command!!")]
+        public async Task translate(CommandContext e, params string[] args)
+        {
+            string data = "";
+            if (args[0] == "languages")
+            {
+                string page = "https://translate.yandex.net/api/v1.5/tr.json/getLangs?key=" + Program.configuration.YandexAPIKey;
+                using (HttpClient cl = new HttpClient())
+                {
+                    data = await cl.GetStringAsync(page);
+                    RootObjectlanguages languages = new RootObjectlanguages();
+                    languages = JsonConvert.DeserializeObject<RootObjectlanguages>(data);
+                    string langstring = "";
+                    foreach (string lang in languages.dirs)
+                    {
+                        langstring = langstring + "   " + lang;
+                    }
+                    await CreateMessage(e, desc: langstring, color: DiscordColor.Green);
+                }
+            }
+            else
+            {
+                string text = "";
+                foreach (string arg in args)
+                {
+                    text = text + " " + arg;
+                }
+                string result = await translate(text);
+                await CreateMessage(e, desc: result.Remove(0, 9));
+
             }
         }
 
@@ -579,6 +750,294 @@ namespace Morbot
 
 
 
+        #endregion
+        #region voice channel join command
+        [Command("join"), Aliases("vchjoin", "voicechanneljoin", "voicejoin", "channeljoin", "voicechjoin"), Description("Joins a voice channel.")]
+        public async Task Join(CommandContext e, DiscordChannel chn = null)
+        {
+            var vnext = e.Client.GetVoiceNextClient();
+            if (vnext == null)
+            {
+                await CreateMessage(e, desc: error_message, color: DiscordColor.Red);
+                return;
+            }
+
+            var vnc = vnext.GetConnection(e.Guild);
+            if (vnc != null)
+            {
+                await CreateMessage(e, desc: "Already connected to voice channel!", color: DiscordColor.Green);
+                return;
+            }
+
+            var vstat = e.Member?.VoiceState;
+            if (vstat?.Channel == null && chn == null)
+            {
+                await CreateMessage(e, desc: "You are not in voice channel!", color: DiscordColor.Red);
+                return;
+            }
+
+            if (chn == null)
+                chn = vstat.Channel;
+
+            vnc = await vnext.ConnectAsync(chn);
+            await CreateMessage(e, desc: "Connected to `" + chn.Name + "`", color: DiscordColor.Green);
+        }
+        #endregion
+        #region voice channel leave command
+        [Command("leave"), Aliases("vchleave", "voicechannelleave", "voiceleave", "channelleave", "voicechleave"), Description("Leaves a voice channel.")]
+        public async Task Leave(CommandContext e)
+        {
+            var vnext = e.Client.GetVoiceNextClient();
+            if (vnext == null)
+            {
+                await CreateMessage(e, desc: error_message, color: DiscordColor.Red);
+                return;
+            }
+
+            var vnc = vnext.GetConnection(e.Guild);
+            if (vnc == null)
+            {
+                await CreateMessage(e, desc: "Not connected on this server", color: DiscordColor.Green);
+                return;
+            }
+
+            vnc.Disconnect();
+            await CreateMessage(e, desc: "Disconnected", color: DiscordColor.Green);
+        }
+        #endregion
+        #region voice channel play command
+        public class Format
+        {
+            public string manifest_url { get; set; }
+            public string ext { get; set; }
+            public int? fps { get; set; }
+            public double tbr { get; set; }
+            public object language { get; set; }
+            public string format_id { get; set; }
+            public string vcodec { get; set; }
+            public int abr { get; set; }
+            public string acodec { get; set; }
+            public int? width { get; set; }
+            public int? asr { get; set; }
+            public string url { get; set; }
+            public int? height { get; set; }
+            public string container { get; set; }
+            public string protocol { get; set; }
+            public int filesize { get; set; }
+            public string format_note { get; set; }
+            public string format { get; set; }
+            public string player_url { get; set; }
+            public string resolution { get; set; }
+        }
+        public class RequestedFormat
+        {
+            public string acodec { get; set; }
+            public int width { get; set; }
+            public object language { get; set; }
+            public string manifest_url { get; set; }
+            public string ext { get; set; }
+            public string format_id { get; set; }
+            public int height { get; set; }
+            public string url { get; set; }
+            public double tbr { get; set; }
+            public object asr { get; set; }
+            public int fps { get; set; }
+            public string protocol { get; set; }
+            public string vcodec { get; set; }
+            public int filesize { get; set; }
+            public string format_note { get; set; }
+            public string format { get; set; }
+            public int? abr { get; set; }
+            public string player_url { get; set; }
+        }
+        public class Thumbnail
+        {
+            public string url { get; set; }
+            public string id { get; set; }
+        }
+        public class Subtitles
+        {
+        }
+        public class AutomaticCaptions
+        {
+        }
+        public class RootObjectvideo
+        {
+            public object resolution { get; set; }
+            public string webpage_url_basename { get; set; }
+            public string fulltitle { get; set; }
+            public List<Format> formats { get; set; }
+            public object end_time { get; set; }
+            public int height { get; set; }
+            public List<RequestedFormat> requested_formats { get; set; }
+            public object is_live { get; set; }
+            public object chapters { get; set; }
+            public int duration { get; set; }
+            public string description { get; set; }
+            public List<string> tags { get; set; }
+            public int abr { get; set; }
+            public object creator { get; set; }
+            public string extractor_key { get; set; }
+            public string acodec { get; set; }
+            public int age_limit { get; set; }
+            public string uploader_id { get; set; }
+            public string _filename { get; set; }
+            public object playlist { get; set; }
+            public string license { get; set; }
+            public int fps { get; set; }
+            public object playlist_index { get; set; }
+            public int dislike_count { get; set; }
+            public string thumbnail { get; set; }
+            public List<Thumbnail> thumbnails { get; set; }
+            public object requested_subtitles { get; set; }
+            public string extractor { get; set; }
+            public object stretched_ratio { get; set; }
+            public List<string> categories { get; set; }
+            public string uploader_url { get; set; }
+            public object annotations { get; set; }
+            public string ext { get; set; }
+            public int view_count { get; set; }
+            public double average_rating { get; set; }
+            public Subtitles subtitles { get; set; }
+            public string display_id { get; set; }
+            public string format_id { get; set; }
+            public string vcodec { get; set; }
+            public object season_number { get; set; }
+            public int width { get; set; }
+            public object episode_number { get; set; }
+            public AutomaticCaptions automatic_captions { get; set; }
+            public string uploader { get; set; }
+            public object alt_title { get; set; }
+            public object start_time { get; set; }
+            public string webpage_url { get; set; }
+            public int like_count { get; set; }
+            public string title { get; set; }
+            public string id { get; set; }
+            public string upload_date { get; set; }
+            public string format { get; set; }
+            public object series { get; set; }
+            public object vbr { get; set; }
+        }
+
+        [Command("play"), Aliases("vchplay", "voicechannelplay", "voiceplay", "channelplay", "voicechplay"), Description("Plays an audio file.")]
+        public async Task Play(CommandContext e, [RemainingText, Description("Full path to the file to play.")] string filename, DiscordChannel chn = null)
+        {
+            await connectToVoiceChannel(e);
+            if (filename.Contains("youtu"))
+            {
+                File.Delete("res.txt");
+                try
+                {
+                    var process = new Process
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = "youtube",
+                            Arguments = filename + " --dump-json",
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true,
+                            CreateNoWindow = false,
+
+                        }
+                    };
+                    string data = null;
+                    process.Start();
+                    while (!process.StandardOutput.EndOfStream)
+                    {
+                        data = await process.StandardOutput.ReadToEndAsync();
+                    }
+
+                    RootObjectvideo oRootObject = new RootObjectvideo();
+                    oRootObject = JsonConvert.DeserializeObject<RootObjectvideo>(data);
+                    await CreateMessage(e, desc: "Playing: `" + oRootObject.fulltitle + "`");
+
+                    File.Delete("temp.mp3");
+                    HttpClient cl = new HttpClient();
+                    HttpResponseMessage response = await cl.GetAsync(oRootObject.formats[5].url);
+                    using (FileStream fs = new FileStream("temp.mp3", FileMode.Create))
+                    {
+                        await response.Content.CopyToAsync(fs);
+                        await SetSpeaking(e, true);
+                        await music(e, "temp.mp3");
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                }
+            }
+            else if (filename.StartsWith("http"))
+            {
+                File.Delete("temp.mp3");
+                HttpClient cl = new HttpClient();
+                HttpResponseMessage response = await cl.GetAsync(filename);
+                using (FileStream fs = new FileStream("temp.mp3", FileMode.Create))
+                {
+                    await response.Content.CopyToAsync(fs);
+                    await CreateMessage(e, desc: $"Playing: `{filename}`");
+                    await SetSpeaking(e, true);
+                    await music(e, "temp.mp3");
+                }
+            }
+            else
+            {
+                if (!File.Exists(filename))
+                {
+                    await e.RespondAsync($"File `{filename}` does not exist.");
+                    return;
+                }
+                await e.Message.RespondAsync($"Playing `{filename}`");
+                await SetSpeaking(e, true);
+                await music(e, filename);
+
+            }
+        }
+        #endregion
+        #region speak command
+        [Command("speak"), Aliases("vchspeak", "voicechannelspeak", "voicespeak", "channelspeak", "voicechspeak"), Description("speaks for you in voice channel :)")]
+        public async Task speak(CommandContext e, params string[] args)
+        {
+            await connectToVoiceChannel(e);
+            string text = "";
+            foreach (string arg in args)
+            {
+                text = text + " " + arg;
+            }
+
+            File.Delete("temp.mp3");
+            string translatedata = text.Remove(0, 1);
+            string page = "https://translate.google.com/translate_tts?ie=UTF-8&q=" + translatedata.Remove(0, 3) + "&tl=" + translatedata.Remove(2, translatedata.Length - 2) + "&client=tw-ob";
+            HttpClient cl = new HttpClient();
+            HttpResponseMessage response = await cl.GetAsync(page);
+            using (FileStream fs = new FileStream("temp.mp3", FileMode.Create))
+            {
+                await response.Content.CopyToAsync(fs);
+            }
+            await CreateMessage(e, desc: "Speaking: " + translatedata.Remove(2, translatedata.Length - 2));
+            await SetSpeaking(e, true);
+            await music(e, "temp.mp3");
+        }
+
+        #endregion
+        #region hidden commands
+        [Command("žaneta"), Hidden, Description("sings section of hej žaneta song, text arrangement by crafty ")]
+        public async Task žaneta(CommandContext e)
+        {
+            await connectToVoiceChannel(e);
+
+            File.Delete("temp.mp3");
+            string page = "https://translate.google.com/translate_tts?ie=UTF-8&q=Héj žaneta zapoj mi tam ten kabel at múžu repovať, všechno jde skvele nema to chybu&tl=cs&client=tw-ob";
+            HttpClient cl = new HttpClient();
+            HttpResponseMessage response = await cl.GetAsync(page);
+            using (FileStream fs = new FileStream("temp.mp3", FileMode.Create))
+            {
+                await response.Content.CopyToAsync(fs);
+            }
+
+            await SetSpeaking(e, true);
+            await music(e, "temp.mp3");
+
+        }
         #endregion
     }
 }

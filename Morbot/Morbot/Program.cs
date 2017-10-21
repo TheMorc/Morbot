@@ -3,19 +3,30 @@ using System.IO;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
+using DSharpPlus.VoiceNext;
 using Newtonsoft.Json;
 using System.Text;
+using DSharpPlus.EventArgs;
+using System.Linq;
+
 namespace Morbot
 {
     class Program
     {
-        static DiscordClient discord;
+        public static DiscordClient discord;
         public static DiscordGame game = new DiscordGame();
         static public string prefix = "";
-        static CommandsNextModule commands;
+        static CommandsNextExtension commands;
+        static VoiceNextExtension voice;
         public static configJSON configuration = new configJSON();
-        public static string version = "1.5.9";
+        public static string version = "1.6";
+        private Task Client_Ready(ReadyEventArgs exx)
+        {
+            exx.Client.Guilds[0].Channels.Where(e => e.Id == 0);
 
+
+            return Task.CompletedTask;
+        }
         public class configJSON
         {
             public string DiscordBotToken { get; set; }
@@ -23,6 +34,7 @@ namespace Morbot
             public string OpenWeatherAPIKey { get; set; }
             public string PixabayAPIKey { get; set; }
             public string GiphyAPIKey { get; set; }
+            public string YandexAPIKey { get; set; }
             public string Prefix { get; set; }
         }
 
@@ -54,10 +66,18 @@ namespace Morbot
                 LogLevel = LogLevel.Debug,
                 UseInternalLogHandler = true
             });
+
             prefix = configuration.Prefix;
             commands = discord.UseCommandsNext(new CommandsNextConfiguration
             {
-                StringPrefix = prefix
+                StringPrefix = prefix,
+                EnableDms = true,
+                EnableMentionPrefix = true
+            });
+
+            voice = discord.UseVoiceNext(new VoiceNextConfiguration
+            {
+                VoiceApplication = DSharpPlus.VoiceNext.Codec.VoiceApplication.Music
             });
             commands.RegisterCommands<Commands>();
             await discord.ConnectAsync();

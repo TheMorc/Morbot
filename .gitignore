@@ -261,3 +261,11 @@ __pycache__/
 *.pyc
 /Morbot/Morbot/Thumbs.db
 /Morbot/Morbot/config.json
+/Morbot/Morbot/the_train_death.mp3
+/Morbot/Morbot/Properties/launchSettings.json
+/Morbot/Morbot/ffmpeg.exe
+/Morbot/Morbot/libopus.dll
+/Morbot/Morbot/libsodium.dll
+/Morbot/Morbot/musik.mp3
+/Morbot/Morbot/temp.mp3
+/Morbot/Morbot/youtube.exe
