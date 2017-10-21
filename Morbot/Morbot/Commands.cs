@@ -17,6 +17,8 @@ using static Morbot.Commands;
 
 namespace Morbot
 {
+
+
     public class Commands
     {
         static readonly string embed_title = "Morbot ( Version: " + Program.version + ", Made in 🇸🇰 )";
@@ -40,31 +42,6 @@ namespace Morbot
                 }
             }
             return resultstring;
-        }
-        public async Task connectToVoiceChannel(CommandContext e)
-        {
-            DiscordChannel chn = null;
-            var vstat = e.Member?.VoiceState;
-            if (chn == null)
-                chn = vstat.Channel;
-
-            var vnext = e.Client.GetVoiceNextClient();
-            if (vnext == null)
-            {
-                await CreateMessage(e, color: DiscordColor.Red, desc: error_message + "VoiceNext is not enabled or configured properly.");
-                return;
-            }
-
-            var vnc = vnext.GetConnection(e.Guild);
-            if (vnc == null)
-            {
-                await CreateMessage(e, color: DiscordColor.Yellow, desc: "Not connected in this guild. Connecting to user's voice channel :)");
-                vnc = await vnext.ConnectAsync(chn);
-                await CreateMessage(e, color: DiscordColor.Green, desc: $"Connected to `{chn.Name}`");
-            }
-
-            while (vnc.IsPlaying)
-                await vnc.WaitForPlaybackFinishAsync();
         }
         public async Task SetSpeaking(CommandContext e, bool SetSpeaking)
         {
@@ -94,7 +71,7 @@ namespace Morbot
             else
                 await e.RespondAsync("", embed: embed);
         }
-        private async Task music(CommandContext e, string v)
+        private async Task music(CommandContext e, string v, double speed = 1.0)
         {
 
             var vnext = e.Client.GetVoiceNextClient();
@@ -103,6 +80,10 @@ namespace Morbot
             Exception exc = null;
             try
             {
+                if (speed == 0)
+                    speed = 1.0;
+                if (speed == 0.0)
+                    speed = 1.0;
                 var ffmpeg_inf = new ProcessStartInfo
                 {
                     FileName = "ffmpeg",
@@ -111,24 +92,24 @@ namespace Morbot
                     RedirectStandardOutput = true,
                     RedirectStandardError = true
                 };
+                Console.Write(ffmpeg_inf.Arguments);
                 var ffmpeg = Process.Start(ffmpeg_inf);
                 var ffout = ffmpeg.StandardOutput.BaseStream;
 
-                // let's buffer ffmpeg output
                 using (var ms = new MemoryStream())
                 {
                     await ffout.CopyToAsync(ms);
                     ms.Position = 0;
 
-                    var buff = new byte[3840]; // buffer to hold the PCM data
+                    var buff = new byte[3840];
                     var br = 0;
                     while ((br = ms.Read(buff, 0, buff.Length)) > 0)
                     {
-                        if (br < buff.Length) // it's possible we got less than expected, let's null the remaining part of the buffer
+                        if (br < buff.Length)
                             for (var i = br; i < buff.Length; i++)
                                 buff[i] = 0;
 
-                        await vnc.SendAsync(buff, 20); // we're sending 20ms of data
+                        await vnc.SendAsync(buff, 20);
                     }
                 }
             }
@@ -736,34 +717,30 @@ namespace Morbot
         #endregion
         #region voice channel join command
         [Command("join"), Aliases("vchjoin", "voicechanneljoin", "voicejoin", "channeljoin", "voicechjoin"), Description("Joins a voice channel.")]
-        public async Task Join(CommandContext e, DiscordChannel chn = null)
+        public async Task connectToVoiceChannel(CommandContext e)
         {
+            DiscordChannel chn = null;
+            var vstat = e.Member?.VoiceState;
+            if (chn == null)
+                chn = vstat.Channel;
+
             var vnext = e.Client.GetVoiceNextClient();
             if (vnext == null)
             {
-                await CreateMessage(e, desc: error_message, color: DiscordColor.Red);
+                await CreateMessage(e, color: DiscordColor.Red, desc: error_message + "VoiceNext is not enabled or configured properly.");
                 return;
             }
 
             var vnc = vnext.GetConnection(e.Guild);
-            if (vnc != null)
+            if (vnc == null)
             {
-                await CreateMessage(e, desc: "Already connected to voice channel!", color: DiscordColor.Green);
-                return;
+                await CreateMessage(e, color: DiscordColor.Yellow, desc: "Not connected in this guild. Connecting to user's voice channel :)");
+                vnc = await vnext.ConnectAsync(chn);
+                await CreateMessage(e, color: DiscordColor.Green, desc: $"Connected to `{chn.Name}`");
             }
 
-            var vstat = e.Member?.VoiceState;
-            if (vstat?.Channel == null && chn == null)
-            {
-                await CreateMessage(e, desc: "You are not in voice channel!", color: DiscordColor.Red);
-                return;
-            }
-
-            if (chn == null)
-                chn = vstat.Channel;
-
-            vnc = await vnext.ConnectAsync(chn);
-            await CreateMessage(e, desc: "Connected to `" + chn.Name + "`", color: DiscordColor.Green);
+            while (vnc.IsPlaying)
+                await vnc.WaitForPlaybackFinishAsync();
         }
         #endregion
         #region voice channel leave command
@@ -1022,5 +999,6 @@ namespace Morbot
 
         }
         #endregion
+
     }
 }
