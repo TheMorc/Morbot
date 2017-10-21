@@ -51,16 +51,16 @@ namespace Morbot
             var vnext = e.Client.GetVoiceNextClient();
             if (vnext == null)
             {
-                await e.RespondAsync("VNext is not enabled or configured.");
+                await CreateMessage(e, color: DiscordColor.Red, desc: error_message + "VoiceNext is not enabled or configured properly.");
                 return;
             }
 
             var vnc = vnext.GetConnection(e.Guild);
             if (vnc == null)
             {
-                await e.RespondAsync("Not connected in this guild. Connecting to user's voice channel :)");
+                await CreateMessage(e, color: DiscordColor.Yellow, desc: "Not connected in this guild. Connecting to user's voice channel :)");
                 vnc = await vnext.ConnectAsync(chn);
-                await e.RespondAsync($"Connected to `{chn.Name}`");
+                await CreateMessage(e, color: DiscordColor.Green, desc: $"Connected to `{chn.Name}`");
             }
 
             while (vnc.IsPlaying)
@@ -68,26 +68,8 @@ namespace Morbot
         }
         public async Task SetSpeaking(CommandContext e, bool SetSpeaking)
         {
-            DiscordChannel chn = null;
-            var vstat = e.Member?.VoiceState;
-            if (chn == null)
-                chn = vstat.Channel;
-
             var vnext = e.Client.GetVoiceNextClient();
-            if (vnext == null)
-            {
-                await e.RespondAsync("VNext is not enabled or configured.");
-                return;
-            }
-
             var vnc = vnext.GetConnection(e.Guild);
-            if (vnc == null)
-            {
-                await e.RespondAsync("Not connected in this guild. Connecting to user's voice channel :)");
-                vnc = await vnext.ConnectAsync(chn);
-                await e.RespondAsync($"Connected to `{chn.Name}`");
-            }
-
             await vnc.SendSpeakingAsync(SetSpeaking);
         }
         public static async Task CreateMessage(CommandContext e, string titleurl = null, string imageurl = null, string thumbnailurl = "https://github.com/NaamloosDT/DSharpPlus/blob/4858631e87392a8586a685bd0e9cb2a96f7d1ffb/logo/d%23+_smaller.png?raw=true", string url = null, string desc = "", string title = "", DiscordColor color = default(DiscordColor), bool sendToUser = false)
@@ -1014,7 +996,7 @@ namespace Morbot
             {
                 await response.Content.CopyToAsync(fs);
             }
-            await CreateMessage(e, desc: "Speaking: " + translatedata.Remove(2, translatedata.Length - 2));
+            await CreateMessage(e, color: DiscordColor.Green, desc: "Speaking: " + translatedata.Remove(0, 3));
             await SetSpeaking(e, true);
             await music(e, "temp.mp3");
         }
@@ -1034,7 +1016,7 @@ namespace Morbot
             {
                 await response.Content.CopyToAsync(fs);
             }
-
+            await CreateMessage(e, color: DiscordColor.Green, desc: "Hej Žaneta https://youtu.be/jtdJAnZNDto", imageurl: "https://i.ytimg.com/vi/jtdJAnZNDto/hqdefault.jpg?sqp=-oaymwEXCPYBEIoBSFryq4qpAwkIARUAAIhCGAE=&rs=AOn4CLB8rIsvdWdSN67GmbM48erLIuvjbQ");
             await SetSpeaking(e, true);
             await music(e, "temp.mp3");
 
