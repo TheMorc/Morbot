@@ -19,7 +19,7 @@ namespace Morbot
         static CommandsNextExtension commands;
         static VoiceNextExtension voice;
         public static configJSON configuration = new configJSON();
-        public static string version = "1.6";
+        public static string version = "1.6.1";
         private Task Client_Ready(ReadyEventArgs exx)
         {
             exx.Client.Guilds[0].Channels.Where(e => e.Id == 0);

@@ -19,8 +19,9 @@ namespace Morbot
 {
     public class Commands
     {
-        static readonly string embed_title = "Morbot ( Version: " + Program.version + ", Made in :flag_sk: )";
+        static readonly string embed_title = "Morbot ( Version: " + Program.version + ", Made in 🇸🇰 )";
         public string error_message = ":no_entry: Bot encoutered an error!!! \n";
+
         //TASKS FOR COMMANDS ala translate, createmessage etc.
         #region tasks for commands
         public async Task<string> translate(string text)
