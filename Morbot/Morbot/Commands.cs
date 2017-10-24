@@ -21,7 +21,7 @@ namespace Morbot
 
     public class Commands
     {
-        static readonly string embed_title = "Morbot ( Version: " + Program.version + ", Made in 🇸🇰 )";
+        static readonly string embed_title = "Morbot [ver: " + Program.version + ", Made in 🇸🇰, By: Morc]";
         public string error_message = ":no_entry: Bot encoutered an error!!! \n";
 
         //TASKS FOR COMMANDS ala translate, createmessage etc.
@@ -258,15 +258,21 @@ namespace Morbot
         public class Main
         {
             public double temp { get; set; }
-            public int pressure { get; set; }
+            public double pressure { get; set; }
             public int humidity { get; set; }
             public double temp_min { get; set; }
             public double temp_max { get; set; }
+            public double sea_level { get; set; }
+            public double grnd_level { get; set; }
         }
         public class Wind
         {
             public double speed { get; set; }
-            public int deg { get; set; }
+            public double deg { get; set; }
+        }
+        public class Rain
+        {
+            public double __invalid_name__3h { get; set; }
         }
         public class Clouds
         {
@@ -274,21 +280,19 @@ namespace Morbot
         }
         public class Sys
         {
-            public int type { get; set; }
-            public int id { get; set; }
             public double message { get; set; }
             public string country { get; set; }
             public int sunrise { get; set; }
             public int sunset { get; set; }
         }
-        public class RootObjectW
+        public class RootObjectW2
         {
             public Coord coord { get; set; }
             public List<Weather> weather { get; set; }
             public string @base { get; set; }
             public Main main { get; set; }
-            public int visibility { get; set; }
             public Wind wind { get; set; }
+            public Rain rain { get; set; }
             public Clouds clouds { get; set; }
             public int dt { get; set; }
             public Sys sys { get; set; }
@@ -296,20 +300,30 @@ namespace Morbot
             public string name { get; set; }
             public int cod { get; set; }
         }
+
+
         [Command("weather"), Description("Bot responds with actual temperature in °C.Weather gets pulled from OpenWeather and city is Topoľčany(small town near village Biskupová where Morc lives).")]
-        public async Task CWeather(CommandContext e)
+        public async Task CWeather(CommandContext e, [RemainingText]string town = "Topolcany")
         {
             string data = "";
             string weathertype = null;
             double temp = 0;
             try
             {
-                string page = "http://api.openweathermap.org/data/2.5/weather?q=Topolcany&mode=json&APPID=" + Program.configuration.OpenWeatherAPIKey;
+                string page = "http://api.openweathermap.org/data/2.5/weather?q=" + System.Web.HttpUtility.UrlEncode(town) + "&mode=json&APPID=" + Program.configuration.OpenWeatherAPIKey;
                 using (HttpClient cl = new HttpClient())
                 {
                     data = await cl.GetStringAsync(page);
-                    RootObjectW oRootObject = new RootObjectW();
-                    oRootObject = JsonConvert.DeserializeObject<RootObjectW>(data);
+                    RootObjectW2 oRootObject = new RootObjectW2();
+                    try
+                    {
+
+                        oRootObject = JsonConvert.DeserializeObject<RootObjectW2>(data);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Write(ex.ToString());
+                    }
                     weathertype = null;
                     DiscordColor wcolor = DiscordColor.None;
                     temp = oRootObject.main.temp - 273.15;
@@ -333,7 +347,14 @@ namespace Morbot
                         weathertype = ":cloud_rain:" + " - Rain";
                         wcolor = DiscordColor.Cyan;
                     }
-                    await CreateMessage(e, desc: "Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype, color: wcolor);
+
+                    if (oRootObject.weather[0].description == "mist")
+                    {
+                        weathertype = ":fog:" + " - Fog/Mist";
+                        wcolor = DiscordColor.Cyan;
+                    }
+                    await CreateMessage(e, desc: oRootObject.name + " - " + oRootObject.sys.country + ", specified by " + e.User.Username + "\n" + temp + "°C \n" + weathertype, color: wcolor);
+                    //await CreateMessage(e, desc: "Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype, color: wcolor);
                 }
             }
             catch (Exception ex)
@@ -766,7 +787,7 @@ namespace Morbot
         }
         #endregion
         #region voice channel play command
-        public class Format
+        public class Format1
         {
             public string manifest_url { get; set; }
             public string ext { get; set; }
@@ -789,7 +810,7 @@ namespace Morbot
             public string player_url { get; set; }
             public string resolution { get; set; }
         }
-        public class RequestedFormat
+        public class RequestedFormat1
         {
             public string acodec { get; set; }
             public int width { get; set; }
@@ -810,26 +831,26 @@ namespace Morbot
             public int? abr { get; set; }
             public string player_url { get; set; }
         }
-        public class Thumbnail
+        public class Thumbnail1
         {
             public string url { get; set; }
             public string id { get; set; }
         }
-        public class Subtitles
+        public class Subtitles1
         {
         }
-        public class AutomaticCaptions
+        public class AutomaticCaptions1
         {
         }
-        public class RootObjectvideo
+        public class RootObjectvideo1
         {
             public object resolution { get; set; }
             public string webpage_url_basename { get; set; }
             public string fulltitle { get; set; }
-            public List<Format> formats { get; set; }
+            public List<Format1> formats { get; set; }
             public object end_time { get; set; }
             public int height { get; set; }
-            public List<RequestedFormat> requested_formats { get; set; }
+            public List<RequestedFormat1> requested_formats { get; set; }
             public object is_live { get; set; }
             public object chapters { get; set; }
             public int duration { get; set; }
@@ -848,7 +869,7 @@ namespace Morbot
             public object playlist_index { get; set; }
             public int dislike_count { get; set; }
             public string thumbnail { get; set; }
-            public List<Thumbnail> thumbnails { get; set; }
+            public List<Thumbnail1> thumbnails { get; set; }
             public object requested_subtitles { get; set; }
             public string extractor { get; set; }
             public object stretched_ratio { get; set; }
@@ -858,14 +879,14 @@ namespace Morbot
             public string ext { get; set; }
             public int view_count { get; set; }
             public double average_rating { get; set; }
-            public Subtitles subtitles { get; set; }
+            public Subtitles1 subtitles { get; set; }
             public string display_id { get; set; }
             public string format_id { get; set; }
             public string vcodec { get; set; }
             public object season_number { get; set; }
             public int width { get; set; }
             public object episode_number { get; set; }
-            public AutomaticCaptions automatic_captions { get; set; }
+            public AutomaticCaptions1 automatic_captions { get; set; }
             public string uploader { get; set; }
             public object alt_title { get; set; }
             public object start_time { get; set; }
@@ -878,6 +899,133 @@ namespace Morbot
             public object series { get; set; }
             public object vbr { get; set; }
         }
+        public class Fragment1
+        {
+            public string path { get; set; }
+            public double? duration { get; set; }
+        }
+        public class Thumbnail2
+        {
+            public string url { get; set; }
+            public string id { get; set; }
+        }
+        public class Subtitles2
+        {
+        }
+        public class RequestedFormat2
+        {
+            public string vcodec { get; set; }
+            public object filesize { get; set; }
+            public List<Fragment2> fragments { get; set; }
+            public string manifest_url { get; set; }
+            public object language { get; set; }
+            public string format { get; set; }
+            public double tbr { get; set; }
+            public string acodec { get; set; }
+            public string format_id { get; set; }
+            public string url { get; set; }
+            public int? height { get; set; }
+            public string protocol { get; set; }
+            public string fragment_base_url { get; set; }
+            public int? asr { get; set; }
+            public string format_note { get; set; }
+            public int? width { get; set; }
+            public string ext { get; set; }
+            public int? fps { get; set; }
+            public string container { get; set; }
+            public int? abr { get; set; }
+        }
+        public class AutomaticCaptions2
+        {
+        }
+        public class Fragment2
+        {
+            public string path { get; set; }
+            public double? duration { get; set; }
+        }
+        public class Format2
+        {
+            public object filesize { get; set; }
+            public string vcodec { get; set; }
+            public List<Fragment2> fragments { get; set; }
+            public string manifest_url { get; set; }
+            public object language { get; set; }
+            public string container { get; set; }
+            public string acodec { get; set; }
+            public string url { get; set; }
+            public int? height { get; set; }
+            public string protocol { get; set; }
+            public string fragment_base_url { get; set; }
+            public string format_note { get; set; }
+            public string ext { get; set; }
+            public int? width { get; set; }
+            public string format { get; set; }
+            public double tbr { get; set; }
+            public string format_id { get; set; }
+            public int? asr { get; set; }
+            public int abr { get; set; }
+            public int? fps { get; set; }
+            public string resolution { get; set; }
+            public string player_url { get; set; }
+        }
+        public class RootObjectvideo2
+        {
+            public string description { get; set; }
+            public string vcodec { get; set; }
+            public string license { get; set; }
+            public List<string> tags { get; set; }
+            public int like_count { get; set; }
+            public string uploader_id { get; set; }
+            public string upload_date { get; set; }
+            public string ext { get; set; }
+            public object season_number { get; set; }
+            public object stretched_ratio { get; set; }
+            public int age_limit { get; set; }
+            public int abr { get; set; }
+            public object vbr { get; set; }
+            public string id { get; set; }
+            public string uploader_url { get; set; }
+            public string _filename { get; set; }
+            public object series { get; set; }
+            public List<Thumbnail2> thumbnails { get; set; }
+            public string format_id { get; set; }
+            public string title { get; set; }
+            public string fulltitle { get; set; }
+            public string webpage_url { get; set; }
+            public object annotations { get; set; }
+            public Subtitles2 subtitles { get; set; }
+            public object requested_subtitles { get; set; }
+            public List<RequestedFormat2> requested_formats { get; set; }
+            public object playlist_index { get; set; }
+            public object chapters { get; set; }
+            public string webpage_url_basename { get; set; }
+            public object playlist { get; set; }
+            public object resolution { get; set; }
+            public List<string> categories { get; set; }
+            public string acodec { get; set; }
+            public double average_rating { get; set; }
+            public int dislike_count { get; set; }
+            public string thumbnail { get; set; }
+            public object episode_number { get; set; }
+            public object alt_title { get; set; }
+            public int height { get; set; }
+            public string extractor { get; set; }
+            public object creator { get; set; }
+            public int duration { get; set; }
+            public int width { get; set; }
+            public AutomaticCaptions2 automatic_captions { get; set; }
+            public string format { get; set; }
+            public object start_time { get; set; }
+            public object is_live { get; set; }
+            public object end_time { get; set; }
+            public string uploader { get; set; }
+            public int view_count { get; set; }
+            public string extractor_key { get; set; }
+            public List<Format2> formats { get; set; }
+            public string display_id { get; set; }
+            public int fps { get; set; }
+        }
+
 
         [Command("play"), Aliases("vchplay", "voicechannelplay", "voiceplay", "channelplay", "voicechplay"), Description("Plays an audio file.")]
         public async Task Play(CommandContext e, [RemainingText, Description("Full path to the file to play.")] string filename, DiscordChannel chn = null)
@@ -885,7 +1033,6 @@ namespace Morbot
             await connectToVoiceChannel(e);
             if (filename.Contains("youtu"))
             {
-                File.Delete("res.txt");
                 try
                 {
                     var process = new Process
@@ -906,37 +1053,113 @@ namespace Morbot
                     {
                         data = await process.StandardOutput.ReadToEndAsync();
                     }
-
-                    RootObjectvideo oRootObject = new RootObjectvideo();
-                    oRootObject = JsonConvert.DeserializeObject<RootObjectvideo>(data);
-                    await CreateMessage(e, desc: "Playing: `" + oRootObject.fulltitle + "`");
-
-                    File.Delete("temp.mp3");
-                    HttpClient cl = new HttpClient();
-                    HttpResponseMessage response = await cl.GetAsync(oRootObject.formats[5].url);
-                    using (FileStream fs = new FileStream("temp.mp3", FileMode.Create))
+                    bool ready = true;
+                    if (ready)
                     {
-                        await response.Content.CopyToAsync(fs);
-                        await SetSpeaking(e, true);
-                        await music(e, "temp.mp3");
+                        try
+                        {
+                            RootObjectvideo2 oRootObject = new RootObjectvideo2();
+                            oRootObject = JsonConvert.DeserializeObject<RootObjectvideo2>(data);
+
+                            string videoname = "M:/" + oRootObject.id + "_" + System.Web.HttpUtility.UrlEncode(oRootObject.fulltitle) + ".mp3";
+
+                            if (File.Exists(videoname))
+                            {
+                                await CreateMessage(e, desc: "Playing: `" + oRootObject.fulltitle + "`", imageurl: oRootObject.thumbnail);
+                                await SetSpeaking(e, true);
+                                await music(e, videoname);
+                            }
+                            else
+                            {
+                                HttpClient cl = new HttpClient();
+                                HttpResponseMessage response = await cl.GetAsync(oRootObject.formats[1].url);
+                                using (FileStream fs = new FileStream(videoname, FileMode.Create))
+                                {
+
+                                    await CreateMessage(e, desc: "Playing: `" + oRootObject.fulltitle + "`", imageurl: oRootObject.thumbnail);
+                                    await response.Content.CopyToAsync(fs);
+                                    await SetSpeaking(e, true);
+                                    await music(e, videoname);
+                                    ready = false;
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.Write(ex);
+                        }
+                        return;
                     }
+
+                    if (ready)
+                    {
+                        try
+                        {
+                            RootObjectvideo1 oRootObject = new RootObjectvideo1();
+                            oRootObject = JsonConvert.DeserializeObject<RootObjectvideo1>(data);
+
+                            string videoname = "M:/" + oRootObject.id + "_" + oRootObject.fulltitle + ".mp3";
+
+                            if (File.Exists(videoname))
+                            {
+                                await CreateMessage(e, desc: "Playing: `" + oRootObject.fulltitle + "`");
+                                await SetSpeaking(e, true);
+                                await music(e, videoname);
+                            }
+                            else
+                            {
+                                HttpClient cl = new HttpClient();
+                                HttpResponseMessage response = await cl.GetAsync(oRootObject.formats[1].url);
+                                using (FileStream fs = new FileStream(videoname, FileMode.Create))
+                                {
+
+                                    await CreateMessage(e, desc: "Playing: `" + oRootObject.fulltitle + "`");
+                                    await response.Content.CopyToAsync(fs);
+                                    await SetSpeaking(e, true);
+                                    await music(e, videoname);
+                                    ready = false;
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            await CreateMessage(e, desc: ex.ToString());
+                        }
+                        return;
+                    }
+                    else
+                    {
+                        return;
+                    }
+
+
                 }
                 catch (Exception ex)
                 {
-
+                    Console.Write(ex);
                 }
             }
             else if (filename.StartsWith("http"))
             {
-                File.Delete("temp.mp3");
-                HttpClient cl = new HttpClient();
-                HttpResponseMessage response = await cl.GetAsync(filename);
-                using (FileStream fs = new FileStream("temp.mp3", FileMode.Create))
+                string site = "H:/" + filename + ".mp3";
+                if (File.Exists(site))
                 {
-                    await response.Content.CopyToAsync(fs);
-                    await CreateMessage(e, desc: $"Playing: `{filename}`");
+                    await CreateMessage(e, desc: $"Playing: `{site}`");
                     await SetSpeaking(e, true);
-                    await music(e, "temp.mp3");
+                    await music(e, site);
+                }
+                else
+                {
+
+                    HttpClient cl = new HttpClient();
+                    HttpResponseMessage response = await cl.GetAsync(filename);
+                    using (FileStream fs = new FileStream(site, FileMode.Create))
+                    {
+                        await response.Content.CopyToAsync(fs);
+                        await CreateMessage(e, desc: $"Playing: `{filename}`");
+                        await SetSpeaking(e, true);
+                        await music(e, site);
+                    }
                 }
             }
             else
@@ -964,18 +1187,44 @@ namespace Morbot
                 text = text + " " + arg;
             }
 
-            File.Delete("temp.mp3");
             string translatedata = text.Remove(0, 1);
-            string page = "https://translate.google.com/translate_tts?ie=UTF-8&q=" + translatedata.Remove(0, 3) + "&tl=" + translatedata.Remove(2, translatedata.Length - 2) + "&client=tw-ob";
-            HttpClient cl = new HttpClient();
-            HttpResponseMessage response = await cl.GetAsync(page);
-            using (FileStream fs = new FileStream("temp.mp3", FileMode.Create))
+            string page = "https://translate.google.com/translate_tts?ie=UTF-8&q=" + System.Web.HttpUtility.UrlEncode(translatedata.Remove(0, 3)) + "&tl=" + translatedata.Remove(2, translatedata.Length - 2) + "&client=tw-ob";
+            string filename = "M:/Translator/" + translatedata.Remove(2, translatedata.Length - 2) + "_" + System.Web.HttpUtility.UrlEncode(translatedata.Remove(0, 3)) + ".mp3";
+
+            if (File.Exists(filename))
             {
-                await response.Content.CopyToAsync(fs);
+                await CreateMessage(e, color: DiscordColor.Green, desc: "Speaking: " + translatedata.Remove(0, 3));
+                await SetSpeaking(e, true);
+                await music(e, filename);
             }
-            await CreateMessage(e, color: DiscordColor.Green, desc: "Speaking: " + translatedata.Remove(0, 3));
-            await SetSpeaking(e, true);
-            await music(e, "temp.mp3");
+            else
+            {
+                HttpClient cl = new HttpClient();
+                HttpResponseMessage response = await cl.GetAsync(page);
+                using (FileStream fs = new FileStream(filename, FileMode.Create))
+                {
+                    await response.Content.CopyToAsync(fs);
+
+                    await CreateMessage(e, color: DiscordColor.Green, desc: "Speaking: " + translatedata.Remove(0, 3));
+                    await SetSpeaking(e, true);
+                    await music(e, filename);
+                }
+            }
+        }
+
+        #endregion
+        #region music command
+        [Command("music"), Aliases("musiclist", "vchmusiclist", "voicechannelmusiclist", "voicemusiclist", "channelmusiclist", "voicechmusiclist"), Description("sends list of music on my pc")]
+        public async Task music(CommandContext e, params string[] args)
+        {
+            string filelist = null;
+            foreach (string file in Directory.GetFiles("M:/"))
+            {
+                filelist = filelist + "\n" + file;
+            }
+
+            await CreateMessage(e, desc: e.User.Mention + " sent list to DM");
+            await CreateMessage(e, desc: filelist, sendToUser: true);
         }
 
         #endregion
