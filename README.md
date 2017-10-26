@@ -1,11 +1,9 @@
 # Morbot [![Discord](https://img.shields.io/badge/join%20us%20on-our%20Discord%20Server-green.svg?style=flat-square)](https://discord.gg/Gneap49) [![Add this bot to your Discord Server](https://img.shields.io/badge/Morbot-add%20it%20to%20your%20Discord%20Server!-green.svg?style=flat-square)](https://discordapp.com/api/oauth2/authorize?client_id=219188936940060684&scope=bot)
 A *"little bigger"* example of bot made with **[DSharpPlus API](https://github.com/NaamloosDT/DSharpPlus)** on programming language **C#**
 
-**This bot includes** *(to date of 8.October.2017 and in random order(it does not matter anyway..))*
+**This bot includes** *(to date of 26.October.2017 and in random order(it does not matter anyway..))*
 
-**{**
-
-- **~~--commands | command that tells you commands?!?!?!~~** *This command is deprecated it is replaced by **--help** command added automatically by DSharpPlus API in latest version*
+**public void Commands(){**
 
 - **--randomnorrisjoke** also known as **--norris**, **--norrisjoke**, **--chucknorris**, **--chuck**, **--chuckjoke** and **--randomchuckjoke** | this command gets random chuck norris joke from **[Chuck Norris API](https://api.chucknorris.io/)**.
 
@@ -13,7 +11,7 @@ A *"little bigger"* example of bot made with **[DSharpPlus API](https://github.c
 
 - **--latestvideo** also known as **--latestmorcvideo** **--morcvideo** **--lastvideo** **--lastvideobymorc**| this command pulls video list from my channel **[Morc](https://youtube.com/riskoautobus)** and sends link of latest video.
 
-- **--weather** | this command takes weather for town Topoľčany(small town near Biskupová, village where Morc lives) from **[OpenWeather Api](https://openweathermap.org/api)** in JSON format deserialzed with Json.NET to send temperature and look outside
+- **--weather** | this command takes weather of town/village that you can choose.If you dont specify any town then it will be defaulted to Topoľčany(small town near Biskupová, village where Morc lives).Weather is taken from **[OpenWeather Api](https://openweathermap.org/api)** in JSON format deserialzed with Json.NET to send temperature and look outside.
 
 - **--time** | pulls time from my pc(one of simplest commands with whoami, i think this command can have use if someone on the other side of world doesnt know where i live and wants to know the time here.)
 
@@ -29,6 +27,21 @@ A *"little bigger"* example of bot made with **[DSharpPlus API](https://github.c
 
 **}**
 
+**public void Voice_Commands() {**
+
+- **--join** also known as **--vchjoin**, **--voicechanneljoin**, **--voicejoin**, **--channeljoin** and **--voicechjoin** | this command connects bot to users voice channel. - user must be on voice channel
+
+- **--leave** also known as **--vchleave**, **--voicechannelleave**, **--voiceleave**, **--channelleave** and **--voicechleave** | this command disconnect bot from voice channel - user doesnt need to be in any voice channel
+
+- **--play** also known as **--vchplay**, **--voicechannelplay**, **--voiceplay**, **--channelplay** and **--voicechplay** | command can play youtube video(just audio and only using provided link), can play mp3s from url and can play music from M:/.
+
+- **--music** | this simple command returns list of music on my hdd more specified on M:/ partition.
+
+- **--speak** | this command speaks everything you send to it. but you need to specify language first **--speak {sk/cs/fi} {text}** 
+
+- **This bot includes one hidden command that can be found in bots code.**
+
+**}**
 
 # Credits:
 - People that made **[DSharpPlus API](https://github.com/NaamloosDT/DSharpPlus)**
