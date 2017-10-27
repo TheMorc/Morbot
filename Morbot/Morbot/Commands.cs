@@ -775,7 +775,8 @@ namespace Morbot
         {
             DiscordChannel chn = null;
             var vstat = e.Member?.VoiceState;
-
+            if (chn == null)
+                chn = vstat.Channel;
             if (vstat?.Channel == null && chn == null)
             {
                 await CreateMessage(e, color: DiscordColor.Red, desc: "You are not in any Voice Channel!");
@@ -1260,14 +1261,21 @@ namespace Morbot
         [Command("music"), Aliases("musiclist", "vchmusiclist", "voicechannelmusiclist", "voicemusiclist", "channelmusiclist", "voicechmusiclist"), Description("sends list of music on my pc")]
         public async Task music(CommandContext e, params string[] args)
         {
-            string filelist = null;
+            string rootfilelist = null;
+            string downfilelist = null;
             foreach (string file in Directory.GetFiles("M:/"))
             {
-                filelist = filelist + "\n" + file;
+                rootfilelist = rootfilelist + "\n" + file;
+            }
+            foreach (string file in Directory.GetFiles("M:/Downloaded"))
+            {
+                downfilelist = downfilelist + "\n" + file;
             }
 
+
             await CreateMessage(e, desc: e.User.Mention + " sent list to DM");
-            await CreateMessage(e, desc: filelist, sendToUser: true);
+            await CreateMessage(e, desc: rootfilelist, sendToUser: true);
+            await CreateMessage(e, desc: downfilelist, sendToUser: true);
         }
 
         #endregion
