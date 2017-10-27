@@ -13,7 +13,6 @@ using System.Linq;
 using System.IO;
 using DSharpPlus.VoiceNext;
 using System.Diagnostics;
-using static Morbot.Commands;
 
 namespace Morbot
 {
@@ -26,6 +25,19 @@ namespace Morbot
 
         //TASKS FOR COMMANDS ala translate, createmessage etc.
         #region tasks for commands
+        public string ShortenName(string value, string addargument)
+        {
+            string shortened;
+            if (value.Length > 200)
+            {
+                shortened = value.Remove(200, value.Length - 200) + addargument;
+            }
+            else
+            {
+                shortened = value;
+            }
+            return shortened;
+        }
         public async Task<string> translate(string text)
         {
             string resultstring = "";
@@ -148,7 +160,7 @@ namespace Morbot
         [Command("whoami"), Description("Bot responds with info about bot! It is that simple...")]
         public async Task Whoami(CommandContext e)
         {
-            await CreateMessage(e, desc: "I am Morbot, and Morc creates this bot for Discord server but also as example.\nMade with DSharpPlus API(ver: " + e.Client.VersionString + ")", color: DiscordColor.Cyan);
+            await CreateMessage(e, desc: "I am Morbot, and Morc creates this bot for Discord server but also as example.\nLink to sourcecode: https://www.github.com/TheMorc/Morbot \nMade with DSharpPlus API(ver: " + e.Client.VersionString + ")", color: DiscordColor.Cyan);
         }
         #endregion
         #region love command
@@ -184,7 +196,28 @@ namespace Morbot
                 loveemoji = ":heart:";
                 laavcolor = DiscordColor.Red;
             }
-            string laav = name[0] + " + " + name[1] + " = " + num + "%   " + loveemoji;
+            string laav = null;
+            bool passed = false;
+            string[] names = { "Andrej", "Babiš", "Monika", "Adam" };
+            foreach (string fename in names)
+            {
+                if (!passed)
+                {
+                    if (name[0] == fename)
+                    {
+                        loveemoji = ":heart:";
+                        laavcolor = DiscordColor.Red;
+                        laav = name[0] + " + " + name[1] + " = " + "100% " + loveemoji;
+                        passed = true;
+                    }
+                    else
+                    {
+                        laav = name[0] + " + " + name[1] + " = " + num + "%   " + loveemoji;
+                        passed = true;
+                    }
+                }
+
+            }
             await CreateMessage(e, desc: laav, color: laavcolor);
         }
         #endregion
@@ -742,8 +775,12 @@ namespace Morbot
         {
             DiscordChannel chn = null;
             var vstat = e.Member?.VoiceState;
-            if (chn == null)
-                chn = vstat.Channel;
+
+            if (vstat?.Channel == null && chn == null)
+            {
+                await CreateMessage(e, color: DiscordColor.Red, desc: "You are not in any Voice Channel!");
+                return;
+            }
 
             var vnext = e.Client.GetVoiceNextClient();
             if (vnext == null)
@@ -1061,8 +1098,7 @@ namespace Morbot
                             RootObjectvideo2 oRootObject = new RootObjectvideo2();
                             oRootObject = JsonConvert.DeserializeObject<RootObjectvideo2>(data);
 
-                            string videoname = "M:/" + oRootObject.id + "_" + System.Web.HttpUtility.UrlEncode(oRootObject.fulltitle) + ".mp3";
-
+                            string videoname = ShortenName("M:/" + oRootObject.id + "_" + System.Web.HttpUtility.UrlEncode(oRootObject.fulltitle) + ".mp3", ".mp3");
                             if (File.Exists(videoname))
                             {
                                 await CreateMessage(e, desc: "Playing: `" + oRootObject.fulltitle + "`", imageurl: oRootObject.thumbnail);
@@ -1098,7 +1134,7 @@ namespace Morbot
                             RootObjectvideo1 oRootObject = new RootObjectvideo1();
                             oRootObject = JsonConvert.DeserializeObject<RootObjectvideo1>(data);
 
-                            string videoname = "M:/" + oRootObject.id + "_" + oRootObject.fulltitle + ".mp3";
+                            string videoname = ShortenName("M:/" + oRootObject.id + "_" + oRootObject.fulltitle + ".mp3", ".mp3");
 
                             if (File.Exists(videoname))
                             {
@@ -1186,14 +1222,21 @@ namespace Morbot
             {
                 text = text + " " + arg;
             }
+            if (text.Remove(0, 1).Length > 200)
+            {
+                await CreateMessage(e, color: DiscordColor.Red, desc: "This request cannot be processed because the length of text is over 200!\nLength: " + text.Remove(0, 1).Length);
+                return;
+            }
 
-            string translatedata = text.Remove(0, 1);
-            string page = "https://translate.google.com/translate_tts?ie=UTF-8&q=" + System.Web.HttpUtility.UrlEncode(translatedata.Remove(0, 3)) + "&tl=" + translatedata.Remove(2, translatedata.Length - 2) + "&client=tw-ob";
-            string filename = "M:/Translator/" + translatedata.Remove(2, translatedata.Length - 2) + "_" + System.Web.HttpUtility.UrlEncode(translatedata.Remove(0, 3)) + ".mp3";
+            string speakdata = text.Remove(0, 1);
+            string speaktext = speakdata.Remove(0, 3);
+
+            string page = "https://translate.google.com/translate_tts?ie=UTF-8&q=" + System.Web.HttpUtility.UrlEncode(speaktext) + "&tl=" + speakdata.Remove(2, speakdata.Length - 2) + "&client=tw-ob";
+            string filename = ShortenName("M:/Translator/" + speakdata.Remove(2, speakdata.Length - 2) + "_" + System.Web.HttpUtility.UrlEncode(speaktext) + ".mp3", ".mp3");
 
             if (File.Exists(filename))
             {
-                await CreateMessage(e, color: DiscordColor.Green, desc: "Speaking: " + translatedata.Remove(0, 3));
+                await CreateMessage(e, color: DiscordColor.Green, desc: "Speaking: " + speakdata.Remove(0, 3));
                 await SetSpeaking(e, true);
                 await music(e, filename);
             }
@@ -1205,7 +1248,7 @@ namespace Morbot
                 {
                     await response.Content.CopyToAsync(fs);
 
-                    await CreateMessage(e, color: DiscordColor.Green, desc: "Speaking: " + translatedata.Remove(0, 3));
+                    await CreateMessage(e, color: DiscordColor.Green, desc: "Speaking: " + speakdata.Remove(0, 3));
                     await SetSpeaking(e, true);
                     await music(e, filename);
                 }
@@ -1233,18 +1276,9 @@ namespace Morbot
         public async Task žaneta(CommandContext e)
         {
             await connectToVoiceChannel(e);
-
-            File.Delete("temp.mp3");
-            string page = "https://translate.google.com/translate_tts?ie=UTF-8&q=Héj žaneta zapoj mi tam ten kabel at múžu repovať, všechno jde skvele nema to chybu&tl=cs&client=tw-ob";
-            HttpClient cl = new HttpClient();
-            HttpResponseMessage response = await cl.GetAsync(page);
-            using (FileStream fs = new FileStream("temp.mp3", FileMode.Create))
-            {
-                await response.Content.CopyToAsync(fs);
-            }
             await CreateMessage(e, color: DiscordColor.Green, desc: "Hej Žaneta https://youtu.be/jtdJAnZNDto", imageurl: "https://i.ytimg.com/vi/jtdJAnZNDto/hqdefault.jpg?sqp=-oaymwEXCPYBEIoBSFryq4qpAwkIARUAAIhCGAE=&rs=AOn4CLB8rIsvdWdSN67GmbM48erLIuvjbQ");
             await SetSpeaking(e, true);
-            await music(e, "temp.mp3");
+            await music(e, "M:/Downloaded/zaneta.mp3");
 
         }
         #endregion

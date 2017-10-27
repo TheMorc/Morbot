@@ -19,7 +19,7 @@ namespace Morbot
         static CommandsNextExtension commands;
         static VoiceNextExtension voice;
         public static configJSON configuration = new configJSON();
-        public static string version = "1.6.4";
+        public static string version = "1.6.6";
         private Task Client_Ready(ReadyEventArgs exx)
         {
             exx.Client.Guilds[0].Channels.Where(e => e.Id == 0);
@@ -45,6 +45,7 @@ namespace Morbot
 
         static async Task MainAsync(string[] args)
         {
+
             if (!File.Exists("config.json"))
             {
                 File.Create("config.json");
@@ -67,6 +68,8 @@ namespace Morbot
                 UseInternalLogHandler = true
             });
 
+
+
             prefix = configuration.Prefix;
             commands = discord.UseCommandsNext(new CommandsNextConfiguration
             {
@@ -87,6 +90,7 @@ namespace Morbot
                 game.StreamType = GameStreamType.NoStream;
                 await discord.UpdateStatusAsync(game);
             };
+
             await Task.Delay(-1);
         }
 
