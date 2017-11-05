@@ -911,15 +911,46 @@ namespace Morbot
         #endregion
         #region compress command
         [Command("compress"), Description("If you specify value from 0 to 100 then the bot compresses to the value. 0 awful | 100 great")]
-        public async Task compress(CommandContext e, int quality = 5)
+        public async Task compress(CommandContext e, [RemainingText]string args = "5")
         {
             File.Delete("temp.jpg");
-            HttpClient cl = new HttpClient();
-            HttpResponseMessage response = await cl.GetAsync(e.Message.Attachments[0].Url);
-            using (FileStream fs = new FileStream("temp.jpg", FileMode.Create))
+            string url;
+            int quality;
+            if (args.Length > 1)
             {
-                await response.Content.CopyToAsync(fs);
+                if (args.StartsWith("h"))
+                {
+                    quality = 5;
+                    url = args;
+                }
+                else if (args.StartsWith("w"))
+                {
+                    quality = 5;
 
+                    url = args;
+                }
+                else
+                {
+
+                    url = args.Remove(0, 2);
+                    quality = Int32.Parse(args.Remove(1, args.Length - 1));
+                }
+                HttpClient imgdown = new HttpClient();
+                HttpResponseMessage imgrespons = await imgdown.GetAsync(url);
+                using (FileStream fs = new FileStream("temp.jpg", FileMode.Create))
+                {
+                    await imgrespons.Content.CopyToAsync(fs);
+                }
+            }
+            else
+            {
+                quality = Int32.Parse(args);
+                HttpClient cl = new HttpClient();
+                HttpResponseMessage response = await cl.GetAsync(e.Message.Attachments[0].Url);
+                using (FileStream fs = new FileStream("temp.jpg", FileMode.Create))
+                {
+                    await response.Content.CopyToAsync(fs);
+                }
             }
             File.Delete("tempedited.jpg");
             using (var img = new MagickImage("temp.jpg"))
