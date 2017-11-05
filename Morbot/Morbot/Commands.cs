@@ -21,7 +21,7 @@ namespace Morbot
     public class Commands
     {
         static readonly string embed_title = "Morbot [ver: " + Program.version + ", Made in 🇸🇰, By: Morc]";
-        public string error_message = ":no_entry: Bot encoutered an error!!! \n";
+        static readonly string error_message = ":no_entry: Bot encoutered an error!!! \n";
 
         //TASKS FOR COMMANDS ala translate, createmessage etc.
         #region tasks for commands
@@ -46,8 +46,8 @@ namespace Morbot
             using (HttpClient cl = new HttpClient())
             {
                 data = await cl.GetStringAsync(page);
-                RootObjectresult result = new RootObjectresult();
-                result = JsonConvert.DeserializeObject<RootObjectresult>(data);
+                JSONs.RootObjectresult result = new JSONs.RootObjectresult();
+                result = JsonConvert.DeserializeObject<JSONs.RootObjectresult>(data);
                 foreach (string resul in result.text)
                 {
                     resultstring = resultstring + "   " + resul;
@@ -57,7 +57,7 @@ namespace Morbot
         }
         public async Task SetSpeaking(CommandContext e, bool SetSpeaking)
         {
-            var vnext = e.Client.GetVoiceNextClient();
+            var vnext = e.Client.GetVoiceNext();
             var vnc = vnext.GetConnection(e.Guild);
             await vnc.SendSpeakingAsync(SetSpeaking);
         }
@@ -86,7 +86,7 @@ namespace Morbot
         private async Task music(CommandContext e, string v, double speed = 1.0)
         {
 
-            var vnext = e.Client.GetVoiceNextClient();
+            var vnext = e.Client.GetVoiceNext();
             var vnc = vnext.GetConnection(e.Guild);
 
             Exception exc = null;
@@ -228,13 +228,6 @@ namespace Morbot
             await CreateMessage(e, desc: "Ping: " + e.Client.Ping + "ms", color: DiscordColor.Green);
         }
         #endregion
-        #region test command
-        [Command("test"), RequireOwner, Hidden, Description("Hidden command! Only for testing purposes!!")]
-        public async Task test(CommandContext e)
-        {
-            await CreateMessage(e);
-        }
-        #endregion
         #region latestvideo command
         [Command("latestvideo"), Aliases("latestmorcvideo", "morcvideo", "lastvideo", "lastvideobymorc"), Description("This command pulls link of last video posted by Morc")]
         public async Task Latestvideo(CommandContext e)
@@ -276,63 +269,6 @@ namespace Morbot
         }
         #endregion
         #region weather command
-        public class Coord
-        {
-            public double lon { get; set; }
-            public double lat { get; set; }
-        }
-        public class Weather
-        {
-            public int id { get; set; }
-            public string main { get; set; }
-            public string description { get; set; }
-            public string icon { get; set; }
-        }
-        public class Main
-        {
-            public double temp { get; set; }
-            public double pressure { get; set; }
-            public int humidity { get; set; }
-            public double temp_min { get; set; }
-            public double temp_max { get; set; }
-            public double sea_level { get; set; }
-            public double grnd_level { get; set; }
-        }
-        public class Wind
-        {
-            public double speed { get; set; }
-            public double deg { get; set; }
-        }
-        public class Rain
-        {
-            public double __invalid_name__3h { get; set; }
-        }
-        public class Clouds
-        {
-            public int all { get; set; }
-        }
-        public class Sys
-        {
-            public double message { get; set; }
-            public string country { get; set; }
-            public int sunrise { get; set; }
-            public int sunset { get; set; }
-        }
-        public class RootObjectW2
-        {
-            public Coord coord { get; set; }
-            public List<Weather> weather { get; set; }
-            public string @base { get; set; }
-            public Main main { get; set; }
-            public Wind wind { get; set; }
-            public Rain rain { get; set; }
-            public Clouds clouds { get; set; }
-            public int dt { get; set; }
-            public Sys sys { get; set; }
-            public int id { get; set; }
-            public string name { get; set; }
-            public int cod { get; set; }
-        }
 
 
         [Command("weather"), Description("Bot responds with actual temperature in °C.Weather gets pulled from OpenWeather and city is Topoľčany(small town near village Biskupová where Morc lives).")]
@@ -347,11 +283,11 @@ namespace Morbot
                 using (HttpClient cl = new HttpClient())
                 {
                     data = await cl.GetStringAsync(page);
-                    RootObjectW2 oRootObject = new RootObjectW2();
+                    JSONs.RootObjectW2 oRootObject = new JSONs.RootObjectW2();
                     try
                     {
 
-                        oRootObject = JsonConvert.DeserializeObject<RootObjectW2>(data);
+                        oRootObject = JsonConvert.DeserializeObject<JSONs.RootObjectW2>(data);
                     }
                     catch (Exception ex)
                     {
@@ -397,14 +333,7 @@ namespace Morbot
         }
         #endregion
         #region randomnorrisjoke command
-        public class RootObjectnorris
-        {
-            public object category { get; set; }
-            public string icon_url { get; set; }
-            public string id { get; set; }
-            public string url { get; set; }
-            public string value { get; set; }
-        }
+
         [Command("randomnorrisjoke"), Aliases("norris", "norrisjoke", "chucknorris", "chuck", "chuckjoke", "randomchuckjoke"), Description("Chuck Norris was born earlier than he died! Command pulls random joke from ChuckNorris API..")]
         public async Task ChuckNorris(CommandContext e, string language = "")
         {
@@ -414,8 +343,8 @@ namespace Morbot
             using (HttpClient cl = new HttpClient())
             {
                 data = await cl.GetStringAsync(page);
-                RootObjectnorris chuck = new RootObjectnorris();
-                chuck = JsonConvert.DeserializeObject<RootObjectnorris>(data);
+                JSONs.RootObjectnorris chuck = new JSONs.RootObjectnorris();
+                chuck = JsonConvert.DeserializeObject<JSONs.RootObjectnorris>(data);
                 url = chuck.url;
                 if (language == "")
                 {
@@ -433,16 +362,7 @@ namespace Morbot
 
         #endregion
         #region translate command
-        public class RootObjectlanguages
-        {
-            public List<string> dirs { get; set; }
-        }
-        public class RootObjectresult
-        {
-            public int code { get; set; }
-            public string lang { get; set; }
-            public List<string> text { get; set; }
-        }
+
         [Command("translate"), Description("eee what else? one! what else? two what else?? ..... translate command!!")]
         public async Task translate(CommandContext e, params string[] args)
         {
@@ -453,8 +373,8 @@ namespace Morbot
                 using (HttpClient cl = new HttpClient())
                 {
                     data = await cl.GetStringAsync(page);
-                    RootObjectlanguages languages = new RootObjectlanguages();
-                    languages = JsonConvert.DeserializeObject<RootObjectlanguages>(data);
+                    JSONs.RootObjectlanguages languages = new JSONs.RootObjectlanguages();
+                    languages = JsonConvert.DeserializeObject<JSONs.RootObjectlanguages>(data);
                     string langstring = "";
                     foreach (string lang in languages.dirs)
                     {
@@ -614,47 +534,7 @@ namespace Morbot
         }
         #endregion
         #region gifv2 command
-        public class Data
-        {
-            public string type { get; set; }
-            public string id { get; set; }
-            public string url { get; set; }
-            public string image_original_url { get; set; }
-            public string image_url { get; set; }
-            public string image_mp4_url { get; set; }
-            public string image_frames { get; set; }
-            public string image_width { get; set; }
-            public string image_height { get; set; }
-            public string fixed_height_downsampled_url { get; set; }
-            public string fixed_height_downsampled_width { get; set; }
-            public string fixed_height_downsampled_height { get; set; }
-            public string fixed_width_downsampled_url { get; set; }
-            public string fixed_width_downsampled_width { get; set; }
-            public string fixed_width_downsampled_height { get; set; }
-            public string fixed_height_small_url { get; set; }
-            public string fixed_height_small_still_url { get; set; }
-            public string fixed_height_small_width { get; set; }
-            public string fixed_height_small_height { get; set; }
-            public string fixed_width_small_url { get; set; }
-            public string fixed_width_small_still_url { get; set; }
-            public string fixed_width_small_width { get; set; }
-            public string fixed_width_small_height { get; set; }
-            public string username { get; set; }
-            public string caption { get; set; }
-        }
 
-        public class Meta
-        {
-            public int status { get; set; }
-            public string msg { get; set; }
-            public string response_id { get; set; }
-        }
-
-        public class RootObjectG
-        {
-            public Data data { get; set; }
-            public Meta meta { get; set; }
-        }
         [Command("gif"), Description("If anything isnt specified with command, then it responds with random dog or cat(dog or cat randomized by bot) gif(by giphy).")]
         public async Task GIFSearch(CommandContext e, [RemainingText]string arg1 = "")
         {
@@ -681,8 +561,8 @@ namespace Morbot
                 using (HttpContent content = response.Content)
                 {
                     string data = await content.ReadAsStringAsync();
-                    RootObjectG oRootObject = new RootObjectG();
-                    oRootObject = JsonConvert.DeserializeObject<RootObjectG>(data);
+                    JSONs.RootObjectG oRootObject = new JSONs.RootObjectG();
+                    oRootObject = JsonConvert.DeserializeObject<JSONs.RootObjectG>(data);
                     gifurl = oRootObject.data.image_url;
                     if (oRootObject.data.username == "")
                     {
@@ -707,36 +587,7 @@ namespace Morbot
 
         #endregion
         #region picture command
-        public class Hit
-        {
-            public int previewHeight { get; set; }
-            public int likes { get; set; }
-            public int favorites { get; set; }
-            public string tags { get; set; }
-            public int webformatHeight { get; set; }
-            public int views { get; set; }
-            public int webformatWidth { get; set; }
-            public int previewWidth { get; set; }
-            public int comments { get; set; }
-            public int downloads { get; set; }
-            public string pageURL { get; set; }
-            public string previewURL { get; set; }
-            public string webformatURL { get; set; }
-            public int imageWidth { get; set; }
-            public int user_id { get; set; }
-            public string user { get; set; }
-            public string type { get; set; }
-            public int id { get; set; }
-            public string userImageURL { get; set; }
-            public int imageHeight { get; set; }
-        }
 
-        public class GIFRootObject
-        {
-            public int totalHits { get; set; }
-            public List<Hit> hits { get; set; }
-            public int total { get; set; }
-        }
         [Command("picture"), Aliases("pic", "pix", "image", "img", "photo"), Description("This command works only if something is specified for ex 'Zetor' then it sends picture of zetor tractor.."), Hidden]
         public async Task IMGSearch(CommandContext e, [RemainingText]string arg1 = "")
         {
@@ -750,8 +601,8 @@ namespace Morbot
                 using (HttpContent content = response.Content)
                 {
                     string data = await content.ReadAsStringAsync();
-                    GIFRootObject oRootObject = new GIFRootObject();
-                    oRootObject = JsonConvert.DeserializeObject<GIFRootObject>(data);
+                    JSONs.GIFRootObject oRootObject = new JSONs.GIFRootObject();
+                    oRootObject = JsonConvert.DeserializeObject<JSONs.GIFRootObject>(data);
                     int num = rand.Next(0, oRootObject.hits.Capacity);
                     await CreateMessage(e, desc: "Photo by: " + oRootObject.hits[num].user + "\nViews: " + oRootObject.hits[num].views, imageurl: oRootObject.hits[num].webformatURL, thumbnailurl: "https://pixabay.com/static/img/logo_square.png");
                 }
@@ -783,7 +634,7 @@ namespace Morbot
                 return;
             }
 
-            var vnext = e.Client.GetVoiceNextClient();
+            var vnext = e.Client.GetVoiceNext();
             if (vnext == null)
             {
                 await CreateMessage(e, color: DiscordColor.Red, desc: error_message + "VoiceNext is not enabled or configured properly.");
@@ -806,7 +657,7 @@ namespace Morbot
         [Command("leave"), Aliases("vchleave", "voicechannelleave", "voiceleave", "channelleave", "voicechleave"), Description("Leaves a voice channel.")]
         public async Task Leave(CommandContext e)
         {
-            var vnext = e.Client.GetVoiceNextClient();
+            var vnext = e.Client.GetVoiceNext();
             if (vnext == null)
             {
                 await CreateMessage(e, desc: error_message, color: DiscordColor.Red);
@@ -825,244 +676,7 @@ namespace Morbot
         }
         #endregion
         #region voice channel play command
-        public class Format1
-        {
-            public string manifest_url { get; set; }
-            public string ext { get; set; }
-            public int? fps { get; set; }
-            public double tbr { get; set; }
-            public object language { get; set; }
-            public string format_id { get; set; }
-            public string vcodec { get; set; }
-            public int abr { get; set; }
-            public string acodec { get; set; }
-            public int? width { get; set; }
-            public int? asr { get; set; }
-            public string url { get; set; }
-            public int? height { get; set; }
-            public string container { get; set; }
-            public string protocol { get; set; }
-            public int filesize { get; set; }
-            public string format_note { get; set; }
-            public string format { get; set; }
-            public string player_url { get; set; }
-            public string resolution { get; set; }
-        }
-        public class RequestedFormat1
-        {
-            public string acodec { get; set; }
-            public int width { get; set; }
-            public object language { get; set; }
-            public string manifest_url { get; set; }
-            public string ext { get; set; }
-            public string format_id { get; set; }
-            public int height { get; set; }
-            public string url { get; set; }
-            public double tbr { get; set; }
-            public object asr { get; set; }
-            public int fps { get; set; }
-            public string protocol { get; set; }
-            public string vcodec { get; set; }
-            public int filesize { get; set; }
-            public string format_note { get; set; }
-            public string format { get; set; }
-            public int? abr { get; set; }
-            public string player_url { get; set; }
-        }
-        public class Thumbnail1
-        {
-            public string url { get; set; }
-            public string id { get; set; }
-        }
-        public class Subtitles1
-        {
-        }
-        public class AutomaticCaptions1
-        {
-        }
-        public class RootObjectvideo1
-        {
-            public object resolution { get; set; }
-            public string webpage_url_basename { get; set; }
-            public string fulltitle { get; set; }
-            public List<Format1> formats { get; set; }
-            public object end_time { get; set; }
-            public int height { get; set; }
-            public List<RequestedFormat1> requested_formats { get; set; }
-            public object is_live { get; set; }
-            public object chapters { get; set; }
-            public int duration { get; set; }
-            public string description { get; set; }
-            public List<string> tags { get; set; }
-            public int abr { get; set; }
-            public object creator { get; set; }
-            public string extractor_key { get; set; }
-            public string acodec { get; set; }
-            public int age_limit { get; set; }
-            public string uploader_id { get; set; }
-            public string _filename { get; set; }
-            public object playlist { get; set; }
-            public string license { get; set; }
-            public int fps { get; set; }
-            public object playlist_index { get; set; }
-            public int dislike_count { get; set; }
-            public string thumbnail { get; set; }
-            public List<Thumbnail1> thumbnails { get; set; }
-            public object requested_subtitles { get; set; }
-            public string extractor { get; set; }
-            public object stretched_ratio { get; set; }
-            public List<string> categories { get; set; }
-            public string uploader_url { get; set; }
-            public object annotations { get; set; }
-            public string ext { get; set; }
-            public int view_count { get; set; }
-            public double average_rating { get; set; }
-            public Subtitles1 subtitles { get; set; }
-            public string display_id { get; set; }
-            public string format_id { get; set; }
-            public string vcodec { get; set; }
-            public object season_number { get; set; }
-            public int width { get; set; }
-            public object episode_number { get; set; }
-            public AutomaticCaptions1 automatic_captions { get; set; }
-            public string uploader { get; set; }
-            public object alt_title { get; set; }
-            public object start_time { get; set; }
-            public string webpage_url { get; set; }
-            public int like_count { get; set; }
-            public string title { get; set; }
-            public string id { get; set; }
-            public string upload_date { get; set; }
-            public string format { get; set; }
-            public object series { get; set; }
-            public object vbr { get; set; }
-        }
-        public class Fragment1
-        {
-            public string path { get; set; }
-            public double? duration { get; set; }
-        }
-        public class Thumbnail2
-        {
-            public string url { get; set; }
-            public string id { get; set; }
-        }
-        public class Subtitles2
-        {
-        }
-        public class RequestedFormat2
-        {
-            public string vcodec { get; set; }
-            public object filesize { get; set; }
-            public List<Fragment2> fragments { get; set; }
-            public string manifest_url { get; set; }
-            public object language { get; set; }
-            public string format { get; set; }
-            public double tbr { get; set; }
-            public string acodec { get; set; }
-            public string format_id { get; set; }
-            public string url { get; set; }
-            public int? height { get; set; }
-            public string protocol { get; set; }
-            public string fragment_base_url { get; set; }
-            public int? asr { get; set; }
-            public string format_note { get; set; }
-            public int? width { get; set; }
-            public string ext { get; set; }
-            public int? fps { get; set; }
-            public string container { get; set; }
-            public int? abr { get; set; }
-        }
-        public class AutomaticCaptions2
-        {
-        }
-        public class Fragment2
-        {
-            public string path { get; set; }
-            public double? duration { get; set; }
-        }
-        public class Format2
-        {
-            public object filesize { get; set; }
-            public string vcodec { get; set; }
-            public List<Fragment2> fragments { get; set; }
-            public string manifest_url { get; set; }
-            public object language { get; set; }
-            public string container { get; set; }
-            public string acodec { get; set; }
-            public string url { get; set; }
-            public int? height { get; set; }
-            public string protocol { get; set; }
-            public string fragment_base_url { get; set; }
-            public string format_note { get; set; }
-            public string ext { get; set; }
-            public int? width { get; set; }
-            public string format { get; set; }
-            public double tbr { get; set; }
-            public string format_id { get; set; }
-            public int? asr { get; set; }
-            public int abr { get; set; }
-            public int? fps { get; set; }
-            public string resolution { get; set; }
-            public string player_url { get; set; }
-        }
-        public class RootObjectvideo2
-        {
-            public string description { get; set; }
-            public string vcodec { get; set; }
-            public string license { get; set; }
-            public List<string> tags { get; set; }
-            public int like_count { get; set; }
-            public string uploader_id { get; set; }
-            public string upload_date { get; set; }
-            public string ext { get; set; }
-            public object season_number { get; set; }
-            public object stretched_ratio { get; set; }
-            public int age_limit { get; set; }
-            public int abr { get; set; }
-            public object vbr { get; set; }
-            public string id { get; set; }
-            public string uploader_url { get; set; }
-            public string _filename { get; set; }
-            public object series { get; set; }
-            public List<Thumbnail2> thumbnails { get; set; }
-            public string format_id { get; set; }
-            public string title { get; set; }
-            public string fulltitle { get; set; }
-            public string webpage_url { get; set; }
-            public object annotations { get; set; }
-            public Subtitles2 subtitles { get; set; }
-            public object requested_subtitles { get; set; }
-            public List<RequestedFormat2> requested_formats { get; set; }
-            public object playlist_index { get; set; }
-            public object chapters { get; set; }
-            public string webpage_url_basename { get; set; }
-            public object playlist { get; set; }
-            public object resolution { get; set; }
-            public List<string> categories { get; set; }
-            public string acodec { get; set; }
-            public double average_rating { get; set; }
-            public int dislike_count { get; set; }
-            public string thumbnail { get; set; }
-            public object episode_number { get; set; }
-            public object alt_title { get; set; }
-            public int height { get; set; }
-            public string extractor { get; set; }
-            public object creator { get; set; }
-            public int duration { get; set; }
-            public int width { get; set; }
-            public AutomaticCaptions2 automatic_captions { get; set; }
-            public string format { get; set; }
-            public object start_time { get; set; }
-            public object is_live { get; set; }
-            public object end_time { get; set; }
-            public string uploader { get; set; }
-            public int view_count { get; set; }
-            public string extractor_key { get; set; }
-            public List<Format2> formats { get; set; }
-            public string display_id { get; set; }
-            public int fps { get; set; }
-        }
+
 
 
         [Command("play"), Aliases("vchplay", "voicechannelplay", "voiceplay", "channelplay", "voicechplay"), Description("Plays an audio file.")]
@@ -1096,8 +710,8 @@ namespace Morbot
                     {
                         try
                         {
-                            RootObjectvideo2 oRootObject = new RootObjectvideo2();
-                            oRootObject = JsonConvert.DeserializeObject<RootObjectvideo2>(data);
+                            JSONs.RootObjectvideo2 oRootObject = new JSONs.RootObjectvideo2();
+                            oRootObject = JsonConvert.DeserializeObject<JSONs.RootObjectvideo2>(data);
 
                             string videoname = ShortenName("M:/" + oRootObject.id + "_" + System.Web.HttpUtility.UrlEncode(oRootObject.fulltitle) + ".mp3", ".mp3");
                             if (File.Exists(videoname))
@@ -1132,8 +746,8 @@ namespace Morbot
                     {
                         try
                         {
-                            RootObjectvideo1 oRootObject = new RootObjectvideo1();
-                            oRootObject = JsonConvert.DeserializeObject<RootObjectvideo1>(data);
+                            JSONs.RootObjectvideo1 oRootObject = new JSONs.RootObjectvideo1();
+                            oRootObject = JsonConvert.DeserializeObject<JSONs.RootObjectvideo1>(data);
 
                             string videoname = ShortenName("M:/" + oRootObject.id + "_" + oRootObject.fulltitle + ".mp3", ".mp3");
 
