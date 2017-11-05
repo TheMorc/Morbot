@@ -6,6 +6,7 @@ namespace Morbot
 {
     class JSONs
     {
+        #region JSON for play command
         public class Format1
         {
             public string manifest_url { get; set; }
@@ -244,10 +245,8 @@ namespace Morbot
             public string display_id { get; set; }
             public int fps { get; set; }
         }
-
-
-
-
+        #endregion
+        #region JSON for weather command
 
         public class Coord
         {
@@ -307,11 +306,8 @@ namespace Morbot
             public int cod { get; set; }
         }
 
-
-
-
-
-
+        #endregion
+        #region JSON for norrisjoke command
         public class RootObjectnorris
         {
             public object category { get; set; }
@@ -321,8 +317,8 @@ namespace Morbot
             public string value { get; set; }
         }
 
-
-
+        #endregion
+        #region JSON for translate command
         public class RootObjectlanguages
         {
             public List<string> dirs { get; set; }
@@ -334,9 +330,8 @@ namespace Morbot
             public List<string> text { get; set; }
         }
 
-
-
-
+        #endregion
+        #region JSON for IMG command
         public class Data
         {
             public string type { get; set; }
@@ -378,9 +373,8 @@ namespace Morbot
             public Data data { get; set; }
             public Meta meta { get; set; }
         }
-
-
-
+        #endregion
+        #region JSON for GIF command
 
         public class Hit
         {
@@ -412,7 +406,7 @@ namespace Morbot
             public List<Hit> hits { get; set; }
             public int total { get; set; }
         }
-
+        #endregion
 
     }
 }

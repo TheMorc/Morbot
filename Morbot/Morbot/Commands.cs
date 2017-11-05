@@ -6,13 +6,13 @@ using Google.Apis.YouTube.v3;
 using Google.Apis.Services;
 using System.Net.Http;
 using Newtonsoft.Json;
-using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using DSharpPlus.Entities;
 using System.Linq;
 using System.IO;
 using DSharpPlus.VoiceNext;
 using System.Diagnostics;
+using ImageMagick;
 
 namespace Morbot
 {
@@ -104,7 +104,6 @@ namespace Morbot
                     RedirectStandardOutput = true,
                     RedirectStandardError = true
                 };
-                Console.Write(ffmpeg_inf.Arguments);
                 var ffmpeg = Process.Start(ffmpeg_inf);
                 var ffout = ffmpeg.StandardOutput.BaseStream;
 
@@ -121,7 +120,14 @@ namespace Morbot
                             for (var i = br; i < buff.Length; i++)
                                 buff[i] = 0;
 
-                        await vnc.SendAsync(buff, 20);
+                        try
+                        {
+                            await vnc.SendAsync(buff, 20);
+                        }
+                        catch
+                        {
+                            return;
+                        }
                     }
                 }
             }
@@ -129,7 +135,6 @@ namespace Morbot
             finally
             {
                 await vnc.SendSpeakingAsync(false);
-                await CreateMessage(e, color: DiscordColor.Red, desc: $"An exception occured during playback: `{exc.GetType()}: {exc.Message}`");
             }
 
         }
@@ -902,6 +907,31 @@ namespace Morbot
             await SetSpeaking(e, true);
             await music(e, "M:/Downloaded/zaneta.mp3");
 
+        }
+        #endregion
+        #region compress command
+        [Command("compress"), Description("If you specify value from 0 to 100 then the bot compresses to the value. 0 awful | 100 great")]
+        public async Task compress(CommandContext e, int quality = 5)
+        {
+            File.Delete("temp.jpg");
+            HttpClient cl = new HttpClient();
+            HttpResponseMessage response = await cl.GetAsync(e.Message.Attachments[0].Url);
+            using (FileStream fs = new FileStream("temp.jpg", FileMode.Create))
+            {
+                await response.Content.CopyToAsync(fs);
+
+            }
+            File.Delete("tempedited.jpg");
+            using (var img = new MagickImage("temp.jpg"))
+            {
+                img.Strip();
+                img.Quality = quality;
+                img.Write("tempedited.jpg");
+            }
+            await e.RespondWithFileAsync("tempedited.jpg");
+            FileInfo info1 = new FileInfo("temp.jpg");
+            FileInfo info2 = new FileInfo("tempedited.jpg");
+            await CreateMessage(e, color: DiscordColor.Green, desc: "Here is your fresh compressed art. We know that it is delicious!\nStats:\nSize before compressing: " + (info1.Length / 1000) + "KB\nSize after compressing: " + (info2.Length / 1000 + "KB"));
         }
         #endregion
 
