@@ -908,6 +908,12 @@ namespace Morbot
             await music(e, "M:/Downloaded/zaneta.mp3");
 
         }
+
+        [Command("tttie"), Hidden, Description("TTtie")]
+        public async Task tttie(CommandContext e)
+        {
+            await e.RespondWithFileAsync("tttie.png");
+        }
         #endregion
         #region compress command
         [Command("compress"), Description("If you specify value from 0 to 100 then the bot compresses to the value. 0 awful | 100 great")]
