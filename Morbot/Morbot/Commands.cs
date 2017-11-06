@@ -915,6 +915,7 @@ namespace Morbot
             await e.RespondWithFileAsync("tttie.png");
         }
         #endregion
+
         #region compress command
         [Command("compress"), Description("If you specify value from 0 to 100 then the bot compresses to the value. 0 awful | 100 great")]
         public async Task compress(CommandContext e, [RemainingText]string args = "5")
@@ -958,17 +959,18 @@ namespace Morbot
                     await response.Content.CopyToAsync(fs);
                 }
             }
-            File.Delete("tempedited.jpg");
+            File.Delete("compressed.jpg");
+
             using (var img = new MagickImage("temp.jpg"))
             {
                 img.Strip();
                 img.Quality = quality;
-                img.Write("tempedited.jpg");
+                img.Write("compressed.jpg");
             }
-            await e.RespondWithFileAsync("tempedited.jpg");
+            await e.RespondWithFileAsync("compressed.jpg");
             FileInfo info1 = new FileInfo("temp.jpg");
-            FileInfo info2 = new FileInfo("tempedited.jpg");
-            await CreateMessage(e, color: DiscordColor.Green, desc: "Here is your fresh compressed art. We know that it is delicious!\nStats:\nSize before compressing: " + (info1.Length / 1000) + "KB\nSize after compressing: " + (info2.Length / 1000 + "KB"));
+            FileInfo info2 = new FileInfo("compressed.jpg");
+            await CreateMessage(e, color: DiscordColor.Green, desc: "Here is your fresh compressed art. We know that it is delicious!\nStats:\nSize before compressing: " + (info1.Length / 1024) + "KB\nSize after compressing: " + (info2.Length / 1024 + "KB"));
         }
         #endregion
 
