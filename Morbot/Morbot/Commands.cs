@@ -822,10 +822,10 @@ namespace Morbot
             {
                 if (!File.Exists(filename))
                 {
-                    await e.RespondAsync($"File `{filename}` does not exist.");
+                    await CreateMessage(e, desc: $"File `{filename}` does not exist!");
                     return;
                 }
-                await e.Message.RespondAsync($"Playing `{filename}`");
+                await CreateMessage(e, desc: $"Playing: `{filename}`");
                 await SetSpeaking(e, true);
                 await music(e, filename);
 
@@ -899,7 +899,7 @@ namespace Morbot
 
         #endregion
         #region hidden commands
-        [Command("žaneta"), Hidden, Description("sings section of hej žaneta song, text arrangement by crafty ")]
+        [Command("žaneta"), Aliases("zani", "žani", "zaneta", "hulvat"), Hidden, Description("sings section of hej žaneta song, text arrangement by crafty ")]
         public async Task žaneta(CommandContext e)
         {
             await connectToVoiceChannel(e);
@@ -909,10 +909,56 @@ namespace Morbot
 
         }
 
-        [Command("tttie"), Hidden, Description("TTtie")]
-        public async Task tttie(CommandContext e)
+        [Command("tttie"), Aliases("zeleny", "zelenyony"), Hidden, Description("TTtie")]
+        public async Task tttie(CommandContext e, string args = "random")
         {
-            await e.RespondWithFileAsync("tttie.png");
+            Random num = new Random();
+            if (args == "random")
+            {
+                if (num.Next(0, 2) == 1)
+                {
+                    await e.RespondWithFileAsync("tttie.png");
+                }
+                else
+                {
+                    await e.RespondWithFileAsync("tttie2.png");
+                }
+            }
+            else
+            {
+                if (args == "nekvalitni")
+                {
+                    await e.RespondWithFileAsync("tttie.png");
+                }
+                else
+                {
+                    return;
+                }
+                if (args == "kvalitni")
+                {
+                    await e.RespondWithFileAsync("tttie2.png");
+                }
+                else
+                {
+                    return;
+                }
+                if (args == "nekvalitny")
+                {
+                    await e.RespondWithFileAsync("tttie.png");
+                }
+                else
+                {
+                    return;
+                }
+                if (args == "kvalitny")
+                {
+                    await e.RespondWithFileAsync("tttie2.png");
+                }
+                else
+                {
+                    return;
+                }
+            }
         }
         #endregion
 
@@ -974,5 +1020,17 @@ namespace Morbot
         }
         #endregion
 
+        #region lookatthisdude command
+
+        [Command("lookatthisdude"), Aliases("dude", "lookatdude", "latd", "smiech"), Description("Plays the guy that was laughing.")]
+        public async Task latd(CommandContext e)
+        {
+            await connectToVoiceChannel(e);
+            await CreateMessage(e, imageurl: "http://ww2.hdnux.com/photos/51/63/45/10959205/17/920x920.jpg", color: DiscordColor.Green);
+            await SetSpeaking(e, true);
+            await music(e, "M:/Downloaded/LookAtThisDude.mp3");
+
+        }
+        #endregion
     }
 }
