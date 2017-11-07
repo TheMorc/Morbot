@@ -930,33 +930,34 @@ namespace Morbot
                 {
                     await e.RespondWithFileAsync("tttie.png");
                 }
-                else
-                {
-                    return;
-                }
                 if (args == "kvalitni")
                 {
                     await e.RespondWithFileAsync("tttie2.png");
-                }
-                else
-                {
-                    return;
                 }
                 if (args == "nekvalitny")
                 {
                     await e.RespondWithFileAsync("tttie.png");
                 }
-                else
-                {
-                    return;
-                }
                 if (args == "kvalitny")
                 {
                     await e.RespondWithFileAsync("tttie2.png");
                 }
-                else
+
+                if (args == "nekvalitní")
                 {
-                    return;
+                    await e.RespondWithFileAsync("tttie.png");
+                }
+                if (args == "kvalitní")
+                {
+                    await e.RespondWithFileAsync("tttie2.png");
+                }
+                if (args == "nekvalitný")
+                {
+                    await e.RespondWithFileAsync("tttie.png");
+                }
+                if (args == "kvalitný")
+                {
+                    await e.RespondWithFileAsync("tttie2.png");
                 }
             }
         }
@@ -1020,6 +1021,53 @@ namespace Morbot
         }
         #endregion
 
+        #region draw command
+        [Command("message")]
+        public async Task draw(CommandContext e, [RemainingText]string ohshit = "test")
+        {
+            string minutes = null;
+            if (DateTime.Now.TimeOfDay.Minutes.ToString().Length == 1)
+            {
+                minutes = "0" + DateTime.Now.TimeOfDay.Minutes.ToString();
+            }
+            else
+            {
+                minutes = DateTime.Now.TimeOfDay.Minutes.ToString();
+            }
+
+            int length;
+            if (ohshit.Length > 22)
+            {
+                length = 256 + (8 * (ohshit.Length - 22));
+            }
+            else
+            {
+                length = 256;
+            }
+            var test = new MagickImage("template.png");
+            using (var image = new MagickImage(new MagickColor("#36393E"), 256, 82))
+            {
+                MagickGeometry size = new MagickGeometry(length, 82);
+                size.IgnoreAspectRatio = true;
+                image.Resize(size);
+                image.Composite(test);
+
+                new Drawables()
+                  .FontPointSize(16.5)
+                  .Font("Fontaria") //secret font..
+                  .FillColor(MagickColors.White)
+                  .TextAlignment(TextAlignment.Left)
+                  .Text(87, 59, ohshit)
+
+                  .FontPointSize(12)
+                  .FillColor(MagickColor.FromRgb(85, 87, 92))
+                  .Text(134, 35, "Today at " + string.Format("{0:hh:mm tt}", DateTime.Now))
+                  .Draw(image);
+                image.Write("message.png");
+            }
+            await e.RespondWithFileAsync("message.png");
+        }
+        #endregion
         #region lookatthisdude command
 
         [Command("lookatthisdude"), Aliases("dude", "lookatdude", "latd", "smiech"), Description("Plays the guy that was laughing.")]
