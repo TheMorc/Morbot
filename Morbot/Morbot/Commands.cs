@@ -970,7 +970,16 @@ namespace Morbot
             File.Delete("temp.jpg");
             string url;
             int quality;
-            if (args.Length > 1)
+            string attachementURL = null;
+            try
+            {
+                attachementURL = e.Message.Attachments[0].Url;
+            }
+            catch
+            {
+                attachementURL = null;
+            }
+            if (attachementURL == null)
             {
                 if (args.StartsWith("h"))
                 {
@@ -987,7 +996,18 @@ namespace Morbot
                 {
 
                     url = args.Remove(0, 2);
-                    quality = Int32.Parse(args.Remove(1, args.Length - 1));
+                    if (args.StartsWith("-"))
+                    {
+
+                        await CreateMessage(e, desc: "no shit sherlock!", color: DiscordColor.Red);
+                        return;
+                    }
+                    else
+                    {
+
+                        quality = Int32.Parse(args.Remove(1, args.Length - 1));
+                    }
+
                 }
                 HttpClient imgdown = new HttpClient();
                 HttpResponseMessage imgrespons = await imgdown.GetAsync(url);
@@ -995,6 +1015,7 @@ namespace Morbot
                 {
                     await imgrespons.Content.CopyToAsync(fs);
                 }
+
             }
             else
             {
@@ -1005,6 +1026,7 @@ namespace Morbot
                 {
                     await response.Content.CopyToAsync(fs);
                 }
+
             }
             File.Delete("compressed.jpg");
 
@@ -1017,13 +1039,22 @@ namespace Morbot
             await e.RespondWithFileAsync("compressed.jpg");
             FileInfo info1 = new FileInfo("temp.jpg");
             FileInfo info2 = new FileInfo("compressed.jpg");
-            await CreateMessage(e, color: DiscordColor.Green, desc: "Here is your fresh compressed art. We know that it is delicious!\nStats:\nSize before compressing: " + (info1.Length / 1024) + "KB\nSize after compressing: " + (info2.Length / 1024 + "KB"));
+            string size;
+            if (info2.Length / 1024 == 0)
+            {
+                size = info2.Length + "B";
+            }
+            else
+            {
+                size = info2.Length / 1024 + "KB";
+            }
+            await CreateMessage(e, color: DiscordColor.Green, desc: "Here is your fresh compressed art. We know that it is delicious!\nStats:\nSize before compressing: " + (info1.Length / 1024) + "KB\nSize after compressing: " + size);
         }
         #endregion
 
         #region draw command
         [Command("message")]
-        public async Task draw(CommandContext e, [RemainingText]string ohshit = "test")
+        public async Task draw(CommandContext e, params string[] args)
         {
             string minutes = null;
             if (DateTime.Now.TimeOfDay.Minutes.ToString().Length == 1)
@@ -1035,19 +1066,27 @@ namespace Morbot
                 minutes = DateTime.Now.TimeOfDay.Minutes.ToString();
             }
 
-            int length;
-            if (ohshit.Length > 22)
+            string words = "";
+            int count = 0;
+            int newlines = 0;
+            foreach (string word in args)
             {
-                length = 256 + (8 * (ohshit.Length - 22));
-            }
-            else
-            {
-                length = 256;
+                count++;
+                if (count > 7)
+                {
+                    count = 0;
+                    newlines++;
+                    words = words + "\n" + word;
+                }
+                else
+                {
+                    words = words + " " + word;
+                }
             }
             var test = new MagickImage("template.png");
-            using (var image = new MagickImage(new MagickColor("#36393E"), 256, 82))
+            using (var image = new MagickImage(new MagickColor("#36393E"), 512, 82 + (20 * newlines)))
             {
-                MagickGeometry size = new MagickGeometry(length, 82);
+                MagickGeometry size = new MagickGeometry(512, 82 + (20 * newlines));
                 size.IgnoreAspectRatio = true;
                 image.Resize(size);
                 image.Composite(test);
@@ -1057,7 +1096,7 @@ namespace Morbot
                   .Font("Fontaria") //secret font..
                   .FillColor(MagickColors.White)
                   .TextAlignment(TextAlignment.Left)
-                  .Text(87, 59, ohshit)
+                  .Text(87, 59, words)
 
                   .FontPointSize(12)
                   .FillColor(MagickColor.FromRgb(85, 87, 92))
