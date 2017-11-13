@@ -13,7 +13,7 @@ using System.IO;
 using DSharpPlus.VoiceNext;
 using System.Diagnostics;
 using ImageMagick;
-
+using System.Drawing;
 namespace Morbot
 {
 
@@ -22,7 +22,7 @@ namespace Morbot
     {
         static readonly string embed_title = "Morbot [ver: " + Program.version + ", Made in 🇸🇰, By: Morc]";
         static readonly string error_message = ":no_entry: Bot encoutered an error!!! \n";
-
+        static private DiscordActivity botActivity = new DiscordActivity();
         //TASKS FOR COMMANDS ala translate, createmessage etc.
         #region tasks for commands
         public string ShortenName(string value, string addargument)
@@ -496,45 +496,33 @@ namespace Morbot
             public async Task BETA(CommandContext e)
             {
                 string gamename = Program.prefix + "help|BETA Mode|V:" + Program.version;
-                DiscordGame game = new DiscordGame()
-                {
-                    StreamType = GameStreamType.NoStream,
-                    Name = gamename
-                };
-                await e.Client.UpdateStatusAsync(game);
+                botActivity.ActivityType = ActivityType.Streaming;
+                botActivity.Name = gamename;
+                await e.Client.UpdateStatusAsync(botActivity);
             }
             [Command("null2")]
             public async Task WIP(CommandContext e)
             {
                 string gamename = Program.prefix + "help|WIP Mode|V:" + Program.version;
-                DiscordGame game = new DiscordGame()
-                {
-                    StreamType = GameStreamType.NoStream,
-                    Name = gamename
-                };
-                await e.Client.UpdateStatusAsync(game);
+                botActivity.ActivityType = ActivityType.Streaming;
+                botActivity.Name = gamename;
+                await e.Client.UpdateStatusAsync(botActivity);
             }
             [Command("null3")]
             public async Task FIX(CommandContext e)
             {
                 string gamename = Program.prefix + "help|FIX Mode|V:" + Program.version;
-                DiscordGame game = new DiscordGame()
-                {
-                    StreamType = GameStreamType.NoStream,
-                    Name = gamename
-                };
-                await e.Client.UpdateStatusAsync(game);
+                botActivity.ActivityType = ActivityType.Streaming;
+                botActivity.Name = gamename;
+                await e.Client.UpdateStatusAsync(botActivity);
             }
             [Command("null4")]
             public async Task READY(CommandContext e)
             {
                 string gamename = Program.prefix + "help|Ready|V:" + Program.version;
-                DiscordGame game = new DiscordGame()
-                {
-                    StreamType = GameStreamType.NoStream,
-                    Name = gamename
-                };
-                await e.Client.UpdateStatusAsync(game);
+                botActivity.ActivityType = ActivityType.Streaming;
+                botActivity.Name = gamename;
+                await e.Client.UpdateStatusAsync(botActivity);
             }
         }
         #endregion
@@ -630,9 +618,9 @@ namespace Morbot
         public async Task connectToVoiceChannel(CommandContext e)
         {
             DiscordChannel chn = null;
+
+
             var vstat = e.Member?.VoiceState;
-            if (chn == null)
-                chn = vstat.Channel;
             if (vstat?.Channel == null && chn == null)
             {
                 await CreateMessage(e, color: DiscordColor.Red, desc: "You are not in any Voice Channel!");
@@ -646,6 +634,8 @@ namespace Morbot
                 return;
             }
 
+            if (chn == null)
+                chn = vstat.Channel;
             var vnc = vnext.GetConnection(e.Guild);
             if (vnc == null)
             {
@@ -653,7 +643,6 @@ namespace Morbot
                 vnc = await vnext.ConnectAsync(chn);
                 await CreateMessage(e, color: DiscordColor.Green, desc: $"Connected to `{chn.Name}`");
             }
-
             while (vnc.IsPlaying)
                 await vnc.WaitForPlaybackFinishAsync();
         }
@@ -1107,6 +1096,33 @@ namespace Morbot
             await e.RespondWithFileAsync("message.png");
         }
         #endregion
+
+
+        #region draw command
+        [Command("emoji")]
+        public async Task emoji(CommandContext e, [RemainingText]string args)
+        {
+            Image img = new Bitmap(1, 1);
+            Graphics drawing = Graphics.FromImage(img);
+            Font font = new Font("Segoe UI Emoji", 20);
+            SizeF textSize = drawing.MeasureString(args, font);
+            img.Dispose();
+            drawing.Dispose();
+            img = new Bitmap((int)textSize.Width, (int)textSize.Height);
+            drawing = Graphics.FromImage(img);
+            drawing.Clear(Color.FromArgb(53, 57, 62));
+            Brush textBrush = new SolidBrush(Color.White);
+            drawing.DrawString(args, font, textBrush, 0, 0);
+
+            drawing.Save();
+            img.Save("emoji.png");
+
+            textBrush.Dispose();
+            drawing.Dispose();
+            await e.RespondWithFileAsync("emoji.png");
+
+        }
+        #endregion
         #region lookatthisdude command
 
         [Command("lookatthisdude"), Aliases("dude", "lookatdude", "latd", "smiech"), Description("Plays the guy that was laughing.")]
@@ -1119,5 +1135,15 @@ namespace Morbot
 
         }
         #endregion
+
+        #region screenshot command
+
+        [Command("screenshot"), Description("Plays the guy that was laughing.")]
+        public async Task screenshot(CommandContext e)
+        {
+
+            await e.RespondWithFileAsync("screenshot.png");
+            #endregion
+        }
     }
 }
