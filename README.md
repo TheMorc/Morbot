@@ -1,7 +1,7 @@
 # Morbot [![Discord](https://img.shields.io/badge/join%20us%20on-our%20Discord%20Server-green.svg?style=flat-square)](https://discord.gg/Gneap49) [![Add this bot to your Discord Server](https://img.shields.io/badge/Morbot-add%20it%20to%20your%20Discord%20Server!-green.svg?style=flat-square)](https://discordapp.com/api/oauth2/authorize?client_id=219188936940060684&scope=bot)
 A *"little bigger"* example of bot made with **[DSharpPlus API](https://github.com/NaamloosDT/DSharpPlus)** on programming language **C#**
 
-**This bot includes** *(to date of 26.October.2017 and in random order(it does not matter anyway..))*
+**This bot includes** *(to date of 14.November 2017 and in random order(it does not matter anyway..))*
 
 **public void Commands(){**
 
@@ -23,7 +23,9 @@ A *"little bigger"* example of bot made with **[DSharpPlus API](https://github.c
 
 - **--status** also known as **--changestatus** | changes game(the "Playing" status) of bot.
 
-- **--randomgif** also known as **--randgif**| This command pulls random gif from **[Giphy](https://giphy.com)** with their **[Giphy GIF API](https://developers.giphy.com/docs/)** If nothing is specified with command, bot responds with url of gif(it searches for dog or cat(dog or cat gets selected by random, gif by Giphy)). If you specify for ex. tractor,bot again responds with url of gif(again searches for tractor(gif gets selected by Giphy))
+- **--randomgif** also known as **--randgif** | This command pulls random gif from **[Giphy](https://giphy.com)** with their **[Giphy GIF API](https://developers.giphy.com/docs/)** If nothing is specified with command, bot responds with url of gif(it searches for dog or cat(dog or cat gets selected by random, gif by Giphy)). If you specify for ex. tractor,bot again responds with url of gif(again searches for tractor(gif gets selected by Giphy))
+
+- **--compress** | This command compresses image that you supply by attaching it or by adding url to it. You can set your own compress ratio 0worst 100best. Example usage: **--compress 45 {image url}** or **--compress {image url}**
 
 **}**
 
