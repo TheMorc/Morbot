@@ -14,17 +14,65 @@ using DSharpPlus.VoiceNext;
 using System.Diagnostics;
 using ImageMagick;
 using System.Drawing;
+
 namespace Morbot
 {
 
-
     public class Commands
     {
+
+        string lastCommit = null;
+        string commitDate = null;
         static readonly string embed_title = "Morbot [ver: " + Program.version + ", Made in 🇸🇰, By: Morc]";
         static readonly string error_message = ":no_entry: Bot encoutered an error!!! \n";
         static private DiscordActivity botActivity = new DiscordActivity();
         //TASKS FOR COMMANDS ala translate, createmessage etc.
         #region tasks for commands
+        private void LastCommitFromGitHub()
+        {
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Add("User-Agent",
+                    "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; WOW64; Trident/6.0)");
+
+                using (var response = client.GetAsync("https://api.github.com/repos/TheMorc/Morbot/commits").Result)
+                {
+                    var json = response.Content.ReadAsStringAsync().Result;
+
+                    dynamic commits = JArray.Parse(json);
+                    lastCommit = commits[0].commit.message;
+                    commitDate = commits[0].commit.author.date;
+                }
+            }
+        }
+        public string CalculateAge(string date)
+        {
+            //DateTime age = Convert.ToDateTime("01 October 2017 3:05:31 PM");
+            DateTime age = Convert.ToDateTime(date);
+            DateTime Now = DateTime.Now;
+            int Years = new DateTime(DateTime.Now.Subtract(age).Ticks).Year - 1;
+            DateTime PastYearDate = age.AddYears(Years);
+            int Months = 0;
+            for (int i = 1; i <= 12; i++)
+            {
+                if (PastYearDate.AddMonths(i) == Now)
+                {
+                    Months = i;
+                    break;
+                }
+                else if (PastYearDate.AddMonths(i) >= Now)
+                {
+                    Months = i - 1;
+                    break;
+                }
+            }
+            int Days = Now.Subtract(PastYearDate.AddMonths(Months)).Days;
+            int Hours = Now.Subtract(PastYearDate).Hours;
+            int Minutes = Now.Subtract(PastYearDate).Minutes;
+            int Seconds = Now.Subtract(PastYearDate).Seconds;
+            return String.Format("**{0}** Months **{1}** Days **{2}** Hours **{3}** Minutes **{4}** Seconds",
+            Months, Days, Hours, Minutes, Seconds);
+        }
         public string ShortenName(string value, string addargument)
         {
             string shortened;
@@ -37,6 +85,29 @@ namespace Morbot
                 shortened = value;
             }
             return shortened;
+        }
+        public Image WatermarkIt(Image img)
+        {
+            Bitmap watermarkIMG = new Bitmap("watermark.png");
+            const byte ALPHA = 255;
+            Color clr;
+            for (int py = 0; py < watermarkIMG.Height; py++)
+            {
+                for (int px = 0; px < watermarkIMG.Width; px++)
+                {
+                    clr = watermarkIMG.GetPixel(px, py);
+                    watermarkIMG.SetPixel(px, py,
+                        Color.FromArgb(ALPHA, clr.R, clr.G, clr.B));
+                }
+            }
+
+            watermarkIMG.MakeTransparent(watermarkIMG.GetPixel(0, 0));
+
+            Graphics g = Graphics.FromImage(img);
+            g.DrawImage(watermarkIMG, img.Width - watermarkIMG.Width, img.Height - watermarkIMG.Height);
+
+            Bitmap wtf = new Bitmap(img.Width, img.Height, g);
+            return wtf;
         }
         public async Task<string> translate(string text)
         {
@@ -122,7 +193,9 @@ namespace Morbot
 
                         try
                         {
-                            await vnc.SendAsync(buff, 20);
+                            if (vnc.Channel == null) { }
+                            else
+                            { await vnc.SendAsync(buff, 20); }
                         }
                         catch
                         {
@@ -134,7 +207,10 @@ namespace Morbot
             catch (Exception ex) { exc = ex; }
             finally
             {
-                await vnc.SendSpeakingAsync(false);
+                if (vnc.Channel == null) { }
+                else
+                { await vnc.SendSpeakingAsync(false); }
+
             }
 
         }
@@ -160,12 +236,28 @@ namespace Morbot
         }
         #endregion
 
+        //dead command [Command("whoami"), Description("Bot responds with info about bot! It is that simple...")]
+        //public async Task Whoami(CommandContext e)
+        //{
+        //    await CreateMessage(e, desc: "I am Morbot, and Morc creates this bot for Discord server but also as example.\nLink to sourcecode: https://www.github.com/TheMorc/Morbot \nMade with DSharpPlus API(ver: " + e.Client.VersionString + ")", color: DiscordColor.Cyan);
+        //}
+
+
         //Commands
-        #region whoami command
-        [Command("whoami"), Description("Bot responds with info about bot! It is that simple...")]
-        public async Task Whoami(CommandContext e)
+        #region bot command
+        [Command("bot")]
+        public async Task Bot(CommandContext e)
         {
-            await CreateMessage(e, desc: "I am Morbot, and Morc creates this bot for Discord server but also as example.\nLink to sourcecode: https://www.github.com/TheMorc/Morbot \nMade with DSharpPlus API(ver: " + e.Client.VersionString + ")", color: DiscordColor.Cyan);
+
+            LastCommitFromGitHub();
+            await CreateMessage(e, color: DiscordColor.Blurple,
+            desc: "**Morbot** is OpenSource bot maintained by **Morc** and **Made in Slovakia** with D#+ (DSharpPlus) API." +
+            "\nAPI Version: `" + e.Client.VersionString +
+            "`.\n\n**Age of Bot(since first commit on GitHub | 1 October 2017):** " + CalculateAge("01 October 2017 3:05:31 PM") +
+            "\n\n**Age of last commit:** " + CalculateAge(commitDate) +
+            "\n**Name of last commit:** " + lastCommit +
+            "\n\n**Bot Source Code:** \nhttps://www.github.com/TheMorc/Morbot " +
+            "\n\n**D#+ GitHub:** \nhttps://github.com/NaamloosDT/DSharpPlus");
         }
         #endregion
         #region love command
@@ -457,72 +549,74 @@ namespace Morbot
             }
         }
         #endregion
-        #region status command
-        [Group("changestatus", CanInvokeWithoutSubcommand = true), Aliases("status"), Description("This command changes status of bot.(the Playing below name in users)")]
-        public class Status
+        #region mode command
+        [Command("changemode"), Aliases("mode"), Description("This command changes mode of bot.(Playing,Streaming,Watching,Listening To)")]
+        public async Task BETA(CommandContext e, [RemainingText]string mode)
         {
-            public async Task ExecuteGroupAsync(CommandContext e, string name = "")
+            bool finished = false;
+            string[] streaming = { "streaming", "Streaming", "Stream", "stream" };
+            string[] playing = { "playing", "Playing", "Play", "play" };
+            string[] watching = { "watching", "Watching", "Watch", "watch" };
+            string[] listening = { "listeningto", "Listeningto", "Listen", "listen", "listento", "Listento", "Listen to", "listen to", "listening to", "Listening to" };
+            foreach (string name in streaming)
             {
-                if (name == "BETA")
+                if (!finished)
                 {
-                    await BETA(e);
-                    await CreateMessage(e, desc: "Status set to " + name, color: DiscordColor.Green);
-                }
-                else if (name == "WIP")
-                {
-                    await WIP(e);
-                    await CreateMessage(e, desc: "Status set to " + name, color: DiscordColor.Green);
-                }
-                else if (name == "FIX")
-                {
-                    await FIX(e);
-                    await CreateMessage(e, desc: "Status set to " + name, color: DiscordColor.Green);
-                }
-                else if (name == "READY")
-                {
-                    await READY(e);
-                    await CreateMessage(e, desc: "Status set to " + name, color: DiscordColor.Green);
-                }
-                else if (name == "")
-                {
-                    await CreateMessage(e, desc: "Select status from one of these: BETA WIP FIX READY !", color: DiscordColor.Red);
-                }
-                else
-                {
-                    await CreateMessage(e, desc: name + " isn't a status. Select status from one of these: BETA WIP FIX READY !", color: DiscordColor.Red);
+                    if (mode == name)
+                    {
+                        finished = true;
+                        botActivity.Name = Program.DiscordActivityText;
+                        botActivity.ActivityType = ActivityType.Streaming;
+                        await e.Client.UpdateStatusAsync(botActivity);
+                        await CreateMessage(e, desc: "Sucessfully changed mode to streaming by: " + e.Member.Mention);
+                    }
                 }
             }
-            [Command("null1")]
-            public async Task BETA(CommandContext e)
+            foreach (string name in playing)
             {
-                string gamename = Program.prefix + "help|BETA Mode|V:" + Program.version;
-                botActivity.ActivityType = ActivityType.Streaming;
-                botActivity.Name = gamename;
-                await e.Client.UpdateStatusAsync(botActivity);
+                if (!finished)
+                {
+                    if (mode == name)
+                    {
+                        finished = true;
+                        botActivity.Name = Program.DiscordActivityText;
+                        botActivity.ActivityType = ActivityType.Streaming;
+                        await e.Client.UpdateStatusAsync(botActivity);
+                        await CreateMessage(e, desc: name + " play shit done");
+                    }
+                }
             }
-            [Command("null2")]
-            public async Task WIP(CommandContext e)
+            foreach (string name in watching)
             {
-                string gamename = Program.prefix + "help|WIP Mode|V:" + Program.version;
-                botActivity.ActivityType = ActivityType.Streaming;
-                botActivity.Name = gamename;
-                await e.Client.UpdateStatusAsync(botActivity);
+                if (!finished)
+                {
+                    if (mode == name)
+                    {
+                        finished = true;
+                        botActivity.Name = Program.DiscordActivityText;
+                        botActivity.ActivityType = ActivityType.Streaming;
+                        await e.Client.UpdateStatusAsync(botActivity);
+                        await CreateMessage(e, desc: name + " watch shit done");
+                    }
+                }
             }
-            [Command("null3")]
-            public async Task FIX(CommandContext e)
+            foreach (string name in listening)
             {
-                string gamename = Program.prefix + "help|FIX Mode|V:" + Program.version;
-                botActivity.ActivityType = ActivityType.Streaming;
-                botActivity.Name = gamename;
-                await e.Client.UpdateStatusAsync(botActivity);
+                if (!finished)
+                {
+                    if (mode == name)
+                    {
+                        finished = true;
+                        botActivity.Name = Program.DiscordActivityText;
+                        botActivity.ActivityType = ActivityType.Streaming;
+                        await e.Client.UpdateStatusAsync(botActivity);
+                        await CreateMessage(e, desc: name + " listen shit done");
+                    }
+                }
             }
-            [Command("null4")]
-            public async Task READY(CommandContext e)
+            if (!finished)
             {
-                string gamename = Program.prefix + "help|Ready|V:" + Program.version;
-                botActivity.ActivityType = ActivityType.Streaming;
-                botActivity.Name = gamename;
-                await e.Client.UpdateStatusAsync(botActivity);
+                await CreateMessage(e, desc: "You Specified: " + mode + "\nSo it looks like you specified the wrong bot mode. :joy:");
             }
         }
         #endregion
@@ -581,7 +675,7 @@ namespace Morbot
         #endregion
         #region picture command
 
-        [Command("picture"), Aliases("pic", "pix", "image", "img", "photo"), Description("This command works only if something is specified for ex 'Zetor' then it sends picture of zetor tractor.."), Hidden]
+        [Command("picture"), Aliases("pic", "pix", "image", "img", "photo"), Description("This command works only if something is specified for ex 'Zetor' then it sends picture of zetor tractor..")]
         public async Task IMGSearch(CommandContext e, [RemainingText]string arg1 = "")
         {
             Random rand = new Random();
@@ -613,6 +707,321 @@ namespace Morbot
 
 
         #endregion
+        #region hidden commands
+        [Command("žaneta"), Aliases("zani", "žani", "zaneta", "hulvat"), Hidden, Description("sings section of hej žaneta song, text arrangement by crafty ")]
+        public async Task žaneta(CommandContext e)
+        {
+            await connectToVoiceChannel(e);
+            await CreateMessage(e, color: DiscordColor.Green, desc: "Hej Žaneta https://youtu.be/jtdJAnZNDto", imageurl: "https://i.ytimg.com/vi/jtdJAnZNDto/hqdefault.jpg?sqp=-oaymwEXCPYBEIoBSFryq4qpAwkIARUAAIhCGAE=&rs=AOn4CLB8rIsvdWdSN67GmbM48erLIuvjbQ");
+            await SetSpeaking(e, true);
+            await music(e, "M:/Downloaded/zaneta.mp3");
+
+        }
+
+        [Command("tttie"), Aliases("zeleny", "zelenyony"), Hidden, Description("TTtie")]
+        public async Task tttie(CommandContext e, string args = "random")
+        {
+            Random num = new Random();
+            if (args == "random")
+            {
+                if (num.Next(0, 2) == 1)
+                {
+                    await e.RespondWithFileAsync("tttie.png");
+                }
+                else
+                {
+                    await e.RespondWithFileAsync("tttie2.png");
+                }
+            }
+            else
+            {
+                if (args == "nekvalitni")
+                {
+                    await e.RespondWithFileAsync("tttie.png");
+                }
+                if (args == "kvalitni")
+                {
+                    await e.RespondWithFileAsync("tttie2.png");
+                }
+                if (args == "nekvalitny")
+                {
+                    await e.RespondWithFileAsync("tttie.png");
+                }
+                if (args == "kvalitny")
+                {
+                    await e.RespondWithFileAsync("tttie2.png");
+                }
+
+                if (args == "nekvalitní")
+                {
+                    await e.RespondWithFileAsync("tttie.png");
+                }
+                if (args == "kvalitní")
+                {
+                    await e.RespondWithFileAsync("tttie2.png");
+                }
+                if (args == "nekvalitný")
+                {
+                    await e.RespondWithFileAsync("tttie.png");
+                }
+                if (args == "kvalitný")
+                {
+                    await e.RespondWithFileAsync("tttie2.png");
+                }
+            }
+        }
+        #endregion
+        #region compress command
+        [Command("compress"), Description("If you specify value from 0 to 100 then the bot compresses to the value. 0 awful | 100 great")]
+        public async Task compress(CommandContext e, [RemainingText]string args = "5")
+        {
+            File.Delete("temp.jpg");
+            string url;
+            int quality;
+            string attachementURL = null;
+            try
+            {
+                attachementURL = e.Message.Attachments[0].Url;
+            }
+            catch
+            {
+                attachementURL = null;
+            }
+            if (attachementURL == null)
+            {
+                if (args.StartsWith("h"))
+                {
+                    quality = 5;
+                    url = args;
+                }
+                else if (args.StartsWith("w"))
+                {
+                    quality = 5;
+
+                    url = args;
+                }
+                else
+                {
+
+                    url = args.Remove(0, 2);
+                    if (args.StartsWith("-"))
+                    {
+
+                        await CreateMessage(e, desc: "no shit sherlock!", color: DiscordColor.Red);
+                        return;
+                    }
+                    else
+                    {
+
+                        quality = Int32.Parse(args.Remove(1, args.Length - 1));
+                    }
+
+                }
+                HttpClient imgdown = new HttpClient();
+                HttpResponseMessage imgrespons = await imgdown.GetAsync(url);
+                using (FileStream fs = new FileStream("temp.jpg", FileMode.Create))
+                {
+                    await imgrespons.Content.CopyToAsync(fs);
+                }
+
+            }
+            else
+            {
+                quality = Int32.Parse(args);
+                HttpClient cl = new HttpClient();
+                HttpResponseMessage response = await cl.GetAsync(e.Message.Attachments[0].Url);
+                using (FileStream fs = new FileStream("temp.jpg", FileMode.Create))
+                {
+                    await response.Content.CopyToAsync(fs);
+                }
+
+            }
+            File.Delete("compressed.jpg");
+
+            using (var img = new MagickImage("temp.jpg"))
+            {
+                img.Strip();
+                img.Quality = quality;
+                img.Write("compressed.jpg");
+            }
+            await e.RespondWithFileAsync("compressed.jpg");
+            FileInfo info1 = new FileInfo("temp.jpg");
+            FileInfo info2 = new FileInfo("compressed.jpg");
+            string size;
+            if (info2.Length / 1024 == 0)
+            {
+                size = info2.Length + "B";
+            }
+            else
+            {
+                size = info2.Length / 1024 + "KB";
+            }
+            await CreateMessage(e, color: DiscordColor.Green, desc: "Here is your fresh compressed art. We know that it is delicious!\nStats:\nSize before compressing: " + (info1.Length / 1024) + "KB\nSize after compressing: " + size);
+        }
+        #endregion
+        #region message command
+        [Command("message")]
+        public async Task message(CommandContext e, params string[] args)
+        {
+            string minutes = null;
+            if (DateTime.Now.TimeOfDay.Minutes.ToString().Length == 1)
+            {
+                minutes = "0" + DateTime.Now.TimeOfDay.Minutes.ToString();
+            }
+            else
+            {
+                minutes = DateTime.Now.TimeOfDay.Minutes.ToString();
+            }
+
+            string words = "";
+            int count = 0;
+            int newlines = 0;
+            foreach (string word in args)
+            {
+                count++;
+                if (count > 7)
+                {
+                    count = 0;
+                    newlines++;
+                    words = words + "\n" + word;
+                }
+                else
+                {
+                    words = words + " " + word;
+                }
+            }
+            var test = new MagickImage("template.png");
+            using (var image = new MagickImage(new MagickColor("#36393E"), 512, 82 + (20 * newlines)))
+            {
+                MagickGeometry size = new MagickGeometry(512, 82 + (20 * newlines));
+                size.IgnoreAspectRatio = true;
+                image.Resize(size);
+                image.Composite(test);
+
+                new Drawables()
+                  .FontPointSize(16.5)
+                  .Font("Fontaria") //secret font..
+                  .FillColor(MagickColors.White)
+                  .TextAlignment(TextAlignment.Left)
+                  .Text(87, 59, words)
+
+                  .FontPointSize(12)
+                  .FillColor(MagickColor.FromRgb(85, 87, 92))
+                  .Text(134, 35, "Today at " + string.Format("{0:hh:mm tt}", DateTime.Now))
+                  .Draw(image);
+                image.Write("message.png");
+            }
+            await e.RespondWithFileAsync("message.png");
+        }
+        #endregion
+        #region emoji command
+        [Command("emoji")]
+        public async Task emoji(CommandContext e, [RemainingText]string args)
+        {
+            Image img = new Bitmap(1, 1);
+            Graphics drawing = Graphics.FromImage(img);
+            Font font = new Font("Segoe UI Emoji", 64);
+            SizeF textSize = drawing.MeasureString(args, font);
+            img.Dispose();
+            drawing.Dispose();
+            img = new Bitmap((int)textSize.Width, (int)textSize.Height);
+            drawing = Graphics.FromImage(img);
+            drawing.Clear(Color.FromArgb(53, 57, 62));
+            Brush textBrush = new SolidBrush(Color.White);
+            drawing.DrawString(args, font, textBrush, 0, 0);
+
+            drawing.Save();
+            img.Save("emoji.png");
+
+            textBrush.Dispose();
+            drawing.Dispose();
+            await e.RespondWithFileAsync("emoji.png");
+
+        }
+        #endregion
+        #region screenshot command
+
+        [Command("screenshot"), Description("screenshots site")]
+        public async Task screenshot(CommandContext e, string args)
+        {
+
+            Process process = new Process();
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "SiteShoter.exe",
+                Arguments = $"/URL " + args + " /Filename \"screenshot.png\" /DisableScrollBars 1 /BrowserAutoSize 1 /MaxBrowserWidth 1280 /MaxBrowserHeight 20000",
+                UseShellExecute = false
+            };
+            process.StartInfo = startInfo;
+            process.EnableRaisingEvents = true;
+            process.Start();
+            process.Exited += async delegate
+            {
+                await e.RespondWithFileAsync("screenshot.png");
+            };
+        }
+
+        #endregion
+        #region anime command
+        [Command("top10animedeaths"), Aliases("anime"), Description("meme generator")]
+        public async Task anime(CommandContext e, [RemainingText]string args)
+        {
+            string attachementURL = null;
+            try
+            {
+                attachementURL = e.Message.Attachments[0].Url;
+            }
+            catch
+            {
+                attachementURL = null;
+            }
+            if (attachementURL == null)
+            {
+                HttpClient imgdown = new HttpClient();
+                HttpResponseMessage imgrespons = await imgdown.GetAsync(args);
+                using (FileStream fs = new FileStream("tempanime.jpg", FileMode.Create))
+                {
+                    await imgrespons.Content.CopyToAsync(fs);
+                }
+
+            }
+            else
+            {
+                HttpClient cl = new HttpClient();
+                HttpResponseMessage response = await cl.GetAsync(e.Message.Attachments[0].Url);
+                using (FileStream fs = new FileStream("tempanime.jpg", FileMode.Create))
+                {
+                    await response.Content.CopyToAsync(fs);
+                }
+
+            }
+            Image anime = Bitmap.FromFile("anime.png");
+            Graphics g = Graphics.FromImage(anime);
+            Bitmap new_img = new Bitmap("tempanime.jpg");
+            g.DrawImage(new_img, new Rectangle(5, 7, 854, 480));
+
+            //Image Watermarked = WatermarkIt(anime);
+            anime.Save("anime.jpg");
+            await e.RespondWithFileAsync("anime.jpg");
+            new_img.Dispose();
+            g.Dispose();
+            anime.Dispose();
+        }
+
+        #endregion
+        #region age command
+        [Command("age"), Aliases("botage", "agebot", "ageofbot")]
+        public async Task age(CommandContext e)
+        {
+            LastCommitFromGitHub();
+            await CreateMessage(e, desc: "**Age of bot(since first commit on GitHub | 1 October 2017):** " + CalculateAge("01 October 2017 3:05:31 PM") +
+                "\n\n**Age of last commit:** " + CalculateAge(commitDate) +
+                "\n**Name of last commit:** " + lastCommit);
+        }
+
+
+        #endregion
+
         #region voice channel join command
         [Command("join"), Aliases("vchjoin", "voicechanneljoin", "voicejoin", "channeljoin", "voicechjoin"), Description("Joins a voice channel.")]
         public async Task connectToVoiceChannel(CommandContext e)
@@ -664,7 +1073,6 @@ namespace Morbot
                 await CreateMessage(e, desc: "Not connected on this server", color: DiscordColor.Green);
                 return;
             }
-
             vnc.Disconnect();
             await CreateMessage(e, desc: "Disconnected", color: DiscordColor.Green);
         }
@@ -887,242 +1295,6 @@ namespace Morbot
         }
 
         #endregion
-        #region hidden commands
-        [Command("žaneta"), Aliases("zani", "žani", "zaneta", "hulvat"), Hidden, Description("sings section of hej žaneta song, text arrangement by crafty ")]
-        public async Task žaneta(CommandContext e)
-        {
-            await connectToVoiceChannel(e);
-            await CreateMessage(e, color: DiscordColor.Green, desc: "Hej Žaneta https://youtu.be/jtdJAnZNDto", imageurl: "https://i.ytimg.com/vi/jtdJAnZNDto/hqdefault.jpg?sqp=-oaymwEXCPYBEIoBSFryq4qpAwkIARUAAIhCGAE=&rs=AOn4CLB8rIsvdWdSN67GmbM48erLIuvjbQ");
-            await SetSpeaking(e, true);
-            await music(e, "M:/Downloaded/zaneta.mp3");
-
-        }
-
-        [Command("tttie"), Aliases("zeleny", "zelenyony"), Hidden, Description("TTtie")]
-        public async Task tttie(CommandContext e, string args = "random")
-        {
-            Random num = new Random();
-            if (args == "random")
-            {
-                if (num.Next(0, 2) == 1)
-                {
-                    await e.RespondWithFileAsync("tttie.png");
-                }
-                else
-                {
-                    await e.RespondWithFileAsync("tttie2.png");
-                }
-            }
-            else
-            {
-                if (args == "nekvalitni")
-                {
-                    await e.RespondWithFileAsync("tttie.png");
-                }
-                if (args == "kvalitni")
-                {
-                    await e.RespondWithFileAsync("tttie2.png");
-                }
-                if (args == "nekvalitny")
-                {
-                    await e.RespondWithFileAsync("tttie.png");
-                }
-                if (args == "kvalitny")
-                {
-                    await e.RespondWithFileAsync("tttie2.png");
-                }
-
-                if (args == "nekvalitní")
-                {
-                    await e.RespondWithFileAsync("tttie.png");
-                }
-                if (args == "kvalitní")
-                {
-                    await e.RespondWithFileAsync("tttie2.png");
-                }
-                if (args == "nekvalitný")
-                {
-                    await e.RespondWithFileAsync("tttie.png");
-                }
-                if (args == "kvalitný")
-                {
-                    await e.RespondWithFileAsync("tttie2.png");
-                }
-            }
-        }
-        #endregion
-
-        #region compress command
-        [Command("compress"), Description("If you specify value from 0 to 100 then the bot compresses to the value. 0 awful | 100 great")]
-        public async Task compress(CommandContext e, [RemainingText]string args = "5")
-        {
-            File.Delete("temp.jpg");
-            string url;
-            int quality;
-            string attachementURL = null;
-            try
-            {
-                attachementURL = e.Message.Attachments[0].Url;
-            }
-            catch
-            {
-                attachementURL = null;
-            }
-            if (attachementURL == null)
-            {
-                if (args.StartsWith("h"))
-                {
-                    quality = 5;
-                    url = args;
-                }
-                else if (args.StartsWith("w"))
-                {
-                    quality = 5;
-
-                    url = args;
-                }
-                else
-                {
-
-                    url = args.Remove(0, 2);
-                    if (args.StartsWith("-"))
-                    {
-
-                        await CreateMessage(e, desc: "no shit sherlock!", color: DiscordColor.Red);
-                        return;
-                    }
-                    else
-                    {
-
-                        quality = Int32.Parse(args.Remove(1, args.Length - 1));
-                    }
-
-                }
-                HttpClient imgdown = new HttpClient();
-                HttpResponseMessage imgrespons = await imgdown.GetAsync(url);
-                using (FileStream fs = new FileStream("temp.jpg", FileMode.Create))
-                {
-                    await imgrespons.Content.CopyToAsync(fs);
-                }
-
-            }
-            else
-            {
-                quality = Int32.Parse(args);
-                HttpClient cl = new HttpClient();
-                HttpResponseMessage response = await cl.GetAsync(e.Message.Attachments[0].Url);
-                using (FileStream fs = new FileStream("temp.jpg", FileMode.Create))
-                {
-                    await response.Content.CopyToAsync(fs);
-                }
-
-            }
-            File.Delete("compressed.jpg");
-
-            using (var img = new MagickImage("temp.jpg"))
-            {
-                img.Strip();
-                img.Quality = quality;
-                img.Write("compressed.jpg");
-            }
-            await e.RespondWithFileAsync("compressed.jpg");
-            FileInfo info1 = new FileInfo("temp.jpg");
-            FileInfo info2 = new FileInfo("compressed.jpg");
-            string size;
-            if (info2.Length / 1024 == 0)
-            {
-                size = info2.Length + "B";
-            }
-            else
-            {
-                size = info2.Length / 1024 + "KB";
-            }
-            await CreateMessage(e, color: DiscordColor.Green, desc: "Here is your fresh compressed art. We know that it is delicious!\nStats:\nSize before compressing: " + (info1.Length / 1024) + "KB\nSize after compressing: " + size);
-        }
-        #endregion
-
-        #region draw command
-        [Command("message")]
-        public async Task draw(CommandContext e, params string[] args)
-        {
-            string minutes = null;
-            if (DateTime.Now.TimeOfDay.Minutes.ToString().Length == 1)
-            {
-                minutes = "0" + DateTime.Now.TimeOfDay.Minutes.ToString();
-            }
-            else
-            {
-                minutes = DateTime.Now.TimeOfDay.Minutes.ToString();
-            }
-
-            string words = "";
-            int count = 0;
-            int newlines = 0;
-            foreach (string word in args)
-            {
-                count++;
-                if (count > 7)
-                {
-                    count = 0;
-                    newlines++;
-                    words = words + "\n" + word;
-                }
-                else
-                {
-                    words = words + " " + word;
-                }
-            }
-            var test = new MagickImage("template.png");
-            using (var image = new MagickImage(new MagickColor("#36393E"), 512, 82 + (20 * newlines)))
-            {
-                MagickGeometry size = new MagickGeometry(512, 82 + (20 * newlines));
-                size.IgnoreAspectRatio = true;
-                image.Resize(size);
-                image.Composite(test);
-
-                new Drawables()
-                  .FontPointSize(16.5)
-                  .Font("Fontaria") //secret font..
-                  .FillColor(MagickColors.White)
-                  .TextAlignment(TextAlignment.Left)
-                  .Text(87, 59, words)
-
-                  .FontPointSize(12)
-                  .FillColor(MagickColor.FromRgb(85, 87, 92))
-                  .Text(134, 35, "Today at " + string.Format("{0:hh:mm tt}", DateTime.Now))
-                  .Draw(image);
-                image.Write("message.png");
-            }
-            await e.RespondWithFileAsync("message.png");
-        }
-        #endregion
-
-
-        #region draw command
-        [Command("emoji")]
-        public async Task emoji(CommandContext e, [RemainingText]string args)
-        {
-            Image img = new Bitmap(1, 1);
-            Graphics drawing = Graphics.FromImage(img);
-            Font font = new Font("Segoe UI Emoji", 20);
-            SizeF textSize = drawing.MeasureString(args, font);
-            img.Dispose();
-            drawing.Dispose();
-            img = new Bitmap((int)textSize.Width, (int)textSize.Height);
-            drawing = Graphics.FromImage(img);
-            drawing.Clear(Color.FromArgb(53, 57, 62));
-            Brush textBrush = new SolidBrush(Color.White);
-            drawing.DrawString(args, font, textBrush, 0, 0);
-
-            drawing.Save();
-            img.Save("emoji.png");
-
-            textBrush.Dispose();
-            drawing.Dispose();
-            await e.RespondWithFileAsync("emoji.png");
-
-        }
-        #endregion
         #region lookatthisdude command
 
         [Command("lookatthisdude"), Aliases("dude", "lookatdude", "latd", "smiech"), Description("Plays the guy that was laughing.")]
@@ -1135,15 +1307,5 @@ namespace Morbot
 
         }
         #endregion
-
-        #region screenshot command
-
-        [Command("screenshot"), Description("Plays the guy that was laughing.")]
-        public async Task screenshot(CommandContext e)
-        {
-
-            await e.RespondWithFileAsync("screenshot.png");
-            #endregion
-        }
     }
 }

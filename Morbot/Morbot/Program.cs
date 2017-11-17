@@ -14,12 +14,14 @@ namespace Morbot
     class Program
     {
         public static DiscordClient discord;
-        public static DiscordActivity game = new DiscordActivity();
-        static public string prefix = "";
+        static public string prefix = "--";
         static CommandsNextExtension commands;
         static VoiceNextExtension voice;
         public static configJSON configuration = new configJSON();
-        public static string version = "1.7.6";
+        public static string version = "1.7.7";
+
+        public static DiscordActivity game = new DiscordActivity();
+        public static string DiscordActivityText = "type " + prefix + "help|ver: " + version;
         private Task Client_Ready(ReadyEventArgs exx)
         {
             exx.Client.Guilds[0].Channels.Where(e => e.Id == 0);
@@ -87,13 +89,15 @@ namespace Morbot
             await discord.ConnectAsync();
             discord.Ready += async ex =>
             {
-                game.Name = prefix + "help|Ready|V:" + version;
-                game.ActivityType = ActivityType.Streaming;
+                game.Name = DiscordActivityText;
+                game.ActivityType = ActivityType.Watching;
                 await discord.UpdateStatusAsync(game);
             };
 
             await Task.Delay(-1);
         }
+
+
 
     }
 }
