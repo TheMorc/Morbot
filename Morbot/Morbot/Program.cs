@@ -19,7 +19,7 @@ namespace Morbot
         static CommandsNextExtension commands;
         static VoiceNextExtension voice;
         public static configJSON configuration = new configJSON();
-        public static string version = "1.7.8";
+        public static string version = "1.7.9";
 
         public static DiscordActivity game = new DiscordActivity();
         public static string DiscordActivityText = "type " + prefix + "help|ver: " + version;
@@ -75,20 +75,18 @@ namespace Morbot
             {
                 if (!e.Message.Author.IsBot)
                 {
-                    string[] trigger = { "JSX", "jsx", "js", "JS" };
-                    foreach (string trig in trigger)
+
+                    if (e.Message.Content.StartsWith("JSX"))
                     {
-                        if (e.Message.Content.Contains(trig))
-                        {
-                            await e.Message.RespondAsync("**easier**");
-                        }
+                        await e.Message.RespondAsync("**easier**");
                     }
 
-                    if (e.Message.Content.Contains("**easier**"))
+
+                    if (e.Message.Content.StartsWith("**easier**"))
                     {
                         await e.Message.RespondAsync("JSX");
                     }
-                    else if (e.Message.Content.Contains("easier"))
+                    else if (e.Message.Content.StartsWith("easier"))
                     {
                         await e.Message.RespondAsync("JSX");
                     }
@@ -107,6 +105,7 @@ namespace Morbot
 
             commands.CommandErrored += async e =>
             {
+                await Commands.CreateMessage(e.Context, Commands.error_message + "`" + e.Exception.Message + "`", color: DiscordColor.Red);
                 e.Context.Client.DebugLogger.LogMessage(LogLevel.Error, "Morbot", e.Context.Member.Username + "#" + e.Context.Member.Discriminator + " executed command --" + e.Command.Name + " and the command failed", DateTime.Now);
             };
 
@@ -114,6 +113,7 @@ namespace Morbot
             {
                 e.Context.Client.DebugLogger.LogMessage(LogLevel.Info, "Morbot", e.Context.Member.Username + "#" + e.Context.Member.Discriminator + " succesfully executed command --" + e.Command.Name, DateTime.Now);
             };
+
             voice = discord.UseVoiceNext(new VoiceNextConfiguration
             {
                 VoiceApplication = DSharpPlus.VoiceNext.Codec.VoiceApplication.Music
@@ -121,11 +121,11 @@ namespace Morbot
             commands.RegisterCommands<Commands>();
             await discord.ConnectAsync();
             discord.Ready += async ex =>
-            {
-                game.Name = DiscordActivityText;
-                game.ActivityType = ActivityType.Watching;
-                await discord.UpdateStatusAsync(game);
-            };
+                        {
+                            game.Name = DiscordActivityText;
+                            game.ActivityType = ActivityType.Watching;
+                            await discord.UpdateStatusAsync(game);
+                        };
             await Task.Delay(-1);
         }
 

@@ -17,18 +17,16 @@ using System.Drawing;
 
 namespace Morbot
 {
-
     public class Commands
     {
-
         string lastCommit = null;
         string commitDate = null;
         static readonly string embed_title = "Morbot [ver: " + Program.version + ", Made in 🇸🇰, By: Morc]";
-        static readonly string error_message = ":no_entry: Bot encoutered an error!!! \n";
+        public static readonly string error_message = ":no_entry: An exception occurred!!!\n";
         static private DiscordActivity botActivity = new DiscordActivity();
         DiscordActivity temp = new DiscordActivity("temp", ActivityType.Playing);
 
-        //TASKS FOR COMMANDS ala translate, createmessage etc.
+        //mhm, wot??
         #region tasks for commands
         private void LastCommitFromGitHub()
         {
@@ -217,8 +215,6 @@ namespace Morbot
 
         }
         #endregion
-
-        //admin only commands
         #region servers command
         [Command("servers"), RequirePermissions(DSharpPlus.Permissions.ManageGuild), Hidden, Description("Should be hidden! But this command shows list of servers that it is on...")]
         public async Task Servers(CommandContext ex)
@@ -238,19 +234,12 @@ namespace Morbot
         }
         #endregion
 
-        //dead command [Command("whoami"), Description("Bot responds with info about bot! It is that simple...")]
-        //public async Task Whoami(CommandContext e)
-        //{
-        //    await CreateMessage(e, desc: "I am Morbot, and Morc creates this bot for Discord server but also as example.\nLink to sourcecode: https://www.github.com/TheMorc/Morbot \nMade with DSharpPlus API(ver: " + e.Client.VersionString + ")", color: DiscordColor.Cyan);
-        //}
-
 
         //Commands
         #region bot command
         [Command("bot")]
         public async Task Bot(CommandContext e)
         {
-
             LastCommitFromGitHub();
             await CreateMessage(e, color: DiscordColor.Blurple,
             desc: "**Morbot** is OpenSource bot maintained by **Morc** and **Made in Slovakia** with D#+ (DSharpPlus) API." +
@@ -331,37 +320,29 @@ namespace Morbot
         [Command("latestvideo"), Aliases("latestmorcvideo", "morcvideo", "lastvideo", "lastvideobymorc"), Description("This command pulls link of last video posted by Morc")]
         public async Task Latestvideo(CommandContext e)
         {
-            try
+            var yt = new YouTubeService(new BaseClientService.Initializer()
             {
-                var yt = new YouTubeService(new BaseClientService.Initializer()
+                ApiKey = Program.configuration.YoutubeDataAPIKey
+            });
+            var channelsListRequest = yt.Channels.List("contentDetails");
+            channelsListRequest.ForUsername = "riskoautobus";
+            var channelsListResponse = channelsListRequest.Execute();
+            foreach (var channel in channelsListResponse.Items)
+            {
+                var uploadsListId = channel.ContentDetails.RelatedPlaylists.Uploads;
+                var nextPageToken = "";
+                while (nextPageToken != null)
                 {
-                    ApiKey = Program.configuration.YoutubeDataAPIKey
-                });
-                var channelsListRequest = yt.Channels.List("contentDetails");
-                channelsListRequest.ForUsername = "riskoautobus";
-                var channelsListResponse = channelsListRequest.Execute();
-                foreach (var channel in channelsListResponse.Items)
-                {
-                    var uploadsListId = channel.ContentDetails.RelatedPlaylists.Uploads;
-                    var nextPageToken = "";
-                    while (nextPageToken != null)
-                    {
-                        var playlistItemsListRequest = yt.PlaylistItems.List("snippet");
-                        playlistItemsListRequest.PlaylistId = uploadsListId;
-                        playlistItemsListRequest.MaxResults = 50;
-                        playlistItemsListRequest.PageToken = nextPageToken;
-                        var playlistItemsListResponse = playlistItemsListRequest.Execute();
-                        string ytlink = "https://youtu.be/" + playlistItemsListResponse.Items[0].Snippet.ResourceId.VideoId;
-                        await e.Message.RespondAsync("\u200B " + ytlink);
-                        nextPageToken = playlistItemsListResponse.NextPageToken;
-                    }
+                    var playlistItemsListRequest = yt.PlaylistItems.List("snippet");
+                    playlistItemsListRequest.PlaylistId = uploadsListId;
+                    playlistItemsListRequest.MaxResults = 50;
+                    playlistItemsListRequest.PageToken = nextPageToken;
+                    var playlistItemsListResponse = playlistItemsListRequest.Execute();
+                    string ytlink = "https://youtu.be/" + playlistItemsListResponse.Items[0].Snippet.ResourceId.VideoId;
+                    await e.Message.RespondAsync("\u200B " + ytlink);
+                    nextPageToken = playlistItemsListResponse.NextPageToken;
                 }
             }
-            catch (Exception exy)
-            {
-                await CreateMessage(e, desc: error_message + exy, color: DiscordColor.Red);
-            }
-
         }
         #endregion
         #region weather command
@@ -371,59 +352,53 @@ namespace Morbot
             string data = "";
             string weathertype = null;
             double temp = 0;
-            try
+            string page = "http://api.openweathermap.org/data/2.5/weather?q=" + System.Web.HttpUtility.UrlEncode(town) + "&mode=json&APPID=" + Program.configuration.OpenWeatherAPIKey;
+            using (HttpClient cl = new HttpClient())
             {
-                string page = "http://api.openweathermap.org/data/2.5/weather?q=" + System.Web.HttpUtility.UrlEncode(town) + "&mode=json&APPID=" + Program.configuration.OpenWeatherAPIKey;
-                using (HttpClient cl = new HttpClient())
+                data = await cl.GetStringAsync(page);
+                JSONs.RootObjectW2 oRootObject = new JSONs.RootObjectW2();
+                try
                 {
-                    data = await cl.GetStringAsync(page);
-                    JSONs.RootObjectW2 oRootObject = new JSONs.RootObjectW2();
-                    try
-                    {
 
-                        oRootObject = JsonConvert.DeserializeObject<JSONs.RootObjectW2>(data);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.Write(ex.ToString());
-                    }
-                    weathertype = null;
-                    DiscordColor wcolor = DiscordColor.None;
-                    temp = oRootObject.main.temp - 273.15;
-                    if (oRootObject.weather[0].description == "clear sky")
-                    {
-                        weathertype = ":sunny:" + " - Sunny";
-                        wcolor = DiscordColor.Yellow;
-                    }
-                    if (oRootObject.weather[0].description == "broken clouds")
-                    {
-                        weathertype = ":cloud:" + " - Clouds";
-                        wcolor = DiscordColor.Gray;
-                    }
-                    if (oRootObject.weather[0].description == "few clouds")
-                    {
-                        weathertype = ":cloud:" + " - Clouds";
-                        wcolor = DiscordColor.Gray;
-                    }
-                    if (oRootObject.weather[0].description == "light rain")
-                    {
-                        weathertype = ":cloud_rain:" + " - Rain";
-                        wcolor = DiscordColor.Cyan;
-                    }
-
-                    if (oRootObject.weather[0].description == "mist")
-                    {
-                        weathertype = ":fog:" + " - Fog/Mist";
-                        wcolor = DiscordColor.Cyan;
-                    }
-                    await CreateMessage(e, desc: oRootObject.name + " - " + oRootObject.sys.country + ", specified by " + e.User.Username + "\n" + temp + "°C \n" + weathertype, color: wcolor);
-                    //await CreateMessage(e, desc: "Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype, color: wcolor);
+                    oRootObject = JsonConvert.DeserializeObject<JSONs.RootObjectW2>(data);
                 }
+                catch (Exception ex)
+                {
+                    Console.Write(ex.ToString());
+                }
+                weathertype = null;
+                DiscordColor wcolor = DiscordColor.None;
+                temp = oRootObject.main.temp - 273.15;
+                if (oRootObject.weather[0].description == "clear sky")
+                {
+                    weathertype = ":sunny:" + " - Sunny";
+                    wcolor = DiscordColor.Yellow;
+                }
+                if (oRootObject.weather[0].description == "broken clouds")
+                {
+                    weathertype = ":cloud:" + " - Clouds";
+                    wcolor = DiscordColor.Gray;
+                }
+                if (oRootObject.weather[0].description == "few clouds")
+                {
+                    weathertype = ":cloud:" + " - Clouds";
+                    wcolor = DiscordColor.Gray;
+                }
+                if (oRootObject.weather[0].description == "light rain")
+                {
+                    weathertype = ":cloud_rain:" + " - Rain";
+                    wcolor = DiscordColor.Cyan;
+                }
+
+                if (oRootObject.weather[0].description == "mist")
+                {
+                    weathertype = ":fog:" + " - Fog/Mist";
+                    wcolor = DiscordColor.Cyan;
+                }
+                await CreateMessage(e, desc: oRootObject.name + " - " + oRootObject.sys.country + ", specified by " + e.User.Username + "\n" + temp + "°C \n" + weathertype, color: wcolor);
+                //await CreateMessage(e, desc: "Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype, color: wcolor);
             }
-            catch (Exception ex)
-            {
-                await CreateMessage(e, desc: error_message + ex, color: DiscordColor.Red);
-            }
+
         }
         #endregion
         #region randomnorrisjoke command
@@ -525,7 +500,6 @@ namespace Morbot
                 url = pData["file"].ToString();
                 await CreateMessage(e, thumbnailurl: "http://random.cat/random.cat-logo.png", imageurl: url, color: DiscordColor.Green);
             }
-
         }
         #endregion
         #region dog command
@@ -551,7 +525,6 @@ namespace Morbot
             string[] playing = { "playing", "Playing", "Play", "play" };
             string[] watching = { "watching", "Watching", "Watch", "watch" };
             string[] listening = { "listeningto", "Listeningto", "Listen", "listen", "listento", "Listento", "Listen to", "listen to", "listening to", "Listening to" };
-
 
             foreach (string name in streaming)
             {
@@ -639,32 +612,25 @@ namespace Morbot
             {
                 page = "http://api.giphy.com/v1/gifs/random?q=cat&tag=" + arg1 + "&api_key=" + Program.configuration.GiphyAPIKey;
             }
-            try
+            using (HttpClient client = new HttpClient())
+            using (HttpResponseMessage response = await client.GetAsync(page))
+            using (HttpContent content = response.Content)
             {
-                using (HttpClient client = new HttpClient())
-                using (HttpResponseMessage response = await client.GetAsync(page))
-                using (HttpContent content = response.Content)
+                string data = await content.ReadAsStringAsync();
+                JSONs.RootObjectG oRootObject = new JSONs.RootObjectG();
+                oRootObject = JsonConvert.DeserializeObject<JSONs.RootObjectG>(data);
+                gifurl = oRootObject.data.image_url;
+                if (oRootObject.data.username == "")
                 {
-                    string data = await content.ReadAsStringAsync();
-                    JSONs.RootObjectG oRootObject = new JSONs.RootObjectG();
-                    oRootObject = JsonConvert.DeserializeObject<JSONs.RootObjectG>(data);
-                    gifurl = oRootObject.data.image_url;
-                    if (oRootObject.data.username == "")
-                    {
-                        gifby = "";
-                    }
-                    else
-                    {
-                        gifby = Emoji[Rand.Next(0, Emoji.Length)] + " By: " + oRootObject.data.username;
-                    }
-                    await CreateMessage(e, thumbnailurl: "https://www.inboxsdk.com/images/logos/giphy.png", desc: gifby, imageurl: gifurl, color: DiscordColor.Green);
+                    gifby = "";
                 }
+                else
+                {
+                    gifby = Emoji[Rand.Next(0, Emoji.Length)] + " By: " + oRootObject.data.username;
+                }
+                await CreateMessage(e, thumbnailurl: "https://www.inboxsdk.com/images/logos/giphy.png", desc: gifby, imageurl: gifurl, color: DiscordColor.Green);
             }
-            catch (Exception ex)
-            {
 
-                await CreateMessage(e, desc: error_message + ex, color: DiscordColor.Red);
-            }
 
         }
         #endregion
@@ -675,27 +641,16 @@ namespace Morbot
             Random rand = new Random();
             string page = "https://pixabay.com/api/?key=" + Program.configuration.PixabayAPIKey + "&q=" + arg1 + "&image_type=photo";
 
-            try
+            using (HttpClient client = new HttpClient())
+            using (HttpResponseMessage response = await client.GetAsync(page))
+            using (HttpContent content = response.Content)
             {
-                using (HttpClient client = new HttpClient())
-                using (HttpResponseMessage response = await client.GetAsync(page))
-                using (HttpContent content = response.Content)
-                {
-                    string data = await content.ReadAsStringAsync();
-                    JSONs.GIFRootObject oRootObject = new JSONs.GIFRootObject();
-                    oRootObject = JsonConvert.DeserializeObject<JSONs.GIFRootObject>(data);
-                    int num = rand.Next(0, oRootObject.hits.Capacity);
-                    await CreateMessage(e, desc: "Photo by: " + oRootObject.hits[num].user + "\nViews: " + oRootObject.hits[num].views, imageurl: oRootObject.hits[num].webformatURL, thumbnailurl: "https://pixabay.com/static/img/logo_square.png");
-                }
+                string data = await content.ReadAsStringAsync();
+                JSONs.GIFRootObject oRootObject = new JSONs.GIFRootObject();
+                oRootObject = JsonConvert.DeserializeObject<JSONs.GIFRootObject>(data);
+                int num = rand.Next(0, oRootObject.hits.Capacity);
+                await CreateMessage(e, desc: "Photo by: " + oRootObject.hits[num].user + "\nViews: " + oRootObject.hits[num].views, imageurl: oRootObject.hits[num].webformatURL, thumbnailurl: "https://pixabay.com/static/img/logo_square.png");
             }
-            catch (Exception ex)
-            {
-
-                await CreateMessage(e, desc: error_message + ex, color: DiscordColor.Red);
-            }
-
-
-
         }
         #endregion
         #region hidden commands
@@ -1164,8 +1119,6 @@ namespace Morbot
                     {
                         return;
                     }
-
-
                 }
                 catch (Exception ex)
                 {
@@ -1233,7 +1186,7 @@ namespace Morbot
 
             if (File.Exists(filename))
             {
-                await CreateMessage(e, color: DiscordColor.Green, desc: "Speaking: " + speakdata.Remove(0, 3));
+                await CreateMessage(e, color: DiscordColor.Green, desc: "Letters Remaining: " + (200 - text.Remove(0, 1).Length) + "\n\nSpeaking: `" + speakdata.Remove(0, 3) + "`");
                 await SetSpeaking(e, true);
                 await music(e, filename);
             }
@@ -1245,7 +1198,7 @@ namespace Morbot
                 {
                     await response.Content.CopyToAsync(fs);
 
-                    await CreateMessage(e, color: DiscordColor.Green, desc: "Speaking: " + speakdata.Remove(0, 3));
+                    await CreateMessage(e, color: DiscordColor.Green, desc: "Letters Remaining: " + (200 - text.Remove(0, 1).Length) + "\n\nSpeaking: `" + speakdata.Remove(0, 3) + "`");
                     await SetSpeaking(e, true);
                     await music(e, filename);
                 }
