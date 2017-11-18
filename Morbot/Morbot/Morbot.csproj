@@ -18,14 +18,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <PlatformTarget>x64</PlatformTarget>
     <Optimize>false</Optimize>
-    <DefineConstants>NETCOREAPP2_0</DefineConstants>
+    <DefineConstants>TRACE;NETCOREAPP2_0;DEBUG;NETCOREAPP2_0</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="CoreCompat.System.Drawing.v2" Version="5.2.0-preview1-r131" />
-    <PackageReference Include="DSharpPlus" Version="4.0.0-beta-00367" />
-    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.0.0-beta-00367" />
-    <PackageReference Include="DSharpPlus.VoiceNext" Version="4.0.0-beta-00367" />
+    <PackageReference Include="DSharpPlus" Version="4.0.0-beta-00368" />
+    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.0.0-beta-00368" />
+    <PackageReference Include="DSharpPlus.VoiceNext" Version="4.0.0-beta-00368" />
     <PackageReference Include="Google.Apis.YouTube.v3" Version="1.30.0.1035" />
     <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="7.1.0" />
   </ItemGroup>

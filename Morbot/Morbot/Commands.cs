@@ -26,6 +26,8 @@ namespace Morbot
         static readonly string embed_title = "Morbot [ver: " + Program.version + ", Made in 🇸🇰, By: Morc]";
         static readonly string error_message = ":no_entry: Bot encoutered an error!!! \n";
         static private DiscordActivity botActivity = new DiscordActivity();
+        DiscordActivity temp = new DiscordActivity("temp", ActivityType.Playing);
+
         //TASKS FOR COMMANDS ala translate, createmessage etc.
         #region tasks for commands
         private void LastCommitFromGitHub()
@@ -340,7 +342,6 @@ namespace Morbot
                 var channelsListResponse = channelsListRequest.Execute();
                 foreach (var channel in channelsListResponse.Items)
                 {
-                    // of videos uploaded to the authenticated user's channel.
                     var uploadsListId = channel.ContentDetails.RelatedPlaylists.Uploads;
                     var nextPageToken = "";
                     while (nextPageToken != null)
@@ -349,8 +350,6 @@ namespace Morbot
                         playlistItemsListRequest.PlaylistId = uploadsListId;
                         playlistItemsListRequest.MaxResults = 50;
                         playlistItemsListRequest.PageToken = nextPageToken;
-
-                        // Retrieve the list of videos uploaded to the authenticated user's channel.
                         var playlistItemsListResponse = playlistItemsListRequest.Execute();
                         string ytlink = "https://youtu.be/" + playlistItemsListResponse.Items[0].Snippet.ResourceId.VideoId;
                         await e.Message.RespondAsync("\u200B " + ytlink);
@@ -366,8 +365,6 @@ namespace Morbot
         }
         #endregion
         #region weather command
-
-
         [Command("weather"), Description("Bot responds with actual temperature in °C.Weather gets pulled from OpenWeather and city is Topoľčany(small town near village Biskupová where Morc lives).")]
         public async Task CWeather(CommandContext e, [RemainingText]string town = "Topolcany")
         {
@@ -430,7 +427,6 @@ namespace Morbot
         }
         #endregion
         #region randomnorrisjoke command
-
         [Command("randomnorrisjoke"), Aliases("norris", "norrisjoke", "chucknorris", "chuck", "chuckjoke", "randomchuckjoke"), Description("Chuck Norris was born earlier than he died! Command pulls random joke from ChuckNorris API..")]
         public async Task ChuckNorris(CommandContext e, string language = "")
         {
@@ -456,10 +452,8 @@ namespace Morbot
                 }
             }
         }
-
         #endregion
         #region translate command
-
         [Command("translate"), Description("eee what else? one! what else? two what else?? ..... translate command!!")]
         public async Task translate(CommandContext e, params string[] args)
         {
@@ -492,7 +486,6 @@ namespace Morbot
 
             }
         }
-
         #endregion
         #region time command
         [Command("time"), Description("WHO WANTS THIS COMMAND???")]
@@ -558,6 +551,8 @@ namespace Morbot
             string[] playing = { "playing", "Playing", "Play", "play" };
             string[] watching = { "watching", "Watching", "Watch", "watch" };
             string[] listening = { "listeningto", "Listeningto", "Listen", "listen", "listento", "Listento", "Listen to", "listen to", "listening to", "Listening to" };
+
+
             foreach (string name in streaming)
             {
                 if (!finished)
@@ -565,10 +560,11 @@ namespace Morbot
                     if (mode == name)
                     {
                         finished = true;
+                        await e.Client.UpdateStatusAsync(temp);
                         botActivity.Name = Program.DiscordActivityText;
                         botActivity.ActivityType = ActivityType.Streaming;
                         await e.Client.UpdateStatusAsync(botActivity);
-                        await CreateMessage(e, desc: "Sucessfully changed mode to streaming by: " + e.Member.Mention);
+                        await CreateMessage(e, color: DiscordColor.Green, desc: "Sucessfully changed mode to `Streaming` by: " + e.Member.Mention);
                     }
                 }
             }
@@ -579,10 +575,11 @@ namespace Morbot
                     if (mode == name)
                     {
                         finished = true;
+                        await e.Client.UpdateStatusAsync(temp);
                         botActivity.Name = Program.DiscordActivityText;
-                        botActivity.ActivityType = ActivityType.Streaming;
+                        botActivity.ActivityType = ActivityType.Playing;
                         await e.Client.UpdateStatusAsync(botActivity);
-                        await CreateMessage(e, desc: name + " play shit done");
+                        await CreateMessage(e, color: DiscordColor.Green, desc: "Sucessfully changed mode to `Playing` by: " + e.Member.Mention);
                     }
                 }
             }
@@ -593,10 +590,11 @@ namespace Morbot
                     if (mode == name)
                     {
                         finished = true;
+                        await e.Client.UpdateStatusAsync(temp);
                         botActivity.Name = Program.DiscordActivityText;
-                        botActivity.ActivityType = ActivityType.Streaming;
+                        botActivity.ActivityType = ActivityType.Watching;
                         await e.Client.UpdateStatusAsync(botActivity);
-                        await CreateMessage(e, desc: name + " watch shit done");
+                        await CreateMessage(e, color: DiscordColor.Green, desc: "Sucessfully changed mode to `Watching` by: " + e.Member.Mention);
                     }
                 }
             }
@@ -607,21 +605,21 @@ namespace Morbot
                     if (mode == name)
                     {
                         finished = true;
+                        await e.Client.UpdateStatusAsync(temp);
                         botActivity.Name = Program.DiscordActivityText;
-                        botActivity.ActivityType = ActivityType.Streaming;
+                        botActivity.ActivityType = ActivityType.ListeningTo;
                         await e.Client.UpdateStatusAsync(botActivity);
-                        await CreateMessage(e, desc: name + " listen shit done");
+                        await CreateMessage(e, color: DiscordColor.Green, desc: "Sucessfully changed mode to `Listening To` by: " + e.Member.Mention);
                     }
                 }
             }
             if (!finished)
             {
-                await CreateMessage(e, desc: "You Specified: " + mode + "\nSo it looks like you specified the wrong bot mode. :joy:");
+                await CreateMessage(e, color: DiscordColor.Red, desc: "You Specified: " + mode + "\nSo it looks like you specified the wrong bot mode. :joy:");
             }
         }
         #endregion
-        #region gifv2 command
-
+        #region gif command
         [Command("gif"), Description("If anything isnt specified with command, then it responds with random dog or cat(dog or cat randomized by bot) gif(by giphy).")]
         public async Task GIFSearch(CommandContext e, [RemainingText]string arg1 = "")
         {
@@ -669,12 +667,8 @@ namespace Morbot
             }
 
         }
-
-
-
         #endregion
         #region picture command
-
         [Command("picture"), Aliases("pic", "pix", "image", "img", "photo"), Description("This command works only if something is specified for ex 'Zetor' then it sends picture of zetor tractor..")]
         public async Task IMGSearch(CommandContext e, [RemainingText]string arg1 = "")
         {
@@ -703,9 +697,6 @@ namespace Morbot
 
 
         }
-
-
-
         #endregion
         #region hidden commands
         [Command("žaneta"), Aliases("zani", "žani", "zaneta", "hulvat"), Hidden, Description("sings section of hej žaneta song, text arrangement by crafty ")]
@@ -717,10 +708,12 @@ namespace Morbot
             await music(e, "M:/Downloaded/zaneta.mp3");
 
         }
-
         [Command("tttie"), Aliases("zeleny", "zelenyony"), Hidden, Description("TTtie")]
         public async Task tttie(CommandContext e, string args = "random")
         {
+            string[] nekvalita = { "nekvalitny", "nekvalitni", "nekvalitní", "nekvalitný", "NEKVALITNÝ", "NEKVALITNÍ", "NEKVALITNY", "NEKVALITNI" };
+            string[] kvalita = { "kvalitny", "kvalitni", "kvalitní", "kvalitný", "KVALITNÝ", "KVALITNÍ", "KVALITNY", "KVALITNI" };
+            bool finished = false;
             Random num = new Random();
             if (args == "random")
             {
@@ -735,38 +728,25 @@ namespace Morbot
             }
             else
             {
-                if (args == "nekvalitni")
+                foreach (string name in nekvalita)
                 {
-                    await e.RespondWithFileAsync("tttie.png");
+                    if (!finished)
+                    {
+                        if (args == name)
+                        {
+                            await e.RespondWithFileAsync("tttie.png");
+                        }
+                    }
                 }
-                if (args == "kvalitni")
+                foreach (string name in kvalita)
                 {
-                    await e.RespondWithFileAsync("tttie2.png");
-                }
-                if (args == "nekvalitny")
-                {
-                    await e.RespondWithFileAsync("tttie.png");
-                }
-                if (args == "kvalitny")
-                {
-                    await e.RespondWithFileAsync("tttie2.png");
-                }
-
-                if (args == "nekvalitní")
-                {
-                    await e.RespondWithFileAsync("tttie.png");
-                }
-                if (args == "kvalitní")
-                {
-                    await e.RespondWithFileAsync("tttie2.png");
-                }
-                if (args == "nekvalitný")
-                {
-                    await e.RespondWithFileAsync("tttie.png");
-                }
-                if (args == "kvalitný")
-                {
-                    await e.RespondWithFileAsync("tttie2.png");
+                    if (!finished)
+                    {
+                        if (args == name)
+                        {
+                            await e.RespondWithFileAsync("tttie2.png");
+                        }
+                    }
                 }
             }
         }
@@ -940,7 +920,6 @@ namespace Morbot
         }
         #endregion
         #region screenshot command
-
         [Command("screenshot"), Description("screenshots site")]
         public async Task screenshot(CommandContext e, string args)
         {
@@ -960,7 +939,6 @@ namespace Morbot
                 await e.RespondWithFileAsync("screenshot.png");
             };
         }
-
         #endregion
         #region anime command
         [Command("top10animedeaths"), Aliases("anime"), Description("meme generator")]
@@ -1007,7 +985,6 @@ namespace Morbot
             g.Dispose();
             anime.Dispose();
         }
-
         #endregion
         #region age command
         [Command("age"), Aliases("botage", "agebot", "ageofbot")]
@@ -1018,10 +995,16 @@ namespace Morbot
                 "\n\n**Age of last commit:** " + CalculateAge(commitDate) +
                 "\n**Name of last commit:** " + lastCommit);
         }
-
-
+        #endregion
+        #region user command
+        [Command("user")]
+        public async Task user(CommandContext e, DiscordMember user)
+        {
+            await e.RespondAsync(user.ToString() + user.Mention);
+        }
         #endregion
 
+        //VoiceNext Extension Commands!
         #region voice channel join command
         [Command("join"), Aliases("vchjoin", "voicechanneljoin", "voicejoin", "channeljoin", "voicechjoin"), Description("Joins a voice channel.")]
         public async Task connectToVoiceChannel(CommandContext e)
@@ -1078,9 +1061,6 @@ namespace Morbot
         }
         #endregion
         #region voice channel play command
-
-
-
         [Command("play"), Aliases("vchplay", "voicechannelplay", "voiceplay", "channelplay", "voicechplay"), Description("Plays an audio file.")]
         public async Task Play(CommandContext e, [RemainingText, Description("Full path to the file to play.")] string filename, DiscordChannel chn = null)
         {
@@ -1271,7 +1251,6 @@ namespace Morbot
                 }
             }
         }
-
         #endregion
         #region music command
         [Command("music"), Aliases("musiclist", "vchmusiclist", "voicechannelmusiclist", "voicemusiclist", "channelmusiclist", "voicechmusiclist"), Description("sends list of music on my pc")]
@@ -1293,10 +1272,8 @@ namespace Morbot
             await CreateMessage(e, desc: rootfilelist, sendToUser: true);
             await CreateMessage(e, desc: downfilelist, sendToUser: true);
         }
-
         #endregion
         #region lookatthisdude command
-
         [Command("lookatthisdude"), Aliases("dude", "lookatdude", "latd", "smiech"), Description("Plays the guy that was laughing.")]
         public async Task latd(CommandContext e)
         {
