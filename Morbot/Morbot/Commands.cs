@@ -14,15 +14,19 @@ using DSharpPlus.VoiceNext;
 using System.Diagnostics;
 using ImageMagick;
 using System.Drawing;
+using static DSharpPlus.Entities.DiscordEmbedBuilder;
+using System.Globalization;
 
 namespace Morbot
 {
     public class Commands
     {
+        string linkname = null;
+        string link = null;
         string lastCommit = null;
         string commitDate = null;
         static readonly string embed_title = "Morbot [ver: " + Program.version + ", Made in 🇸🇰, By: Morc]";
-        public static readonly string error_message = ":no_entry: An exception occurred!!!\n";
+        public static readonly string error_message = "**:no_entry: -|  An exception occurred!!!  |- :no_entry:**\n";
         static private DiscordActivity botActivity = new DiscordActivity();
         DiscordActivity temp = new DiscordActivity("temp", ActivityType.Playing);
 
@@ -43,6 +47,45 @@ namespace Morbot
                     lastCommit = commits[0].commit.message;
                     commitDate = commits[0].commit.author.date;
                 }
+            }
+        }
+        public string Linkify(string v)
+        {
+            bool https = false;
+            bool http = false;
+            if (v.Contains("https://"))
+            {
+                https = true;
+            }
+            if (v.Contains("http://"))
+            {
+                http = true;
+            }
+
+            if (http && !https)
+            {
+                return v;
+            }
+            else if (!http && https)
+            {
+                return v;
+            }
+            else if (!http && !https)
+            {
+                return "http://" + v;
+            }
+            return null;
+
+        }
+        public string EmojifyBool(bool bol)
+        {
+            if (bol)
+            {
+                return "✅";
+            }
+            else
+            {
+                return "❌";
             }
         }
         public string CalculateAge(string date)
@@ -132,7 +175,7 @@ namespace Morbot
             var vnc = vnext.GetConnection(e.Guild);
             await vnc.SendSpeakingAsync(SetSpeaking);
         }
-        public static async Task CreateMessage(CommandContext e, string titleurl = null, string imageurl = null, string thumbnailurl = "https://github.com/NaamloosDT/DSharpPlus/blob/4858631e87392a8586a685bd0e9cb2a96f7d1ffb/logo/d%23+_smaller.png?raw=true", string url = null, string desc = "", string title = "", DiscordColor color = default(DiscordColor), bool sendToUser = false)
+        public static async Task CreateMessage(CommandContext e, string titleurl = null, string imageurl = null, string thumbnailurl = "https://github.com/NaamloosDT/DSharpPlus/blob/4858631e87392a8586a685bd0e9cb2a96f7d1ffb/logo/d%23+_smaller.png?raw=true", string url = null, string desc = "", string title = "", EmbedAuthor author = default(EmbedAuthor), EmbedFooter footer = default(EmbedFooter), DiscordColor color = default(DiscordColor), bool sendToUser = false)
         {
             if (title == "")
             {
@@ -147,6 +190,8 @@ namespace Morbot
                 ImageUrl = imageurl,
                 ThumbnailUrl = thumbnailurl,
                 Url = url,
+                Author = author,
+                Footer = footer,
                 Timestamp = DateTime.Now
             };
             if (sendToUser)
@@ -240,6 +285,7 @@ namespace Morbot
         [Command("bot")]
         public async Task Bot(CommandContext e)
         {
+            await e.TriggerTypingAsync();
             LastCommitFromGitHub();
             await CreateMessage(e, color: DiscordColor.Blurple,
             desc: "**Morbot** is OpenSource bot maintained by **Morc** and **Made in Slovakia** with D#+ (DSharpPlus) API." +
@@ -255,6 +301,7 @@ namespace Morbot
         [Command("love"), Description("Who needs command that generates random number and sends it?? ANYONE! but this is great example for array string command!!")]
         public async Task Love(CommandContext e, params string[] name)
         {
+            await e.TriggerTypingAsync();
             Random rand = new Random();
             string loveemoji = "";
             DiscordColor laavcolor = DiscordColor.None;
@@ -295,7 +342,7 @@ namespace Morbot
                     {
                         loveemoji = ":heart:";
                         laavcolor = DiscordColor.Red;
-                        laav = name[0] + " + " + name[1] + " = " + "100% " + loveemoji;
+                        laav = "**" + name[0] + "** + **" + name[1] + "** = **" + "100%** " + loveemoji;
                         passed = true;
                     }
                     else
@@ -313,13 +360,15 @@ namespace Morbot
         [Command("ping"), Description("What simpler than this! This sends ping in miliseconds!")]
         public async Task Ping(CommandContext e)
         {
-            await CreateMessage(e, desc: "Ping: " + e.Client.Ping + "ms", color: DiscordColor.Green);
+            await e.TriggerTypingAsync();
+            await CreateMessage(e, desc: "**Ping:** " + e.Client.Ping + "ms", color: DiscordColor.Green);
         }
         #endregion
         #region latestvideo command
         [Command("latestvideo"), Aliases("latestmorcvideo", "morcvideo", "lastvideo", "lastvideobymorc"), Description("This command pulls link of last video posted by Morc")]
         public async Task Latestvideo(CommandContext e)
         {
+            await e.TriggerTypingAsync();
             var yt = new YouTubeService(new BaseClientService.Initializer()
             {
                 ApiKey = Program.configuration.YoutubeDataAPIKey
@@ -349,9 +398,9 @@ namespace Morbot
         [Command("weather"), Description("Bot responds with actual temperature in °C.Weather gets pulled from OpenWeather and city is Topoľčany(small town near village Biskupová where Morc lives).")]
         public async Task CWeather(CommandContext e, [RemainingText]string town = "Topolcany")
         {
+            await e.TriggerTypingAsync();
             string data = "";
             string weathertype = null;
-            double temp = 0;
             string page = "http://api.openweathermap.org/data/2.5/weather?q=" + System.Web.HttpUtility.UrlEncode(town) + "&mode=json&APPID=" + Program.configuration.OpenWeatherAPIKey;
             using (HttpClient cl = new HttpClient())
             {
@@ -368,34 +417,40 @@ namespace Morbot
                 }
                 weathertype = null;
                 DiscordColor wcolor = DiscordColor.None;
-                temp = oRootObject.main.temp - 273.15;
+                double celsius = Math.Round(oRootObject.main.temp - 273.15, 1);
+                double fahrenheit = Math.Round((oRootObject.main.temp - 273.15) * 1.8 + 32, 1);
                 if (oRootObject.weather[0].description == "clear sky")
                 {
-                    weathertype = ":sunny:" + " - Sunny";
+                    weathertype = ":sunny:" + " - **Sunny**";
                     wcolor = DiscordColor.Yellow;
                 }
                 if (oRootObject.weather[0].description == "broken clouds")
                 {
-                    weathertype = ":cloud:" + " - Clouds";
+                    weathertype = ":cloud:" + " - **Clouds**";
                     wcolor = DiscordColor.Gray;
                 }
                 if (oRootObject.weather[0].description == "few clouds")
                 {
-                    weathertype = ":cloud:" + " - Clouds";
+                    weathertype = ":cloud:" + " - **Clouds**";
+                    wcolor = DiscordColor.Gray;
+                }
+                if (oRootObject.weather[0].description == "overcast clouds")
+                {
+                    weathertype = ":cloud:" + " - **Clouds**";
                     wcolor = DiscordColor.Gray;
                 }
                 if (oRootObject.weather[0].description == "light rain")
                 {
-                    weathertype = ":cloud_rain:" + " - Rain";
+                    weathertype = ":cloud_rain:" + " - **Rain**";
                     wcolor = DiscordColor.Cyan;
                 }
 
                 if (oRootObject.weather[0].description == "mist")
                 {
-                    weathertype = ":fog:" + " - Fog/Mist";
+                    weathertype = ":fog:" + " - **Fog/Mist**";
                     wcolor = DiscordColor.Cyan;
                 }
-                await CreateMessage(e, desc: oRootObject.name + " - " + oRootObject.sys.country + ", specified by " + e.User.Username + "\n" + temp + "°C \n" + weathertype, color: wcolor);
+                await CreateMessage(e, desc: oRootObject.name + " - " + oRootObject.sys.country + "\n\n**Temperature in °C:** " + celsius + "°C \n**Temperature in °F:** " + fahrenheit + "°F\n" + weathertype, color: wcolor);
                 //await CreateMessage(e, desc: "Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype, color: wcolor);
             }
 
@@ -405,6 +460,7 @@ namespace Morbot
         [Command("randomnorrisjoke"), Aliases("norris", "norrisjoke", "chucknorris", "chuck", "chuckjoke", "randomchuckjoke"), Description("Chuck Norris was born earlier than he died! Command pulls random joke from ChuckNorris API..")]
         public async Task ChuckNorris(CommandContext e, string language = "")
         {
+            await e.TriggerTypingAsync();
             string data = "";
             string url = "";
             string page = "https://api.chucknorris.io/jokes/random";
@@ -432,6 +488,7 @@ namespace Morbot
         [Command("translate"), Description("eee what else? one! what else? two what else?? ..... translate command!!")]
         public async Task translate(CommandContext e, params string[] args)
         {
+            await e.TriggerTypingAsync();
             string data = "";
             if (args[0] == "languages")
             {
@@ -466,6 +523,7 @@ namespace Morbot
         [Command("time"), Description("WHO WANTS THIS COMMAND???")]
         public async Task Time(CommandContext e)
         {
+            await e.TriggerTypingAsync();
             string minutes = null;
             if (DateTime.Now.TimeOfDay.Minutes.ToString().Length == 1)
             {
@@ -483,6 +541,7 @@ namespace Morbot
         [Command("randomwindows"), Aliases("RandomWindows", "RandWind", "randwind", "ranwin", "randomwin", "RandomWin", "rwin", "randomw", "randw"), Description("Command sends random picture(Windows 95/98/ME/2000/XP/Vista/7/8/10).")]
         public async Task RandomWindows(CommandContext e)
         {
+            await e.TriggerTypingAsync();
             Random rnd = new Random();
             string ver = versions[rnd.Next(0, versions.Length)];
             await e.Message.RespondWithFileAsync(ver);
@@ -492,6 +551,7 @@ namespace Morbot
         [Command("meow"), Aliases("cat", "kitty", "catpicture", "meov", "mjau"), Description("Command cat and dog does the same thing. Sends cute picture/gif of cat or dog!")]
         public async Task Meow(CommandContext e)
         {
+            await e.TriggerTypingAsync();
             string url = null;
             using (HttpClient cl = new HttpClient())
             {
@@ -506,6 +566,7 @@ namespace Morbot
         [Command("woof"), Aliases("dog", "puppy", "dogpicture", "hau", "haw"), Description("Command cat and dog does the same thing. Sends cute picture/gif of cat or dog!")]
         public async Task Woof(CommandContext e)
         {
+            await e.TriggerTypingAsync();
             string url = null;
             using (HttpClient cl = new HttpClient())
             {
@@ -518,8 +579,9 @@ namespace Morbot
         #endregion
         #region mode command
         [Command("changemode"), Aliases("mode"), Description("This command changes mode of bot.(Playing,Streaming,Watching,Listening To)")]
-        public async Task BETA(CommandContext e, [RemainingText]string mode)
+        public async Task mode(CommandContext e, [RemainingText]string mode)
         {
+            await e.TriggerTypingAsync();
             bool finished = false;
             string[] streaming = { "streaming", "Streaming", "Stream", "stream" };
             string[] playing = { "playing", "Playing", "Play", "play" };
@@ -596,6 +658,7 @@ namespace Morbot
         [Command("gif"), Description("If anything isnt specified with command, then it responds with random dog or cat(dog or cat randomized by bot) gif(by giphy).")]
         public async Task GIFSearch(CommandContext e, [RemainingText]string arg1 = "")
         {
+            await e.TriggerTypingAsync();
             string gifby = "";
             string gifurl = "";
             Random Rand = new Random();
@@ -638,6 +701,7 @@ namespace Morbot
         [Command("picture"), Aliases("pic", "pix", "image", "img", "photo"), Description("This command works only if something is specified for ex 'Zetor' then it sends picture of zetor tractor..")]
         public async Task IMGSearch(CommandContext e, [RemainingText]string arg1 = "")
         {
+            await e.TriggerTypingAsync();
             Random rand = new Random();
             string page = "https://pixabay.com/api/?key=" + Program.configuration.PixabayAPIKey + "&q=" + arg1 + "&image_type=photo";
 
@@ -666,6 +730,7 @@ namespace Morbot
         [Command("tttie"), Aliases("zeleny", "zelenyony"), Hidden, Description("TTtie")]
         public async Task tttie(CommandContext e, string args = "random")
         {
+            await e.TriggerTypingAsync();
             string[] nekvalita = { "nekvalitny", "nekvalitni", "nekvalitní", "nekvalitný", "NEKVALITNÝ", "NEKVALITNÍ", "NEKVALITNY", "NEKVALITNI" };
             string[] kvalita = { "kvalitny", "kvalitni", "kvalitní", "kvalitný", "KVALITNÝ", "KVALITNÍ", "KVALITNY", "KVALITNI" };
             bool finished = false;
@@ -710,6 +775,7 @@ namespace Morbot
         [Command("compress"), Description("If you specify value from 0 to 100 then the bot compresses to the value. 0 awful | 100 great")]
         public async Task compress(CommandContext e, [RemainingText]string args = "5")
         {
+            await e.TriggerTypingAsync();
             File.Delete("temp.jpg");
             string url;
             int quality;
@@ -798,6 +864,7 @@ namespace Morbot
         [Command("message")]
         public async Task message(CommandContext e, params string[] args)
         {
+            await e.TriggerTypingAsync();
             string minutes = null;
             if (DateTime.Now.TimeOfDay.Minutes.ToString().Length == 1)
             {
@@ -853,9 +920,10 @@ namespace Morbot
         [Command("emoji")]
         public async Task emoji(CommandContext e, [RemainingText]string args)
         {
+            await e.TriggerTypingAsync();
             Image img = new Bitmap(1, 1);
             Graphics drawing = Graphics.FromImage(img);
-            Font font = new Font("Segoe UI Emoji", 64);
+            Font font = new Font("Segoe UI Emoji", 128);
             SizeF textSize = drawing.MeasureString(args, font);
             img.Dispose();
             drawing.Dispose();
@@ -878,7 +946,7 @@ namespace Morbot
         [Command("screenshot"), Description("screenshots site")]
         public async Task screenshot(CommandContext e, string args)
         {
-
+            await e.TriggerTypingAsync();
             Process process = new Process();
             var startInfo = new ProcessStartInfo
             {
@@ -899,6 +967,7 @@ namespace Morbot
         [Command("top10animedeaths"), Aliases("anime"), Description("meme generator")]
         public async Task anime(CommandContext e, [RemainingText]string args)
         {
+            await e.TriggerTypingAsync();
             string attachementURL = null;
             try
             {
@@ -945,6 +1014,7 @@ namespace Morbot
         [Command("age"), Aliases("botage", "agebot", "ageofbot")]
         public async Task age(CommandContext e)
         {
+            await e.TriggerTypingAsync();
             LastCommitFromGitHub();
             await CreateMessage(e, desc: "**Age of bot(since first commit on GitHub | 1 October 2017):** " + CalculateAge("01 October 2017 3:05:31 PM") +
                 "\n\n**Age of last commit:** " + CalculateAge(commitDate) +
@@ -953,9 +1023,214 @@ namespace Morbot
         #endregion
         #region user command
         [Command("user")]
-        public async Task user(CommandContext e, DiscordMember user)
+        public async Task user(CommandContext e, DiscordMember member = null)
         {
-            await e.RespondAsync(user.ToString() + user.Mention);
+            await e.TriggerTypingAsync();
+            if (member == null)
+            {
+                member = e.Member;
+            }
+            await CreateMessage(e, imageurl: member.AvatarUrl, color: DiscordColor.Green,
+                desc: "**Info about user:** " + member.Mention +
+                "\n**Name on " + e.Guild.Name + ":** " + member.DisplayName +
+                "\n**Full username:** " + member.Username + "#" + member.Discriminator +
+                "\n\n**Bot:** " + EmojifyBool(member.IsBot) +
+                "\n**Owner:** " + EmojifyBool(member.IsOwner) +
+                "\n**Muted:** " + EmojifyBool(member.IsMuted) +
+                "\n\n**Joined Discord:** " + member.CreationTimestamp.DateTime.ToString(CultureInfo.CreateSpecificCulture("cs")) +
+                "\n**Joined " + e.Guild.Name + ":** " + member.JoinedAt.DateTime.ToString(CultureInfo.CreateSpecificCulture("cs")));
+        }
+        #endregion
+        #region guild command
+        [Command("guild"), Aliases("server")]
+        public async Task guild(CommandContext e)
+        {
+            DiscordGuild guild = e.Guild;
+            await CreateMessage(e, imageurl: guild.IconUrl, color: DiscordColor.Green,
+                desc: "**Info about server:** " + guild.Name +
+                "\n**Owner:** " + guild.Owner.Mention +
+                "\n\n**Count of Channels:** " + guild.Channels.Count +
+                "\n**Count of Custom Emojis:** " + guild.Emojis.Count +
+                "\n\n**//Joined Discord:** " + guild.CreationTimestamp.DateTime.ToString(CultureInfo.CreateSpecificCulture("cs")) +
+                "\n**//Joined " + e.Guild.Name + ":** " + guild.JoinedAt.DateTime.ToString(CultureInfo.CreateSpecificCulture("cs")));
+        }
+        #endregion
+        #region bye command
+        [Command("bye"), RequireOwner]
+        public async Task bye(CommandContext e)
+        {
+            await e.TriggerTypingAsync();
+            await CreateMessage(e, desc: "Bye Bye, see you later!", color: DiscordColor.Blurple);
+            await e.Client.DisconnectAsync();
+            Environment.Exit(0);
+        }
+        #endregion
+        #region link commands
+        [Command("link"), Aliases("links")]
+        public async Task linkcmd(CommandContext e, string selected_Link = null)
+        {
+            string links = null;
+            if (selected_Link == null)
+            {
+                await e.TriggerTypingAsync();
+                if (!Directory.Exists("links"))
+                {
+                    Directory.CreateDirectory("links");
+                }
+                foreach (string file in Directory.EnumerateFiles("links"))
+                {
+                    links = links + "`" + file.Remove(0, 6) + "` ";
+                }
+
+                await CreateMessage(e, color: DiscordColor.Green, desc: "**Links:** " + links);
+            }
+            else
+            {
+                foreach (string file in Directory.EnumerateFiles("links"))
+                {
+                    if (selected_Link == file.Remove(0, 6))
+                    {
+
+                        await CreateMessage(e, color: DiscordColor.Green, desc: $"**Link Name:** `{file.Remove(0, 6)}`\n**Link:** {Linkify(File.ReadAllText(file))}");
+                    }
+                }
+            }
+        }
+
+
+        [Command("setlink"), Aliases("linkset")]
+        public async Task setlink(CommandContext e, string alink = null)
+        {
+            await e.TriggerTypingAsync();
+            if (alink == null)
+            {
+                await CreateMessage(e, color: DiscordColor.Red, desc: "**Link cannot be blank!!!**");
+            }
+            else
+            {
+                link = alink;
+                await CreateMessage(e, color: DiscordColor.Green, desc: $"**Set link to:** `{link}`");
+            }
+        }
+        [Command("setname"), Aliases("linkname", "setlinkname")]
+        public async Task setnamelink(CommandContext e, string name = null)
+        {
+            await e.TriggerTypingAsync();
+            await e.TriggerTypingAsync();
+            if (name == null)
+            {
+                await CreateMessage(e, color: DiscordColor.Red, desc: "**Link name cannot be blank!!!**");
+            }
+            else
+            {
+                linkname = name;
+                await CreateMessage(e, color: DiscordColor.Green, desc: $"**Set link name to:** `{name}`");
+            }
+        }
+        [Command("savelink"), Aliases("linksave")]
+        public async Task savelink(CommandContext e)
+        {
+            if (Directory.Exists("links"))
+            {
+                if (linkname == null)
+                {
+                    await CreateMessage(e, color: DiscordColor.Red, desc: "**Cannot create link because link name is blank!!!**");
+                }
+                else if (link == null)
+                {
+                    await CreateMessage(e, color: DiscordColor.Red, desc: "**Cannot create link because link is blank!!!**");
+                }
+                else
+                {
+                    await e.TriggerTypingAsync();
+                    using (var StrmWrt = new StreamWriter("links/" + linkname, false))
+                    {
+                        StrmWrt.WriteLine(link);
+                        StrmWrt.Close();
+                        await CreateMessage(e, color: DiscordColor.Green, desc: $"**Saved link:** `{linkname}`");
+                    }
+                }
+            }
+            else
+            {
+                Directory.CreateDirectory("links");
+            }
+        }
+        #endregion
+        #region fullwidth command
+        private System.Collections.Generic.Dictionary<char, char> letters = new System.Collections.Generic.Dictionary<char, char>()
+        {
+                {'\u0041', '\uff21'},
+                {'\u0042', '\uff22'},
+                {'\u0043', '\uff23'},
+                {'\u0044', '\uff24'},
+                {'\u0045', '\uff25'},
+                {'\u0046', '\uff26'},
+                {'\u0047', '\uff27'},
+                {'\u0048', '\uff28'},
+                {'\u0049', '\uff29'},
+                {'\u004a', '\uff2a'},
+                {'\u004b', '\uff2b'},
+                {'\u004c', '\uff2c'},
+                {'\u004d', '\uff2d'},
+                {'\u004e', '\uff2e'},
+                {'\u004f', '\uff2f'},
+                {'\u0050', '\uff30'},
+                {'\u0051', '\uff31'},
+                {'\u0052', '\uff32'},
+                {'\u0053', '\uff33'},
+                {'\u0054', '\uff34'},
+                {'\u0055', '\uff35'},
+                {'\u0056', '\uff36'},
+                {'\u0057', '\uff37'},
+                {'\u0058', '\uff38'},
+                {'\u0059', '\uff39'},
+                {'\u005a', '\uff3a'},
+                {'\u0061', '\uff41'},
+                {'\u0062', '\uff42'},
+                {'\u0063', '\uff43'},
+                {'\u0064', '\uff44'},
+                {'\u0065', '\uff45'},
+                {'\u0066', '\uff46'},
+                {'\u0067', '\uff47'},
+                {'\u0068', '\uff48'},
+                {'\u0069', '\uff49'},
+                {'\u006a', '\uff4a'},
+                {'\u006b', '\uff4b'},
+                {'\u006c', '\uff4c'},
+                {'\u006d', '\uff4d'},
+                {'\u006e', '\uff4e'},
+                {'\u006f', '\uff4f'},
+                {'\u0070', '\uff50'},
+                {'\u0071', '\uff51'},
+                {'\u0072', '\uff52'},
+                {'\u0073', '\uff53'},
+                {'\u0074', '\uff54'},
+                {'\u0075', '\uff55'},
+                {'\u0076', '\uff56'},
+                {'\u0077', '\uff57'},
+                {'\u0078', '\uff58'},
+                {'\u0079', '\uff59'},
+                {'\u007a', '\uff5a'}
+            };
+        [Command("fullwidth"), Aliases("fullw", "fwidth", "fullWidth", "fWidth")]
+        public async Task fWidth(CommandContext e, [RemainingText]string text)
+        {
+            string output = "";
+            for (var i = 0; i < text.Length; i++)
+            {
+                char normal = text[i];
+                try
+                {
+                    char latin = letters[normal];
+                    output += latin;
+                }
+                catch (System.Collections.Generic.KeyNotFoundException ex)
+                {
+                    output += normal;
+                }
+            }
+            await CreateMessage(e, color: DiscordColor.Green, desc: output);
         }
         #endregion
 
@@ -964,20 +1239,20 @@ namespace Morbot
         [Command("join"), Aliases("vchjoin", "voicechanneljoin", "voicejoin", "channeljoin", "voicechjoin"), Description("Joins a voice channel.")]
         public async Task connectToVoiceChannel(CommandContext e)
         {
+            await e.TriggerTypingAsync();
             DiscordChannel chn = null;
-
 
             var vstat = e.Member?.VoiceState;
             if (vstat?.Channel == null && chn == null)
             {
-                await CreateMessage(e, color: DiscordColor.Red, desc: "You are not in any Voice Channel!");
+                await CreateMessage(e, color: DiscordColor.Red, desc: "**You are not in any Voice Channel!**");
                 return;
             }
 
             var vnext = e.Client.GetVoiceNext();
             if (vnext == null)
             {
-                await CreateMessage(e, color: DiscordColor.Red, desc: error_message + "VoiceNext is not enabled or configured properly.");
+                await CreateMessage(e, color: DiscordColor.Red, desc: error_message + "**VoiceNext is not enabled or configured properly.**");
                 return;
             }
 
@@ -986,9 +1261,9 @@ namespace Morbot
             var vnc = vnext.GetConnection(e.Guild);
             if (vnc == null)
             {
-                await CreateMessage(e, color: DiscordColor.Yellow, desc: "Not connected in this guild. Connecting to user's voice channel :)");
+                await CreateMessage(e, color: DiscordColor.Yellow, desc: "**Not connected in this guild. Connecting to user's voice channel** :)");
                 vnc = await vnext.ConnectAsync(chn);
-                await CreateMessage(e, color: DiscordColor.Green, desc: $"Connected to `{chn.Name}`");
+                await CreateMessage(e, color: DiscordColor.Green, desc: $"**Connected to** `{chn.Name}`");
             }
             while (vnc.IsPlaying)
                 await vnc.WaitForPlaybackFinishAsync();
@@ -998,6 +1273,7 @@ namespace Morbot
         [Command("leave"), Aliases("vchleave", "voicechannelleave", "voiceleave", "channelleave", "voicechleave"), Description("Leaves a voice channel.")]
         public async Task Leave(CommandContext e)
         {
+            await e.TriggerTypingAsync();
             var vnext = e.Client.GetVoiceNext();
             if (vnext == null)
             {
@@ -1008,16 +1284,16 @@ namespace Morbot
             var vnc = vnext.GetConnection(e.Guild);
             if (vnc == null)
             {
-                await CreateMessage(e, desc: "Not connected on this server", color: DiscordColor.Green);
+                await CreateMessage(e, desc: "**Not connected on this server**", color: DiscordColor.Green);
                 return;
             }
             vnc.Disconnect();
-            await CreateMessage(e, desc: "Disconnected", color: DiscordColor.Green);
+            await CreateMessage(e, desc: "**Disconnected*", color: DiscordColor.Green);
         }
         #endregion
         #region voice channel play command
         [Command("play"), Aliases("vchplay", "voicechannelplay", "voiceplay", "channelplay", "voicechplay"), Description("Plays an audio file.")]
-        public async Task Play(CommandContext e, [RemainingText, Description("Full path to the file to play.")] string filename, DiscordChannel chn = null)
+        public async Task Play(CommandContext e, [RemainingText, Description("Full path to the file to play.")] string filename)
         {
             await connectToVoiceChannel(e);
             if (filename.Contains("youtu"))
@@ -1053,7 +1329,7 @@ namespace Morbot
                             string videoname = ShortenName("M:/" + oRootObject.id + "_" + System.Web.HttpUtility.UrlEncode(oRootObject.fulltitle) + ".mp3", ".mp3");
                             if (File.Exists(videoname))
                             {
-                                await CreateMessage(e, desc: "Playing: `" + oRootObject.fulltitle + "`", imageurl: oRootObject.thumbnail);
+                                await CreateMessage(e, desc: "**Playing:** `" + oRootObject.fulltitle + "`", imageurl: oRootObject.thumbnail);
                                 await SetSpeaking(e, true);
                                 await music(e, videoname);
                             }
@@ -1064,7 +1340,7 @@ namespace Morbot
                                 using (FileStream fs = new FileStream(videoname, FileMode.Create))
                                 {
 
-                                    await CreateMessage(e, desc: "Playing: `" + oRootObject.fulltitle + "`", imageurl: oRootObject.thumbnail);
+                                    await CreateMessage(e, desc: "**Playing:** `" + oRootObject.fulltitle + "`", imageurl: oRootObject.thumbnail);
                                     await response.Content.CopyToAsync(fs);
                                     await SetSpeaking(e, true);
                                     await music(e, videoname);
@@ -1090,7 +1366,7 @@ namespace Morbot
 
                             if (File.Exists(videoname))
                             {
-                                await CreateMessage(e, desc: "Playing: `" + oRootObject.fulltitle + "`");
+                                await CreateMessage(e, desc: "**Playing:** `" + oRootObject.fulltitle + "`");
                                 await SetSpeaking(e, true);
                                 await music(e, videoname);
                             }
@@ -1101,7 +1377,7 @@ namespace Morbot
                                 using (FileStream fs = new FileStream(videoname, FileMode.Create))
                                 {
 
-                                    await CreateMessage(e, desc: "Playing: `" + oRootObject.fulltitle + "`");
+                                    await CreateMessage(e, desc: "**Playing:** `" + oRootObject.fulltitle + "`");
                                     await response.Content.CopyToAsync(fs);
                                     await SetSpeaking(e, true);
                                     await music(e, videoname);
@@ -1130,7 +1406,7 @@ namespace Morbot
                 string site = "H:/" + filename + ".mp3";
                 if (File.Exists(site))
                 {
-                    await CreateMessage(e, desc: $"Playing: `{site}`");
+                    await CreateMessage(e, desc: $"**Playing:** `{site}`");
                     await SetSpeaking(e, true);
                     await music(e, site);
                 }
@@ -1142,7 +1418,7 @@ namespace Morbot
                     using (FileStream fs = new FileStream(site, FileMode.Create))
                     {
                         await response.Content.CopyToAsync(fs);
-                        await CreateMessage(e, desc: $"Playing: `{filename}`");
+                        await CreateMessage(e, desc: $"**Playing:** `{filename}`");
                         await SetSpeaking(e, true);
                         await music(e, site);
                     }
@@ -1152,10 +1428,10 @@ namespace Morbot
             {
                 if (!File.Exists(filename))
                 {
-                    await CreateMessage(e, desc: $"File `{filename}` does not exist!");
+                    await CreateMessage(e, desc: $"**File** `{filename}` **does not exist!**");
                     return;
                 }
-                await CreateMessage(e, desc: $"Playing: `{filename}`");
+                await CreateMessage(e, desc: $"**Playing:** `{filename}`");
                 await SetSpeaking(e, true);
                 await music(e, filename);
 
@@ -1166,6 +1442,7 @@ namespace Morbot
         [Command("speak"), Aliases("vchspeak", "voicechannelspeak", "voicespeak", "channelspeak", "voicechspeak"), Description("speaks for you in voice channel :)")]
         public async Task speak(CommandContext e, params string[] args)
         {
+            await e.TriggerTypingAsync();
             await connectToVoiceChannel(e);
             string text = "";
             foreach (string arg in args)
@@ -1174,7 +1451,7 @@ namespace Morbot
             }
             if (text.Remove(0, 1).Length > 200)
             {
-                await CreateMessage(e, color: DiscordColor.Red, desc: "This request cannot be processed because the length of text is over 200!\nLength: " + text.Remove(0, 1).Length);
+                await CreateMessage(e, color: DiscordColor.Red, desc: "**This request cannot be processed because the length of text is over 200!**\n**Length:** " + text.Remove(0, 1).Length);
                 return;
             }
 
@@ -1186,7 +1463,7 @@ namespace Morbot
 
             if (File.Exists(filename))
             {
-                await CreateMessage(e, color: DiscordColor.Green, desc: "Letters Remaining: " + (200 - text.Remove(0, 1).Length) + "\n\nSpeaking: `" + speakdata.Remove(0, 3) + "`");
+                await CreateMessage(e, color: DiscordColor.Green, desc: "**Letters Remaining:** " + (200 - text.Remove(0, 1).Length) + "\n\n**Speaking:** `" + speakdata.Remove(0, 3) + "`");
                 await SetSpeaking(e, true);
                 await music(e, filename);
             }
@@ -1198,7 +1475,7 @@ namespace Morbot
                 {
                     await response.Content.CopyToAsync(fs);
 
-                    await CreateMessage(e, color: DiscordColor.Green, desc: "Letters Remaining: " + (200 - text.Remove(0, 1).Length) + "\n\nSpeaking: `" + speakdata.Remove(0, 3) + "`");
+                    await CreateMessage(e, color: DiscordColor.Green, desc: "**Letters Remaining:** " + (200 - text.Remove(0, 1).Length) + "\n\n**Speaking:** `" + speakdata.Remove(0, 3) + "`");
                     await SetSpeaking(e, true);
                     await music(e, filename);
                 }
@@ -1209,6 +1486,7 @@ namespace Morbot
         [Command("music"), Aliases("musiclist", "vchmusiclist", "voicechannelmusiclist", "voicemusiclist", "channelmusiclist", "voicechmusiclist"), Description("sends list of music on my pc")]
         public async Task music(CommandContext e, params string[] args)
         {
+            await e.TriggerTypingAsync();
             string rootfilelist = null;
             string downfilelist = null;
             foreach (string file in Directory.GetFiles("M:/"))
@@ -1230,11 +1508,11 @@ namespace Morbot
         [Command("lookatthisdude"), Aliases("dude", "lookatdude", "latd", "smiech"), Description("Plays the guy that was laughing.")]
         public async Task latd(CommandContext e)
         {
+            await e.TriggerTypingAsync();
             await connectToVoiceChannel(e);
             await CreateMessage(e, imageurl: "http://ww2.hdnux.com/photos/51/63/45/10959205/17/920x920.jpg", color: DiscordColor.Green);
             await SetSpeaking(e, true);
             await music(e, "M:/Downloaded/LookAtThisDude.mp3");
-
         }
         #endregion
     }

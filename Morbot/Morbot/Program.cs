@@ -9,6 +9,7 @@ using System.Text;
 using DSharpPlus.EventArgs;
 using System.Linq;
 using System;
+using System.Net;
 
 namespace Morbot
 {
@@ -19,7 +20,7 @@ namespace Morbot
         static CommandsNextExtension commands;
         static VoiceNextExtension voice;
         public static configJSON configuration = new configJSON();
-        public static string version = "1.7.9";
+        public static string version = "1.8";
 
         public static DiscordActivity game = new DiscordActivity();
         public static string DiscordActivityText = "type " + prefix + "help|ver: " + version;
@@ -105,8 +106,8 @@ namespace Morbot
 
             commands.CommandErrored += async e =>
             {
-                await Commands.CreateMessage(e.Context, Commands.error_message + "`" + e.Exception.Message + "`", color: DiscordColor.Red);
-                e.Context.Client.DebugLogger.LogMessage(LogLevel.Error, "Morbot", e.Context.Member.Username + "#" + e.Context.Member.Discriminator + " executed command --" + e.Command.Name + " and the command failed", DateTime.Now);
+                await Commands.CreateMessage(e.Context, desc: Commands.error_message + "`" + e.Exception.Message + "`", color: DiscordColor.Red);
+                e.Context.Client.DebugLogger.LogMessage(LogLevel.Error, "Morbot", e.Context.Member.Username + "#" + e.Context.Member.Discriminator + " executed command --" + e.Command.Name + " and the command failed\n" + e.Exception.Message, DateTime.Now);
             };
 
             commands.CommandExecuted += async e =>
