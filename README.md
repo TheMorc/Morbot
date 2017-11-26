@@ -1,16 +1,6 @@
-<p align="center">
 <h1 align="center">Morbot</h1>
-</p>
-<p align="center">
-  
-<img src="https://discordapp.com/api/guilds/363965764987912192/embed.png?style=banner4">
-<a href="https://discord.gg/Gneap49"></a>
-</img>
-<img src="https://github.com/TheMorc/imgs/blob/master/morbot.png?raw=true">
-<a href="https://discordapp.com/api/oauth2/authorize?client_id=219188936940060684&scope=bot"></a>
-</img>
-</p>
 
+<p align="center"><a href="https://discord.gg/Gneap49" align="center"><img src="https://discordapp.com/api/guilds/363965764987912192/embed.png?style=banner4"/></a><a align="center" href="https://discordapp.com/api/oauth2/authorize?client_id=219188936940060684&scope=bot"><img src="https://github.com/TheMorc/imgs/blob/master/morbot.png?raw=true"/></a></p>
 
 A *"bigger"* example of bot made with **[DSharpPlus API](https://github.com/NaamloosDT/DSharpPlus)** on programming language **C#**
 
@@ -70,6 +60,7 @@ A *"bigger"* example of bot made with **[DSharpPlus API](https://github.com/Naam
 
 **}**
 
+# Join my Discord Server or add Morbot to your Discord Server
 # Credits:
 - People that made **[DSharpPlus API](https://github.com/NaamloosDT/DSharpPlus)**
 - Emzi0767 for his great help source code **[DSharpPlus Example Bot](https://github.com/Emzi0767/DSharpPlus-Example-Bot)**
