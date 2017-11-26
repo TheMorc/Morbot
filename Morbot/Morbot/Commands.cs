@@ -27,9 +27,13 @@ namespace Morbot
         string commitDate = null;
         static readonly string embed_title = "Morbot [ver: " + Program.version + ", Made in 🇸🇰, By: Morc]";
         public static readonly string error_message = "**:no_entry: -|  An exception occurred!!!  |- :no_entry:**\n";
+        public static readonly string processing_message = "**Morbot is now processing your request. Please Wait!!**\n";
+        public static readonly string Welcome_on_server = "Welcome on our server!";
+        public static readonly string You_will_be_missed = "You will be missed. :(";
         static private DiscordActivity botActivity = new DiscordActivity();
         DiscordActivity temp = new DiscordActivity("temp", ActivityType.Playing);
-
+        static DiscordEmbedBuilder embed = new DiscordEmbedBuilder();
+        static DiscordMessage msg = null;
         //mhm, wot??
         #region tasks for commands
         private void LastCommitFromGitHub()
@@ -129,7 +133,21 @@ namespace Morbot
             }
             return shortened;
         }
-        public Image WatermarkIt(Image img)
+        public MagickImage MagickNETWatermarkIt(MagickImage img)
+        {
+            using (MagickImage image = new MagickImage(img))
+            {
+                using (MagickImage watermark = new MagickImage("watermark.png"))
+                {
+                    image.Composite(watermark, Gravity.Southeast, CompositeOperator.Over);
+                    watermark.Evaluate(Channels.Alpha, EvaluateOperator.Divide, 4);
+                    image.Composite(watermark, 200, 50, CompositeOperator.Over);
+                }
+
+                return image;
+            }
+        }
+        public Image SysDrawWatermarkIt(Image img)
         {
             Bitmap watermarkIMG = new Bitmap("watermark.png");
             const byte ALPHA = 255;
@@ -175,14 +193,21 @@ namespace Morbot
             var vnc = vnext.GetConnection(e.Guild);
             await vnc.SendSpeakingAsync(SetSpeaking);
         }
-        public static async Task CreateMessage(CommandContext e, string titleurl = null, string imageurl = null, string thumbnailurl = "https://github.com/NaamloosDT/DSharpPlus/blob/4858631e87392a8586a685bd0e9cb2a96f7d1ffb/logo/d%23+_smaller.png?raw=true", string url = null, string desc = "", string title = "", EmbedAuthor author = default(EmbedAuthor), EmbedFooter footer = default(EmbedFooter), DiscordColor color = default(DiscordColor), bool sendToUser = false)
+        public static async Task CreateMessage(CommandContext e, string titleurl = null, string imageurl = null, string thumbnailurl = null, string url = null, string desc = "", string title = "", EmbedAuthor author = null, EmbedFooter footer = default(EmbedFooter), DiscordColor color = default(DiscordColor), bool sendToUser = false)
         {
-            if (title == "")
+            var AUTHR = new EmbedAuthor
             {
-                title = embed_title;
-            }
-
-            var embed = new DiscordEmbedBuilder
+                IconUrl = "https://github.com/TheMorc/imgs/blob/master/Morbot_evenSmaller.png?raw=true",
+                Name = embed_title,
+                Url = "https://github.com/TheMorc/Morbot/"
+            };
+            var FOOTR = new EmbedFooter
+            {
+                IconUrl = e.Member.GetAvatarUrl(DSharpPlus.ImageFormat.Png, 128),
+                Text = "Executed by: " + e.Member.DisplayName
+            };
+            await e.Message.CreateReactionAsync(DiscordEmoji.FromName(e.Client, ":bot:"));
+            embed = new DiscordEmbedBuilder
             {
                 Title = title,
                 Color = color,
@@ -190,14 +215,49 @@ namespace Morbot
                 ImageUrl = imageurl,
                 ThumbnailUrl = thumbnailurl,
                 Url = url,
-                Author = author,
-                Footer = footer,
+                Author = AUTHR,
+                Footer = FOOTR,
                 Timestamp = DateTime.Now
             };
             if (sendToUser)
                 await e.Member.SendMessageAsync("", embed: embed);
             else
-                await e.RespondAsync("", embed: embed);
+                msg = await e.RespondAsync("", embed: embed);
+        }
+        public static async Task EditMessage(CommandContext e, string titleurl = null, string imageurl = null, string thumbnailurl = null, string url = null, string desc = "", string title = "", EmbedAuthor author = null, EmbedFooter footer = default(EmbedFooter), DiscordColor color = default(DiscordColor))
+        {
+            var AUTHR = new EmbedAuthor
+            {
+                IconUrl = "https://github.com/TheMorc/imgs/blob/master/Morbot_evenSmaller.png?raw=true",
+                Name = embed_title,
+                Url = "https://github.com/TheMorc/Morbot/"
+            };
+            var FOOTR = new EmbedFooter
+            {
+                IconUrl = e.Member.GetAvatarUrl(DSharpPlus.ImageFormat.Png, 128),
+                Text = "Executed by: " + e.Member.DisplayName
+            };
+            embed = new DiscordEmbedBuilder
+            {
+                Title = title,
+                Color = color,
+                Description = desc,
+                ImageUrl = imageurl,
+                ThumbnailUrl = thumbnailurl,
+                Url = url,
+                Author = AUTHR,
+                Footer = FOOTR,
+                Timestamp = DateTime.Now
+            };
+            await msg.ModifyAsync(embed: embed);
+        }
+        public static async Task EditMessageSlim(CommandContext e)
+        {
+            await msg.ModifyAsync(embed: embed);
+        }
+        public static async Task DeleteMessage(CommandContext e)
+        {
+            await msg.DeleteAsync("Deleted by command in bots code");
         }
         private async Task music(CommandContext e, string v, double speed = 1.0)
         {
@@ -259,26 +319,88 @@ namespace Morbot
             }
 
         }
+        public static async Task CreateHelloImage(DiscordMember member, string text)
+        {
+            HttpClient cl = new HttpClient();
+            HttpResponseMessage response = await cl.GetAsync(member.GetAvatarUrl(DSharpPlus.ImageFormat.Png, 256));
+            using (FileStream fs = new FileStream("avatar.png", FileMode.Create))
+            {
+                await response.Content.CopyToAsync(fs);
+            }
+
+            using (MagickImage image = new MagickImage(@"avatar.png"))
+            {
+                image.Alpha(AlphaOption.Set);
+                using (IMagickImage clone = image.Clone())
+                {
+                    clone.Distort(DistortMethod.DePolar, 0);
+                    clone.VirtualPixelMethod = VirtualPixelMethod.HorizontalTile;
+                    clone.BackgroundColor = MagickColors.None;
+                    clone.Distort(DistortMethod.Polar, 0);
+                    image.Composite(clone, CompositeOperator.DstIn);
+                    image.Trim();
+                    image.RePage();
+                    image.Resize(256, 256);
+                    using (MagickImage hello = new MagickImage("hello_template.png"))
+                    {
+                        new Drawables()
+                          .Composite(127, 4, image)
+
+                          .FillColor(MagickColors.White)
+                          .Font("FontariaBOLD")
+                          .TextAlignment(TextAlignment.Left)
+                          .FontPointSize(28)
+                          .Text(10, 368, text)
+
+                          .FontPointSize(25)
+                          .TextAlignment(TextAlignment.Center)
+                          .Text(256, 288, member.DisplayName)
+
+                          .Font("Fontaria")
+                          .FontPointSize(20)
+                          .FillColor(MagickColor.FromRgb(196, 206, 239))
+                          .Text(256, 312, member.Username + "#" + member.Discriminator)
+
+                          .Draw(hello);
+                        hello.Write("morbot_image.png");
+                    }
+                }
+            }
+        }
         #endregion
         #region servers command
-        [Command("servers"), RequirePermissions(DSharpPlus.Permissions.ManageGuild), Hidden, Description("Should be hidden! But this command shows list of servers that it is on...")]
+        [Command("servers"), RequireOwner, Hidden, Description("Should be hidden! But this command shows list of servers that it is on...")]
         public async Task Servers(CommandContext ex)
         {
             string serverlist = null;
-            foreach (string server in ex.Client.Guilds.Values.Select(e => e.Name))
+            foreach (DiscordGuild server in ex.Client.Guilds.Values.Select(e => e))
             {
-                string help = "";
-                try { help = serverlist.Remove(server.Length, serverlist.Length - server.Length); } catch { }
-                if (help == server) { }
-                else
-                {
-                    serverlist = server + "\n" + serverlist;
-                }
+                //string help = "";
+                //try { help = serverlist.Remove(server.Length, serverlist.Length - server.Length); } catch { }
+                //if (help == server) { }
+                //else
+                //{
+                //    serverlist = server + "\n" + serverlist;
+                //}
+                serverlist = serverlist + "**" + server.Name + "** | " + server.Owner + "\n\n";
             }
-            await CreateMessage(ex, desc: "Servers: " + serverlist, sendToUser: true, color: DiscordColor.Cyan);
+            await CreateMessage(ex, desc: "**Servers:**\n" + serverlist, color: DiscordColor.Cyan);
         }
         #endregion
 
+        //test purpose command
+        #region test command
+        [Command("test")]
+        public async Task test(CommandContext ex, DiscordMember member = null)
+        {
+            if (member == null)
+            {
+                member = ex.Member;
+            }
+            await CreateHelloImage(member, Welcome_on_server);
+            await ex.RespondWithFileAsync("morbot_image.png");
+        }
+        #endregion
 
         //Commands
         #region bot command
@@ -287,14 +409,22 @@ namespace Morbot
         {
             await e.TriggerTypingAsync();
             LastCommitFromGitHub();
-            await CreateMessage(e, color: DiscordColor.Blurple,
-            desc: "**Morbot** is OpenSource bot maintained by **Morc** and **Made in Slovakia** with D#+ (DSharpPlus) API." +
-            "\nAPI Version: `" + e.Client.VersionString +
-            "`.\n\n**Age of Bot(since first commit on GitHub | 1 October 2017):** " + CalculateAge("01 October 2017 3:05:31 PM") +
-            "\n\n**Age of last commit:** " + CalculateAge(commitDate) +
-            "\n**Name of last commit:** " + lastCommit +
-            "\n\n**Bot Source Code:** \nhttps://www.github.com/TheMorc/Morbot " +
-            "\n\n**D#+ GitHub:** \nhttps://github.com/NaamloosDT/DSharpPlus");
+            //await CreateMessage(e, color: DiscordColor.Blurple,
+            //desc: "**Morbot** is OpenSource bot maintained by **Morc** and **Made in Slovakia** with D#+ (DSharpPlus) API." +
+            //"\nAPI Version: `" + e.Client.VersionString +
+            //"`.\n\n**Age of Bot(since first commit on GitHub | 1 October 2017):** " + CalculateAge("01 October 2017 3:05:31 PM") +
+            //"\n\n**Age of last commit:** " + CalculateAge(commitDate) +
+            //"\n**Name of last commit:** " + lastCommit +
+            //"\n\n**Bot Source Code:** \nhttps://www.github.com/TheMorc/Morbot " +
+            //"\n\n**D#+ GitHub:** \nhttps://github.com/NaamloosDT/DSharpPlus");
+            await CreateMessage(e, color: DiscordColor.Green, desc: "**Morbot** is OpenSource bot maintained by **Morc** and **Made in Slovakia** with D#+ (DSharpPlus) API.**");
+            embed.AddField("**API Version:**", e.Client.VersionString, true);
+            embed.AddField("**Age of Bot(since first commit on GitHub | 1 October 2017):**", CalculateAge("01 October 2017 3:05:31 PM"), true);
+            embed.AddField("**Age of last commit:**", CalculateAge(commitDate), true);
+            embed.AddField("**Name of last commit:**", lastCommit, false);
+            embed.AddField("**Bot Source Code:**", "https://www.github.com/TheMorc/Morbot", true);
+            embed.AddField("**D#+ on GitHub:**", "https://github.com/NaamloosDT/DSharpPlus", true);
+            await EditMessageSlim(e);
         }
         #endregion
         #region love command
@@ -342,18 +472,29 @@ namespace Morbot
                     {
                         loveemoji = ":heart:";
                         laavcolor = DiscordColor.Red;
-                        laav = "**" + name[0] + "** + **" + name[1] + "** = **" + "100%** " + loveemoji;
+                        laav = "**" + name[0] + "** + **" + name[1] + "** = **100%** " + loveemoji;
                         passed = true;
                     }
                     else
                     {
-                        laav = name[0] + " + " + name[1] + " = " + num + "%   " + loveemoji;
+                        laav = "**" + name[0] + "** + **" + name[1] + "** = **" + num + "%** " + loveemoji;
                         passed = true;
                     }
                 }
 
             }
-            await CreateMessage(e, desc: laav, color: laavcolor);
+            //await CreateMessage(e, desc: laav, color: laavcolor);
+            await CreateMessage(e, desc: "**" + name[0] + "** + **" + name[1] + "** = **0%** :heartpulse:", color: DiscordColor.Brown);
+            await Task.Delay(150);
+            await EditMessage(e, desc: "**" + name[0] + "** + **" + name[1] + "** = **25%** :heartbeat:", color: DiscordColor.Green);
+            await Task.Delay(150);
+            await EditMessage(e, desc: "**" + name[0] + "** + **" + name[1] + "** = **50%** :heartpulse:", color: DiscordColor.Yellow);
+            await Task.Delay(150);
+            await EditMessage(e, desc: "**" + name[0] + "** + **" + name[1] + "** = **75%** :heartbeat:", color: DiscordColor.Red);
+            await Task.Delay(150);
+            await EditMessage(e, desc: "**" + name[0] + "** + **" + name[1] + "** = **0%** :heartpulse:", color: DiscordColor.Brown);
+            await Task.Delay(150);
+            await EditMessage(e, desc: laav, color: laavcolor);
         }
         #endregion
         #region ping command
@@ -399,6 +540,7 @@ namespace Morbot
         public async Task CWeather(CommandContext e, [RemainingText]string town = "Topolcany")
         {
             await e.TriggerTypingAsync();
+            await CreateMessage(e, desc: processing_message, color: DiscordColor.Blurple);
             string data = "";
             string weathertype = null;
             string page = "http://api.openweathermap.org/data/2.5/weather?q=" + System.Web.HttpUtility.UrlEncode(town) + "&mode=json&APPID=" + Program.configuration.OpenWeatherAPIKey;
@@ -450,7 +592,7 @@ namespace Morbot
                     weathertype = ":fog:" + " - **Fog/Mist**";
                     wcolor = DiscordColor.Cyan;
                 }
-                await CreateMessage(e, desc: oRootObject.name + " - " + oRootObject.sys.country + "\n\n**Temperature in °C:** " + celsius + "°C \n**Temperature in °F:** " + fahrenheit + "°F\n" + weathertype, color: wcolor);
+                await EditMessage(e, desc: oRootObject.name + " - " + oRootObject.sys.country + "\n\n**Temperature in °C:** " + celsius + "°C \n**Temperature in °F:** " + fahrenheit + "°F\n" + weathertype, color: wcolor);
                 //await CreateMessage(e, desc: "Town near Morc - Topoľčany:\n" + temp + "°C \n" + weathertype, color: wcolor);
             }
 
@@ -461,6 +603,7 @@ namespace Morbot
         public async Task ChuckNorris(CommandContext e, string language = "")
         {
             await e.TriggerTypingAsync();
+            await CreateMessage(e, desc: processing_message, color: DiscordColor.Blurple);
             string data = "";
             string url = "";
             string page = "https://api.chucknorris.io/jokes/random";
@@ -472,12 +615,12 @@ namespace Morbot
                 url = chuck.url;
                 if (language == "")
                 {
-                    await CreateMessage(e, title: "Chuck Norris joke:", desc: chuck.value, thumbnailurl: chuck.icon_url, url: "https://api.chucknorris.io", color: DiscordColor.Green);
+                    await EditMessage(e, title: "Chuck Norris joke:", desc: chuck.value, thumbnailurl: chuck.icon_url, url: "https://api.chucknorris.io", color: DiscordColor.Green);
                 }
                 else
                 {
 
-                    await CreateMessage(e, title: "Chuck Norris joke in English:", desc: chuck.value, thumbnailurl: chuck.icon_url, url: "https://api.chucknorris.io", color: DiscordColor.Green);
+                    await EditMessage(e, title: "Chuck Norris joke in English:", desc: chuck.value, thumbnailurl: chuck.icon_url, url: "https://api.chucknorris.io", color: DiscordColor.Green);
                     string translation = await translate(language + " " + chuck.value);
                     await CreateMessage(e, title: "Chuck Norris joke in " + translation.Remove(9, translation.Length - 9) + ":", desc: translation.Remove(0, 9), thumbnailurl: chuck.icon_url, url: "https://api.chucknorris.io", color: DiscordColor.Green);
                 }
@@ -489,6 +632,7 @@ namespace Morbot
         public async Task translate(CommandContext e, params string[] args)
         {
             await e.TriggerTypingAsync();
+            await CreateMessage(e, desc: processing_message, color: DiscordColor.Blurple);
             string data = "";
             if (args[0] == "languages")
             {
@@ -503,7 +647,7 @@ namespace Morbot
                     {
                         langstring = langstring + "   " + lang;
                     }
-                    await CreateMessage(e, desc: langstring, color: DiscordColor.Green);
+                    await EditMessage(e, desc: langstring, color: DiscordColor.Green);
                 }
             }
             else
@@ -514,7 +658,7 @@ namespace Morbot
                     text = text + " " + arg;
                 }
                 string result = await translate(text);
-                await CreateMessage(e, desc: result.Remove(0, 9));
+                await EditMessage(e, desc: result.Remove(0, 9));
 
             }
         }
@@ -524,6 +668,7 @@ namespace Morbot
         public async Task Time(CommandContext e)
         {
             await e.TriggerTypingAsync();
+            await CreateMessage(e, desc: processing_message, color: DiscordColor.Blurple);
             string minutes = null;
             if (DateTime.Now.TimeOfDay.Minutes.ToString().Length == 1)
             {
@@ -533,7 +678,7 @@ namespace Morbot
             {
                 minutes = DateTime.Now.TimeOfDay.Minutes.ToString();
             }
-            await CreateMessage(e, desc: "Morc's time zone is UTC+01:00 so the time is: " + DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes, color: DiscordColor.Orange);
+            await EditMessage(e, desc: "Morc's time zone is UTC+01:00 so the time is: " + DateTime.Now.TimeOfDay.Hours.ToString() + ":" + minutes, color: DiscordColor.Orange);
         }
         #endregion
         #region randomwindows command
@@ -542,8 +687,10 @@ namespace Morbot
         public async Task RandomWindows(CommandContext e)
         {
             await e.TriggerTypingAsync();
+            await CreateMessage(e, desc: processing_message, color: DiscordColor.Blurple);
             Random rnd = new Random();
             string ver = versions[rnd.Next(0, versions.Length)];
+            await DeleteMessage(e);
             await e.Message.RespondWithFileAsync(ver);
         }
         #endregion
@@ -552,13 +699,14 @@ namespace Morbot
         public async Task Meow(CommandContext e)
         {
             await e.TriggerTypingAsync();
+            await CreateMessage(e, desc: processing_message, color: DiscordColor.Blurple);
             string url = null;
             using (HttpClient cl = new HttpClient())
             {
                 string data = await cl.GetStringAsync("https://random.cat/meow");
                 var pData = JObject.Parse(data);
                 url = pData["file"].ToString();
-                await CreateMessage(e, thumbnailurl: "http://random.cat/random.cat-logo.png", imageurl: url, color: DiscordColor.Green);
+                await EditMessage(e, thumbnailurl: "http://random.cat/random.cat-logo.png", imageurl: url, color: DiscordColor.Green);
             }
         }
         #endregion
@@ -567,13 +715,14 @@ namespace Morbot
         public async Task Woof(CommandContext e)
         {
             await e.TriggerTypingAsync();
+            await CreateMessage(e, desc: processing_message, color: DiscordColor.Blurple);
             string url = null;
             using (HttpClient cl = new HttpClient())
             {
                 string data = await cl.GetStringAsync("https://random.dog/woof.json");
                 var pData = JObject.Parse(data);
                 url = pData["url"].ToString();
-                await CreateMessage(e, imageurl: url, color: DiscordColor.Green);
+                await EditMessage(e, imageurl: url, color: DiscordColor.Green);
             }
         }
         #endregion
@@ -659,6 +808,7 @@ namespace Morbot
         public async Task GIFSearch(CommandContext e, [RemainingText]string arg1 = "")
         {
             await e.TriggerTypingAsync();
+            await CreateMessage(e, desc: processing_message, color: DiscordColor.Blurple);
             string gifby = "";
             string gifurl = "";
             Random Rand = new Random();
@@ -691,7 +841,7 @@ namespace Morbot
                 {
                     gifby = Emoji[Rand.Next(0, Emoji.Length)] + " By: " + oRootObject.data.username;
                 }
-                await CreateMessage(e, thumbnailurl: "https://www.inboxsdk.com/images/logos/giphy.png", desc: gifby, imageurl: gifurl, color: DiscordColor.Green);
+                await EditMessage(e, thumbnailurl: "https://www.inboxsdk.com/images/logos/giphy.png", desc: gifby, imageurl: gifurl, color: DiscordColor.Green);
             }
 
 
@@ -702,6 +852,7 @@ namespace Morbot
         public async Task IMGSearch(CommandContext e, [RemainingText]string arg1 = "")
         {
             await e.TriggerTypingAsync();
+            await CreateMessage(e, desc: processing_message, color: DiscordColor.Blurple);
             Random rand = new Random();
             string page = "https://pixabay.com/api/?key=" + Program.configuration.PixabayAPIKey + "&q=" + arg1 + "&image_type=photo";
 
@@ -713,7 +864,7 @@ namespace Morbot
                 JSONs.GIFRootObject oRootObject = new JSONs.GIFRootObject();
                 oRootObject = JsonConvert.DeserializeObject<JSONs.GIFRootObject>(data);
                 int num = rand.Next(0, oRootObject.hits.Capacity);
-                await CreateMessage(e, desc: "Photo by: " + oRootObject.hits[num].user + "\nViews: " + oRootObject.hits[num].views, imageurl: oRootObject.hits[num].webformatURL, thumbnailurl: "https://pixabay.com/static/img/logo_square.png");
+                await EditMessage(e, desc: "Photo by: " + oRootObject.hits[num].user + "\nViews: " + oRootObject.hits[num].views, imageurl: oRootObject.hits[num].webformatURL, thumbnailurl: "https://pixabay.com/static/img/logo_square.png");
             }
         }
         #endregion
@@ -775,6 +926,7 @@ namespace Morbot
         [Command("compress"), Description("If you specify value from 0 to 100 then the bot compresses to the value. 0 awful | 100 great")]
         public async Task compress(CommandContext e, [RemainingText]string args = "5")
         {
+            await CreateMessage(e, desc: processing_message, color: DiscordColor.Blurple);
             await e.TriggerTypingAsync();
             File.Delete("temp.jpg");
             string url;
@@ -808,7 +960,7 @@ namespace Morbot
                     if (args.StartsWith("-"))
                     {
 
-                        await CreateMessage(e, desc: "no shit sherlock!", color: DiscordColor.Red);
+                        await EditMessage(e, desc: "no shit sherlock!", color: DiscordColor.Red);
                         return;
                     }
                     else
@@ -857,13 +1009,14 @@ namespace Morbot
             {
                 size = info2.Length / 1024 + "KB";
             }
-            await CreateMessage(e, color: DiscordColor.Green, desc: "Here is your fresh compressed art. We know that it is delicious!\nStats:\nSize before compressing: " + (info1.Length / 1024) + "KB\nSize after compressing: " + size);
+            await EditMessage(e, color: DiscordColor.Green, desc: "Here is your fresh compressed art. We know that it is delicious!\nStats:\nSize before compressing: " + (info1.Length / 1024) + "KB\nSize after compressing: " + size);
         }
         #endregion
         #region message command
         [Command("message")]
         public async Task message(CommandContext e, params string[] args)
         {
+            await CreateMessage(e, desc: processing_message, color: DiscordColor.Blurple);
             await e.TriggerTypingAsync();
             string minutes = null;
             if (DateTime.Now.TimeOfDay.Minutes.ToString().Length == 1)
@@ -913,6 +1066,7 @@ namespace Morbot
                   .Draw(image);
                 image.Write("message.png");
             }
+            await DeleteMessage(e);
             await e.RespondWithFileAsync("message.png");
         }
         #endregion
@@ -920,6 +1074,7 @@ namespace Morbot
         [Command("emoji")]
         public async Task emoji(CommandContext e, [RemainingText]string args)
         {
+            await CreateMessage(e, desc: processing_message, color: DiscordColor.Blurple);
             await e.TriggerTypingAsync();
             Image img = new Bitmap(1, 1);
             Graphics drawing = Graphics.FromImage(img);
@@ -938,6 +1093,7 @@ namespace Morbot
 
             textBrush.Dispose();
             drawing.Dispose();
+            await DeleteMessage(e);
             await e.RespondWithFileAsync("emoji.png");
 
         }
@@ -946,6 +1102,7 @@ namespace Morbot
         [Command("screenshot"), Description("screenshots site")]
         public async Task screenshot(CommandContext e, string args)
         {
+            await CreateMessage(e, desc: processing_message, color: DiscordColor.Blurple);
             await e.TriggerTypingAsync();
             Process process = new Process();
             var startInfo = new ProcessStartInfo
@@ -959,6 +1116,7 @@ namespace Morbot
             process.Start();
             process.Exited += async delegate
             {
+                await DeleteMessage(e);
                 await e.RespondWithFileAsync("screenshot.png");
             };
         }
@@ -968,6 +1126,7 @@ namespace Morbot
         public async Task anime(CommandContext e, [RemainingText]string args)
         {
             await e.TriggerTypingAsync();
+            await CreateMessage(e, desc: processing_message, color: DiscordColor.Blurple);
             string attachementURL = null;
             try
             {
@@ -1004,6 +1163,7 @@ namespace Morbot
 
             //Image Watermarked = WatermarkIt(anime);
             anime.Save("anime.jpg");
+            await DeleteMessage(e);
             await e.RespondWithFileAsync("anime.jpg");
             new_img.Dispose();
             g.Dispose();
@@ -1025,20 +1185,45 @@ namespace Morbot
         [Command("user")]
         public async Task user(CommandContext e, DiscordMember member = null)
         {
+            string roles = null;
             await e.TriggerTypingAsync();
             if (member == null)
             {
                 member = e.Member;
             }
-            await CreateMessage(e, imageurl: member.AvatarUrl, color: DiscordColor.Green,
-                desc: "**Info about user:** " + member.Mention +
-                "\n**Name on " + e.Guild.Name + ":** " + member.DisplayName +
-                "\n**Full username:** " + member.Username + "#" + member.Discriminator +
-                "\n\n**Bot:** " + EmojifyBool(member.IsBot) +
-                "\n**Owner:** " + EmojifyBool(member.IsOwner) +
-                "\n**Muted:** " + EmojifyBool(member.IsMuted) +
-                "\n\n**Joined Discord:** " + member.CreationTimestamp.DateTime.ToString(CultureInfo.CreateSpecificCulture("cs")) +
-                "\n**Joined " + e.Guild.Name + ":** " + member.JoinedAt.DateTime.ToString(CultureInfo.CreateSpecificCulture("cs")));
+            //    //await CreateMessage(e, imageurl: member.AvatarUrl, color: DiscordColor.Green,
+            //        desc: "**Info about user:** " + member.Mention +
+            //        "\n**Name on " + e.Guild.Name + ":** " + member.DisplayName +
+            //        "\n**Full username:** " + member.Username + "#" + member.Discriminator +
+            //        "\n\n**Bot:** " + EmojifyBool(member.IsBot) +
+            //        "\n**Owner:** " + EmojifyBool(member.IsOwner) +
+            //        "\n**Muted:** " + EmojifyBool(member.IsMuted) +
+            //        "\n\n**Joined Discord:** " + member.CreationTimestamp.DateTime.ToString(CultureInfo.CreateSpecificCulture("cs")) +
+            //        "\n**Joined " + e.Guild.Name + ":** " + member.JoinedAt.DateTime.ToString(CultureInfo.CreateSpecificCulture("cs")));
+            foreach (DiscordRole role in member.Roles)
+            {
+                roles = roles + "`" + role.Name + "` **&** ";
+            }
+            await CreateMessage(e, imageurl: member.GetAvatarUrl(DSharpPlus.ImageFormat.Png, 128), color: DiscordColor.Green, desc: "**Info about user:** " + member.Mention);
+            embed.AddField("**Bot:**", EmojifyBool(member.IsBot), true);
+            embed.AddField("**Owner:**", EmojifyBool(member.IsOwner), true);
+            embed.AddField("**Muted:**", EmojifyBool(member.IsMuted), true);
+            try
+            {
+                embed.AddField("**Voice - Channel:**", "**Connected to:** `" + member.VoiceState.Channel.Name + "`", true);
+            }
+            catch { }
+            try
+            {
+                embed.AddField("**Voice - Server Muted:**", EmojifyBool(member.VoiceState.IsServerMuted), true);
+            }
+            catch { }
+            embed.AddField("**Name on " + e.Guild.Name + ":**", member.DisplayName, false);
+            embed.AddField("**Full username:**", member.Username + "#" + member.Discriminator, true);
+            embed.AddField("**Roles:**", roles, true);
+            embed.AddField("**Joined Discord:**", member.CreationTimestamp.DateTime.ToString(CultureInfo.CreateSpecificCulture("cs")), false);
+            embed.AddField("**Joined " + e.Guild.Name + ":**", member.JoinedAt.DateTime.ToString(CultureInfo.CreateSpecificCulture("cs")), false);
+            await EditMessageSlim(e);
         }
         #endregion
         #region guild command
@@ -1046,13 +1231,43 @@ namespace Morbot
         public async Task guild(CommandContext e)
         {
             DiscordGuild guild = e.Guild;
-            await CreateMessage(e, imageurl: guild.IconUrl, color: DiscordColor.Green,
-                desc: "**Info about server:** " + guild.Name +
-                "\n**Owner:** " + guild.Owner.Mention +
-                "\n\n**Count of Channels:** " + guild.Channels.Count +
-                "\n**Count of Custom Emojis:** " + guild.Emojis.Count +
-                "\n\n**//Joined Discord:** " + guild.CreationTimestamp.DateTime.ToString(CultureInfo.CreateSpecificCulture("cs")) +
-                "\n**//Joined " + e.Guild.Name + ":** " + guild.JoinedAt.DateTime.ToString(CultureInfo.CreateSpecificCulture("cs")));
+            string emojis = null;
+            string channels = null;
+            string members = null;
+            string roles = null;
+            //await CreateMessage(e, imageurl: guild.IconUrl, color: DiscordColor.Green,
+            //    desc: "**Info about server:** " + guild.Name +
+            //    "\n**Owner:** " + guild.Owner.Mention +
+            //    "\n\n**Count of Channels:** " + guild.Channels.Count +
+            //    "\n**Count of Custom Emojis:** " + guild.Emojis.Count +
+            //    "\n\n**//Joined Discord:** " + guild.CreationTimestamp.DateTime.ToString(CultureInfo.CreateSpecificCulture("cs")) +
+            //    "\n**//Joined " + e.Guild.Name + ":** " + guild.JoinedAt.DateTime.ToString(CultureInfo.CreateSpecificCulture("cs")));
+            foreach (DiscordEmoji emoji in guild.Emojis)
+            {
+                emojis = emojis + DiscordEmoji.FromName(e.Client, ":" + emoji.Name + ":") + " **|** ";
+            }
+            foreach (DiscordChannel channel in guild.Channels)
+            {
+                channels = channels + channel.Mention + " **|** ";
+            }
+            foreach (DiscordMember member in guild.Members)
+            {
+                members = members + member.Mention + " **|** ";
+            }
+            foreach (DiscordRole role in guild.Roles)
+            {
+                roles = roles + "`" + role.Name + "` **|** ";
+            }
+            await CreateMessage(e, imageurl: guild.IconUrl, color: DiscordColor.Green, desc: "**Info about server/guild:** " + guild.Name);
+            embed.AddField("**Owner:**", guild.Owner.Mention, true);
+            embed.AddField("**Verification Level:**", guild.VerificationLevel.ToString(), true);
+            embed.AddField("**Large:**", EmojifyBool(guild.IsLarge), true);
+            embed.AddField("**Member Count:**", guild.MemberCount.ToString(), true);
+            embed.AddField("**Members:**", members, false);
+            embed.AddField("**Channels:**", channels, false);
+            embed.AddField("**Custom Emojis:**", emojis, false);
+            embed.AddField("**Roles:**", roles, false);
+            await EditMessageSlim(e);
         }
         #endregion
         #region bye command
@@ -1079,7 +1294,7 @@ namespace Morbot
                 }
                 foreach (string file in Directory.EnumerateFiles("links"))
                 {
-                    links = links + "`" + file.Remove(0, 6) + "` ";
+                    links = links + "`" + file.Remove(0, 6) + "` **|**";
                 }
 
                 await CreateMessage(e, color: DiscordColor.Green, desc: "**Links:** " + links);
@@ -1230,7 +1445,28 @@ namespace Morbot
                     output += normal;
                 }
             }
-            await CreateMessage(e, color: DiscordColor.Green, desc: output);
+            await e.RespondAsync(output);
+        }
+        #endregion
+        #region pc command
+        [Command("pc")]
+        public async Task pc(CommandContext e, DiscordMember member = null)
+        {
+            await e.TriggerTypingAsync();
+            await CreateMessage(e, color: DiscordColor.Green, desc: "**Morbot is running on Morc's PC:**");
+            embed.AddField("**Specifications of:**", "Morc's PC", true);
+            embed.AddField("**Motherboard:**", "Gigabyte Z97-HD3", true);
+            embed.AddField("**CPU:**", "Intel Core i5-4460", true);
+            embed.AddField("**GPU:**", "Asus Turbo GTX 1060(previous was Gigabyte GTX 750)", true);
+            embed.AddField("**RAM:**", "2x8GB Corsair VengeanceLP 1600MHz", true);
+            embed.AddField("**SDD:**", "Kingston SSDNow 120GB", true);
+            embed.AddField("**HDD:**", "old WD 3.5\" 320GB", true);
+            embed.AddField("**FullHD Monitor:**", "LG IPS237", true);
+            embed.AddField("**1280x1024 Monitor:**", "BenQ FP7|G+", true);
+            embed.AddField("**Webcam:**", "Logitech C270", true);
+            embed.AddField("**Audio Mixer:**", "Unomat VP1000(ancient VCR Audio Video Mixer)", true);
+            embed.AddField("**External HDD:**", "1TB WD 3.5\" used as storage + as stand for 1024p Monitor :grin:", true);
+            await EditMessageSlim(e);
         }
         #endregion
 
@@ -1263,10 +1499,12 @@ namespace Morbot
             {
                 await CreateMessage(e, color: DiscordColor.Yellow, desc: "**Not connected in this guild. Connecting to user's voice channel** :)");
                 vnc = await vnext.ConnectAsync(chn);
-                await CreateMessage(e, color: DiscordColor.Green, desc: $"**Connected to** `{chn.Name}`");
+                await EditMessage(e, color: DiscordColor.Green, desc: $"**Connected to** `{chn.Name}`");
+                await music(e, "M:/Downloaded/AkumajoTest.mp3");
             }
             while (vnc.IsPlaying)
                 await vnc.WaitForPlaybackFinishAsync();
+
         }
         #endregion
         #region voice channel leave command
@@ -1288,7 +1526,7 @@ namespace Morbot
                 return;
             }
             vnc.Disconnect();
-            await CreateMessage(e, desc: "**Disconnected*", color: DiscordColor.Green);
+            await CreateMessage(e, desc: "**Disconnected!**", color: DiscordColor.Green);
         }
         #endregion
         #region voice channel play command
@@ -1298,6 +1536,8 @@ namespace Morbot
             await connectToVoiceChannel(e);
             if (filename.Contains("youtu"))
             {
+
+                await CreateMessage(e, desc: processing_message, color: DiscordColor.Blurple);
                 try
                 {
                     var process = new Process
@@ -1329,7 +1569,7 @@ namespace Morbot
                             string videoname = ShortenName("M:/" + oRootObject.id + "_" + System.Web.HttpUtility.UrlEncode(oRootObject.fulltitle) + ".mp3", ".mp3");
                             if (File.Exists(videoname))
                             {
-                                await CreateMessage(e, desc: "**Playing:** `" + oRootObject.fulltitle + "`", imageurl: oRootObject.thumbnail);
+                                await EditMessage(e, desc: "**Playing:** `" + oRootObject.fulltitle + "`", imageurl: oRootObject.thumbnail, thumbnailurl: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/YouTube_Logo_2017.svg/2000px-YouTube_Logo_2017.svg.png");
                                 await SetSpeaking(e, true);
                                 await music(e, videoname);
                             }
@@ -1340,7 +1580,7 @@ namespace Morbot
                                 using (FileStream fs = new FileStream(videoname, FileMode.Create))
                                 {
 
-                                    await CreateMessage(e, desc: "**Playing:** `" + oRootObject.fulltitle + "`", imageurl: oRootObject.thumbnail);
+                                    await EditMessage(e, desc: "**Playing:** `" + oRootObject.fulltitle + "`", imageurl: oRootObject.thumbnail, thumbnailurl: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/YouTube_Logo_2017.svg/2000px-YouTube_Logo_2017.svg.png");
                                     await response.Content.CopyToAsync(fs);
                                     await SetSpeaking(e, true);
                                     await music(e, videoname);
@@ -1366,18 +1606,19 @@ namespace Morbot
 
                             if (File.Exists(videoname))
                             {
-                                await CreateMessage(e, desc: "**Playing:** `" + oRootObject.fulltitle + "`");
+                                await EditMessage(e, desc: "**Playing:** `" + oRootObject.fulltitle + "`", thumbnailurl: "https://upload.wikimedia.org/wikipedia/commons/e/ea/Mp3.svg");
                                 await SetSpeaking(e, true);
                                 await music(e, videoname);
                             }
                             else
                             {
+                                await CreateMessage(e, desc: processing_message, color: DiscordColor.Blurple);
                                 HttpClient cl = new HttpClient();
                                 HttpResponseMessage response = await cl.GetAsync(oRootObject.formats[1].url);
                                 using (FileStream fs = new FileStream(videoname, FileMode.Create))
                                 {
 
-                                    await CreateMessage(e, desc: "**Playing:** `" + oRootObject.fulltitle + "`");
+                                    await EditMessage(e, desc: "**Playing:** `" + oRootObject.fulltitle + "`", thumbnailurl: "https://upload.wikimedia.org/wikipedia/commons/e/ea/Mp3.svg");
                                     await response.Content.CopyToAsync(fs);
                                     await SetSpeaking(e, true);
                                     await music(e, videoname);
@@ -1403,10 +1644,12 @@ namespace Morbot
             }
             else if (filename.StartsWith("http"))
             {
+
+                await CreateMessage(e, desc: processing_message, color: DiscordColor.Blurple);
                 string site = "H:/" + filename + ".mp3";
                 if (File.Exists(site))
                 {
-                    await CreateMessage(e, desc: $"**Playing:** `{site}`");
+                    await EditMessage(e, desc: $"**Playing:** `{site}`");
                     await SetSpeaking(e, true);
                     await music(e, site);
                 }
@@ -1426,6 +1669,7 @@ namespace Morbot
             }
             else
             {
+                await CreateMessage(e, desc: processing_message, color: DiscordColor.Blurple);
                 if (!File.Exists(filename))
                 {
                     await CreateMessage(e, desc: $"**File** `{filename}` **does not exist!**");

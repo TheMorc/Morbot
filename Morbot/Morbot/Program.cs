@@ -20,7 +20,7 @@ namespace Morbot
         static CommandsNextExtension commands;
         static VoiceNextExtension voice;
         public static configJSON configuration = new configJSON();
-        public static string version = "1.8";
+        public static string version = "1.8.1";
 
         public static DiscordActivity game = new DiscordActivity();
         public static string DiscordActivityText = "type " + prefix + "help|ver: " + version;
@@ -76,13 +76,26 @@ namespace Morbot
             {
                 if (!e.Message.Author.IsBot)
                 {
-
+                    if (e.Message.Content.StartsWith("Windows 7"))
+                    {
+                        await e.Message.RespondAsync("**TRIGGER WARNING!!!!!**");
+                    }
+                    else if (e.Message.Content.StartsWith("Windosz 7"))
+                    {
+                        await e.Message.RespondAsync("**TRIGGER WARNING!!!!!**");
+                    }
+                    if (e.Message.Content.StartsWith("mhm"))
+                    {
+                        await e.Message.RespondAsync(":thinking:");
+                    }
+                    else if (e.Message.Content.StartsWith("hmm"))
+                    {
+                        await e.Message.RespondAsync(":thinking:");
+                    }
                     if (e.Message.Content.StartsWith("JSX"))
                     {
                         await e.Message.RespondAsync("**easier**");
                     }
-
-
                     if (e.Message.Content.StartsWith("**easier**"))
                     {
                         await e.Message.RespondAsync("JSX");
@@ -127,6 +140,17 @@ namespace Morbot
                             game.ActivityType = ActivityType.Watching;
                             await discord.UpdateStatusAsync(game);
                         };
+
+            discord.GuildMemberAdded += async e =>
+            {
+                await Commands.CreateHelloImage(e.Member, Commands.Welcome_on_server);
+                await e.Guild.Channels[0].SendFileAsync("morbot_image.png");
+            };
+            discord.GuildMemberRemoved += async e =>
+            {
+                await Commands.CreateHelloImage(e.Member, Commands.You_will_be_missed);
+                await e.Guild.Channels[0].SendFileAsync("morbot_image.png");
+            };
             await Task.Delay(-1);
         }
 
