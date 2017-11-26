@@ -1,4 +1,17 @@
-# Morbot [![Discord](https://img.shields.io/badge/join%20us%20on-our%20Discord%20Server-green.svg?style=flat-square)](https://discord.gg/Gneap49) [![Add this bot to your Discord Server](https://img.shields.io/badge/Morbot-add%20it%20to%20your%20Discord%20Server!-green.svg?style=flat-square)](https://discordapp.com/api/oauth2/authorize?client_id=219188936940060684&scope=bot)
+<p align="center">
+<h1 align="center">Morbot</h1>
+</p>
+<p align="center">
+  
+<img src="https://discordapp.com/api/guilds/363965764987912192/embed.png?style=banner4">
+<a href="https://discord.gg/Gneap49"></a>
+</img>
+<img src="https://github.com/TheMorc/imgs/blob/master/morbot.png?raw=true">
+<a href="https://discordapp.com/api/oauth2/authorize?client_id=219188936940060684&scope=bot"></a>
+</img>
+</p>
+
+
 A *"bigger"* example of bot made with **[DSharpPlus API](https://github.com/NaamloosDT/DSharpPlus)** on programming language **C#**
 
 **This bot includes** *(to date of 18.November 2017 and in random order(it does not matter anyway..))*
@@ -11,7 +24,7 @@ A *"bigger"* example of bot made with **[DSharpPlus API](https://github.com/Naam
 
 - **--latestvideo** also with these aliases **--latestmorcvideo**, **--morcvideo**, **--lastvideo** and  **--lastvideobymorc** | this command pulls video list from my channel **[Morc](https://youtube.com/riskoautobus)** and sends link of latest video. Example: **--latestvideo**
 
-- **--weather** | this command takes weather of town/village that you can choose.If you dont specify any town then it will be defaulted to Topoľčany(small town near Biskupová, village where Morc lives).Weather is taken from **[OpenWeather Api](https://openweathermap.org/api)** in JSON format deserialzed with Json.NET to send temperature and look outside. Example: **--time {town of your choice, ex:Moscow}**
+- **--weather** | this command takes weather of town/village that you can choose.If you dont specify any town then it will be defaulted to Topoľčany(small town near Biskupová, village where Morc lives).Weather is taken from **[OpenWeather Api](https://openweathermap.org/api)** in JSON format deserialzed with Json.NET to send temperature and look outside. Example: **--weather {town of your choice, ex:Moscow}**
 
 - **--time** | pulls time from my pc(one of simplest commands with --bot, i think this command can have use if someone on the other side of world doesnt know where i live and wants to know the time here.) Example: **--time**
 
