@@ -9,7 +9,6 @@ using System.Text;
 using DSharpPlus.EventArgs;
 using System.Linq;
 using System;
-using System.Net;
 
 namespace Morbot
 {
@@ -20,10 +19,10 @@ namespace Morbot
         static CommandsNextExtension commands;
         static VoiceNextExtension voice;
         public static configJSON configuration = new configJSON();
-        public static string version = "1.8.1";
+        public static string version = "1.8.2";
 
         public static DiscordActivity game = new DiscordActivity();
-        public static string DiscordActivityText = "type " + prefix + "help|ver: " + version;
+        public static string DiscordActivityText = $"type {prefix}help|ver: {version}";
         private Task Client_Ready(ReadyEventArgs exx)
         {
             exx.Client.Guilds[0].Channels.Where(e => e.Id == 0);
@@ -86,11 +85,11 @@ namespace Morbot
                     }
                     if (e.Message.Content.StartsWith("mhm"))
                     {
-                        await e.Message.RespondAsync(":thinking:");
+                        await e.Message.CreateReactionAsync(DiscordEmoji.FromName(e.Client, ":thinking:"));
                     }
                     else if (e.Message.Content.StartsWith("hmm"))
                     {
-                        await e.Message.RespondAsync(":thinking:");
+                        await e.Message.CreateReactionAsync(DiscordEmoji.FromName(e.Client, ":thinking:"));
                     }
                     if (e.Message.Content.StartsWith("JSX"))
                     {
@@ -120,12 +119,12 @@ namespace Morbot
             commands.CommandErrored += async e =>
             {
                 await Commands.CreateMessage(e.Context, desc: Commands.error_message + "`" + e.Exception.Message + "`", color: DiscordColor.Red);
-                e.Context.Client.DebugLogger.LogMessage(LogLevel.Error, "Morbot", e.Context.Member.Username + "#" + e.Context.Member.Discriminator + " executed command --" + e.Command.Name + " and the command failed\n" + e.Exception.Message, DateTime.Now);
+                e.Context.Client.DebugLogger.LogMessage(LogLevel.Error, "Morbot", $"{e.Context.Member.Username}#{e.Context.Member.Discriminator} executed command --{e.Command.Name} and the command failed\n{e.Exception.Message}", DateTime.Now);
             };
 
             commands.CommandExecuted += async e =>
             {
-                e.Context.Client.DebugLogger.LogMessage(LogLevel.Info, "Morbot", e.Context.Member.Username + "#" + e.Context.Member.Discriminator + " succesfully executed command --" + e.Command.Name, DateTime.Now);
+                e.Context.Client.DebugLogger.LogMessage(LogLevel.Info, "Morbot", $"{e.Context.Member.Username}#{e.Context.Member.Discriminator} succesfully executed command --{e.Command.Name}", DateTime.Now);
             };
 
             voice = discord.UseVoiceNext(new VoiceNextConfiguration
