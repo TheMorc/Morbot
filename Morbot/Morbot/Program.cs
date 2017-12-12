@@ -9,17 +9,18 @@ using System.Text;
 using DSharpPlus.EventArgs;
 using System.Linq;
 using System;
+using DSharpPlus.CommandsNext.Exceptions;
 
 namespace Morbot
 {
-    class Program
+    public class Program
     {
         public static DiscordClient discord;
         static public string prefix = "--";
         static CommandsNextExtension commands;
         static VoiceNextExtension voice;
-        public static configJSON configuration = new configJSON();
-        public static string version = "1.8.2";
+        public static ConfigJSON configuration = new ConfigJSON();
+        public static string version = "1.8.3";
 
         public static DiscordActivity game = new DiscordActivity();
         public static string DiscordActivityText = $"type {prefix}help|ver: {version}";
@@ -30,7 +31,7 @@ namespace Morbot
 
             return Task.CompletedTask;
         }
-        public class configJSON
+        public class ConfigJSON
         {
             public string DiscordBotToken { get; set; }
             public string YoutubeDataAPIKey { get; set; }
@@ -48,7 +49,6 @@ namespace Morbot
 
         static async Task MainAsync(string[] args)
         {
-
             if (!File.Exists("config.json"))
             {
                 File.Create("config.json");
@@ -59,7 +59,7 @@ namespace Morbot
                 using (var fs = File.OpenRead("config.json"))
                 using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
                     json = await sr.ReadToEndAsync();
-                configuration = JsonConvert.DeserializeObject<configJSON>(json);
+                configuration = JsonConvert.DeserializeObject<ConfigJSON>(json);
             }
 
             discord = new DiscordClient(new DiscordConfiguration
@@ -75,31 +75,31 @@ namespace Morbot
             {
                 if (!e.Message.Author.IsBot)
                 {
-                    if (e.Message.Content.StartsWith("Windows 7"))
+                    if (e.Message.Content.ToLower().StartsWith("clap"))
                     {
-                        await e.Message.RespondAsync("**TRIGGER WARNING!!!!!**");
+                        await e.Message.CreateReactionAsync(DiscordEmoji.FromName(e.Client, ":clap:"));
                     }
-                    else if (e.Message.Content.StartsWith("Windosz 7"))
-                    {
-                        await e.Message.RespondAsync("**TRIGGER WARNING!!!!!**");
-                    }
-                    if (e.Message.Content.StartsWith("mhm"))
+                    else if (e.Message.Content.ToLower().StartsWith("mhm"))
                     {
                         await e.Message.CreateReactionAsync(DiscordEmoji.FromName(e.Client, ":thinking:"));
                     }
-                    else if (e.Message.Content.StartsWith("hmm"))
+                    else if (e.Message.Content.ToLower().StartsWith("hmm"))
                     {
                         await e.Message.CreateReactionAsync(DiscordEmoji.FromName(e.Client, ":thinking:"));
                     }
-                    if (e.Message.Content.StartsWith("JSX"))
+                    else if (e.Message.Content.ToLower().StartsWith("ok"))
+                    {
+                        await e.Message.CreateReactionAsync(DiscordEmoji.FromName(e.Client, ":ok_hand:"));
+                    }
+                    else if (e.Message.Content.ToLower().StartsWith("jsx"))
                     {
                         await e.Message.RespondAsync("**easier**");
                     }
-                    if (e.Message.Content.StartsWith("**easier**"))
+                    else if (e.Message.Content.ToLower().StartsWith("**easier**"))
                     {
                         await e.Message.RespondAsync("JSX");
                     }
-                    else if (e.Message.Content.StartsWith("easier"))
+                    else if (e.Message.Content.ToLower().StartsWith("easier"))
                     {
                         await e.Message.RespondAsync("JSX");
                     }
@@ -118,7 +118,14 @@ namespace Morbot
 
             commands.CommandErrored += async e =>
             {
-                await Commands.CreateMessage(e.Context, desc: Commands.error_message + "`" + e.Exception.Message + "`", color: DiscordColor.Red);
+                if (e.Exception is CommandNotFoundException)
+                {
+                    await Commands.CreateMessage(e.Context, desc: $"Command doesn't exist.\nUse command `--help` to see list of commands.", color: DiscordColor.Red);
+                }
+                else
+                {
+                    await Commands.CreateMessage(e.Context, desc: $"{Commands.error_message}`{e.Exception.Message}`", color: DiscordColor.Red);
+                }
                 e.Context.Client.DebugLogger.LogMessage(LogLevel.Error, "Morbot", $"{e.Context.Member.Username}#{e.Context.Member.Discriminator} executed command --{e.Command.Name} and the command failed\n{e.Exception.Message}", DateTime.Now);
             };
 
