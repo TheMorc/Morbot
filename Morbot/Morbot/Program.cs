@@ -20,7 +20,7 @@ namespace Morbot
         static CommandsNextExtension commands;
         static VoiceNextExtension voice;
         public static ConfigJSON configuration = new ConfigJSON();
-        public static string version = "1.8.3";
+        public static string version = "1.8.4";
 
         public static DiscordActivity game = new DiscordActivity();
         public static string DiscordActivityText = $"type {prefix}help|ver: {version}";
