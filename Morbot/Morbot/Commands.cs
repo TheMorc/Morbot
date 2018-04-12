@@ -822,10 +822,10 @@ namespace Morbot
             string url = null;
             using (HttpClient cl = new HttpClient())
             {
-                string data = await cl.GetStringAsync("https://random.cat/meow");
+                string data = await cl.GetStringAsync("https://aws.random.cat/meow");
                 var pData = JObject.Parse(data);
                 url = pData["file"].ToString();
-                await EditMessage(e, thumbnailurl: "http://random.cat/random.cat-logo.png", imageurl: url, color: DiscordColor.Green);
+                await EditMessage(e, thumbnailurl: "https://purr.objects-us-west-1.dream.io/static/img/random.cat-logo.png", imageurl: url, color: DiscordColor.Green);
             }
         }
         #endregion
